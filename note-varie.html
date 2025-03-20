@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Note Varie</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- MathJax per il rendering delle formule matematiche -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Note Varie</h1>
+        </header>
+        <main>
+            <a href="index.html" class="back-link">← Torna alla pagina principale</a>
+
+            <div class="chart-container">
+                <section>
+                    <h2>Borsa Lang & Schwarz</h2>
+                    <ul>
+                        <li><strong>Orari di apertura:</strong> 7:30 - 23:00</li>
+                        <li><strong>Orari Derivati:</strong> 08:00 - 21:50</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Oscillazioni e Perdita Percentuale</h2>
+                    <p>
+                        Scendere e salire del 10% o salire e poi scendere non cambia nulla perché corrisponde a 
+                        <strong>1.1 × 0.9</strong> o a <strong>0.9 × 1.1</strong> e l'ordine con cui moltiplico non cambia.
+                    </p>
+                    <p>
+                        La perdita percentuale dovuta all'oscillazione su e giù della stessa percentuale con <strong>L</strong> leva e 
+                        <strong>x</strong> percentuale di salita e discesa è data da:
+                    </p>
+                    <p style="text-align: center;">
+                        \[ \frac{L^2 \times x^2}{100} \% \]
+                    </p>
+
+                    <h3>Esempio:</h3>
+                    <p>
+                        Se <strong>L = 3</strong> e <strong>x = 15%</strong>:
+                    </p>
+                    <p style="text-align: center;">
+                        \[ \frac{3^2 \times 15^2}{100} = 20.25\% \]
+                    </p>
+                    <p>
+                        Cioè, a leva <strong>3</strong>, scendere e risalire il giorno dopo del <strong>15%</strong> comporta una perdita del <strong>20.25%</strong>.
+                    </p>
+                    <p>
+                        Per più oscillazioni consecutive, il calcolo diventa più complesso.
+                    </p>
+                </section>
+
+                <section>
+                    <h2>Selezione delle Azioni negli ETF</h2>
+                    
+                    <h3>1. Per Settore</h3>
+                    
+                    <h3>2. Per Paesi</h3>
+                    
+                    <h3>3. Per Fattori</h3>
+                    <ul>
+                        <li><strong>ETF Large Cap / Small Cap / Mid Cap</strong>: Classificano le aziende in base alla capitalizzazione di mercato.</li>
+                        <li><strong>ETF Value</strong>: Investono in società sottovalutate in base a indicatori come P/E, P/B e dividend yield.</li>
+                        <li><strong>ETF Growth</strong>: Puntano su aziende con alto potenziale di crescita di ricavi ed utili.</li>
+                        <li><strong>ETF Momentum</strong>: Sfruttano il fenomeno dell'inerzia del mercato selezionando titoli con trend positivi recenti.</li>
+                        <li><strong>ETF Low Volatility</strong>: Focalizzati su azioni con minori oscillazioni di prezzo.</li>
+                        <li><strong>ETF Quality</strong>: Selezionano aziende con bilanci solidi e alta redditività.</li>
+                        <li><strong>ETF Dividend</strong>: Investono in società con alti dividendi o in crescita.</li>
+                        <li><strong>ETF Multi-Factor</strong>: Combinano più fattori per migliorare il rapporto rischio/rendimento.</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Ponderazione delle Azioni</h2>
+                    <ul>
+                        <li><strong>Market Cap Weighted</strong>: Ponderazione basata sulla capitalizzazione di mercato.</li>
+                        <li><strong>Equal Weighted</strong>: Ogni azione ha lo stesso peso nell'indice.</li>
+                        <li><strong>Country Weighted</strong>: Ponderazione basata sulla nazione di appartenenza.</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Leva con Knockout</h2>
+                    <p>
+                        La leva con knockout viene calcolata come mostrato sotto, non è fissa.
+                    </p>
+                    <p>
+                        In particolare, il livello di knockout è pensato per essere sempre tale che la leva ottenuta corrisponda a una perdita del 100% se raggiunto il knockout.
+                    </p>
+                    <p><strong>Esempio:</strong></p>
+                    <ul>
+                        <li>Leva <strong>x15</strong> significa che se il sottostante sta a <strong>100 €</strong>, il knockout sta a <strong>93,33 €</strong>.</li>
+                        <li>Quindi, se perdo il <strong>6,66%</strong> del sottostante, ciò corrisponde a un <strong>-100%</strong> del derivato.</li>
+                        <li>In questo caso, viene raggiunto il knockout e il sistema vende automaticamente per evitare l'indebitamento.</li>
+                    </ul>
+                    <p>
+                        La leva si ricalcola all'aggiornarsi del sottostante, tendendo ad aumentare esponenzialmente tanto più siamo vicini al knockout.
+                    </p>
+                    <p style="text-align: center;">
+                        \[ \text{Leva} = \frac{\text{Prezzo del sottostante}}{\text{Prezzo del sottostante} - \text{Livello di knockout}} \]
+                    </p>
+                </section>
+            </div>
+        </main>
+
+    </div>
+</body>
+
+</html>
