@@ -114,7 +114,7 @@
                 const startDate = new Date(dataInizio).getTime();
                 const endDate = new Date(dataFine).getTime();
                 const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/chart/${ticker}?period1=${Math.floor(startDate / 1000)}&period2=${Math.floor(endDate / 1000)}&interval=1d&events=history`;
-                const proxyUrl = "https://thingproxy.freeboard.io/fetch/" + yahooUrl;
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`;
 
                 const response = await fetch(proxyUrl);
                 const parsedData = await response.json();
