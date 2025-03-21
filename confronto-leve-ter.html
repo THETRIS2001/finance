@@ -63,10 +63,11 @@
                 <div id="chart-wrapper" style="height: 800px;">
                     <canvas id="myChart"></canvas>
                 </div>
-                <div id="loading" style="display: none; text-align: center; margin-top: 20px;">
-                    <p>Caricamento dati in corso...</p>
+                <div id="loading" style="display: none; text-align: center; margin: 20px;">
+                    <div class="spinner"></div>
+                    <p>Caricamento dati in corso... Questo potrebbe richiedere alcuni secondi.</p>
                 </div>
-                <div id="error" style="display: none; color: red; text-align: center; margin-top: 20px;">
+                <div id="error" style="display: none; color: red; margin: 20px; padding: 15px; background-color: #ffeeee; border-radius: 5px;">
                     <p>Errore nel caricamento dei dati. Riprova più tardi.</p>
                 </div>
             </div>
@@ -88,7 +89,9 @@
                 </div>
             </div>
         </main>
-
+        <footer>
+            <p>&copy; 2023 Analisi Finanziaria</p>
+        </footer>
     </div>
 
     <script>
@@ -108,10 +111,10 @@
         // Funzione per scaricare i dati storici da Yahoo Finance utilizzando Thingproxy per aggirare CORS
         async function scaricaDati(ticker, dataInizio, dataFine) {
             try {
-                const startDate = Math.floor(new Date(dataInizio).getTime() / 1000);
-                const endDate = Math.floor(new Date(dataFine).getTime() / 1000);
-                const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/chart/${ticker}?period1=${startDate}&period2=${endDate}&interval=1d&events=history`;
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`;
+                const startDate = new Date(dataInizio).getTime();
+                const endDate = new Date(dataFine).getTime();
+                const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/chart/${ticker}?period1=${Math.floor(startDate / 1000)}&period2=${Math.floor(endDate / 1000)}&interval=1d&events=history`;
+                const proxyUrl = "https://thingproxy.freeboard.io/fetch/" + yahooUrl;
 
                 const response = await fetch(proxyUrl);
                 const parsedData = await response.json();
