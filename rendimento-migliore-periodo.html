@@ -368,8 +368,8 @@
                             max_ret: max_ret.toFixed(2) + '%',
                             min_ret: min_ret.toFixed(2) + '%',
                             mean_ret: mean_ret.toFixed(2) + '%',
-                            rendimento_annuo_medio: rendimento_annuo_medio.toFixed(2) + '%',
-                            rendimento_annuo_medio_realistico: rendimento_annuo_medio_realistico.toFixed(2) + '%'
+                            rendimento_annuo_medio: rendimento_annuo_medio.toFixed(2) + '% / annuo',
+                            rendimento_annuo_medio_realistico: rendimento_annuo_medio_realistico.toFixed(2) + '% / annuo'
                         }
                     });
                     
@@ -403,13 +403,14 @@
                     for (let i = 0; i < tuttiRendimenti.length; i++) {
                         const periodoStats = tuttiRendimenti[i].stats;
                         const periodo = tuttiRendimenti[i].periodo;
-                        
+                        const migliorGiorno = tuttiMiglioriGiorni.find(mg => mg.periodo === periodo);
                         // Creiamo un oggetto con le statistiche di base per questo periodo
                         const periodoObj = {
                             'Anni': Math.round(periodoStats.periodoAnni),
                             'Mesi': Math.round(periodoStats.periodoMesi),
                             '% giorni negativi': periodoStats.negative_pct,
                             'Rendimento massimo (%)': periodoStats.max_ret,
+                            'Rendimento massimo annualizzato (%)': migliorGiorno.rendimentoAnnuo.toFixed(2) + '% / annuo',
                             'Rendimento minimo (%)': periodoStats.min_ret,
                             'Rendimento medio (%)': periodoStats.mean_ret,
                             'Rendimento annuo medio (%)': periodoStats.rendimento_annuo_medio,
@@ -417,11 +418,10 @@
                         };
                         
                         // Aggiungiamo informazioni sui migliori giorni per questo periodo
-                        const migliorGiorno = tuttiMiglioriGiorni.find(mg => mg.periodo === periodo);
+                        
                         if (migliorGiorno) {
                             periodoObj['Miglior data ingresso'] = migliorGiorno.giorno.toLocaleDateString();
                             periodoObj['Miglior data uscita'] = migliorGiorno.dataUscita.toLocaleDateString();
-                            periodoObj['Miglior rendimento annualizzato (%)'] = migliorGiorno.rendimentoAnnuo.toFixed(2) + '%';
                         }
                         
                         // Aggiungiamo informazioni sui migliori giorni per rendimento annualizzato
