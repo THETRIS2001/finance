@@ -179,8 +179,8 @@
                 const period2 = Math.floor(endDate.getTime() / 1000);
                 const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/chart/${ticker}?period1=${period1}&period2=${period2}&interval=1d&events=history`;
 
-                // Utilizziamo thingproxy.freeboard.io come proxy CORS per evitare problemi di cross-origin
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`;
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`;
+                /*const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`;*/
 
                 // Mostriamo il loader durante il caricamento
                 document.getElementById('loading').style.display = 'block';
