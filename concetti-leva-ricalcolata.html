@@ -46,7 +46,7 @@
                     <button id="aggiorna">Aggiorna Grafici</button>
                 </div>
                 
-                <div class="chart-wrapper" style="height: 400px;">
+                <div class="chart-wrapper" style="height:700 px;">
                     <canvas id="chartVariazionePercentuale"></canvas>
                 </div>
             </div>
@@ -55,7 +55,7 @@
                 <h2>Disinvestimento e Reinvestimento con Leva</h2>
                 <p>Questo grafico dimostra che disinvestire e reinvestire immediatamente con leva non fa perdere il vantaggio dell'interesse composto.</p>
                 
-                <div class="chart-wrapper" style="height: 400px;">
+                <div class="chart-wrapper" style="height:700 px;">
                     <canvas id="chartDisinvestimento"></canvas>
                 </div>
             </div>
@@ -64,7 +64,7 @@
                 <h2>Confronto Normalizzato vs Non Normalizzato</h2>
                 <p>Questo grafico mostra come la normalizzazione influisce sulla visualizzazione dei valori, ma non sulla variazione percentuale.</p>
                 
-                <div class="chart-wrapper" style="height: 400px;">
+                <div class="chart-wrapper" style="height:700 px;">
                     <canvas id="chartNormalizzazione"></canvas>
                 </div>
             </div>
@@ -94,6 +94,9 @@
     </div>
 
     <script>
+        // Registra il plugin di annotazione
+        // Chart.register(ChartAnnotation);
+        
         // Inizializza i grafici al caricamento della pagina
         document.addEventListener('DOMContentLoaded', function() {
             // Imposta il valore massimo per il momento di interruzione
@@ -410,3 +413,6 @@
                 }
             });
         }
+    </script>
+</body>
+</html>
