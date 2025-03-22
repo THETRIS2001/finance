@@ -6,12 +6,19 @@ body {
     background-color: #f5f5f5;
     margin: 0;
     padding: 0;
+    overflow-x: hidden;
 }
 
 .container {
     width: 90% !important;
     margin: 0 auto;
     padding: 20px;
+}
+
+/* Stile per contenuti che potrebbero essere troppo larghi */
+p, h1, h2, h3, h4, h5, h6, ul, ol, table, .MathJax_Display {
+    max-width: 100%;
+    overflow-x: auto;
 }
 
 /* Header */

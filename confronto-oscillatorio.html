@@ -42,24 +42,30 @@
                     <button id="calcola_minus">Calcola Tasso -</button>
                     <button id="aggiorna">Aggiorna Grafico</button>
                 </div>
-                <canvas id="myChart"></canvas>
+                <div class="chart-wrapper" style="height:700px;">
+                    <canvas id="myChart"></canvas>
+                </div>
             </div>
 
             <section>
                 <h2>Note sul Calcolo</h2>
                 <!-- La parte delle note resta invariata -->
                 <h3>Caso 1: Primo giorno di calcolo, la formula sarà:</h3>
-                <p>
-                    $$ O_{-1} \times \left( 1 + \text{LEVA} \times \frac{O_0 - O_{-1}}{O_{-1}} \right) $$
-                </p>
+                <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <p>
+                        $$ O_{-1} \times \left( 1 + \text{LEVA} \times \frac{O_0 - O_{-1}}{O_{-1}} \right) $$
+                    </p>
+                </div>
 
                 <h3>Caso 2: Giorni successivi</h3>
                 <p>
                     Se non è il primo giorno, la formula sarà quella originale:
                 </p>
-                <p>
-                    $$ L_{-1} \times \left( 1 + \text{LEVA} \times \frac{O_0 - O_{-1}}{O_{-1}} \right) $$
-                </p>
+                <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <p>
+                        $$ L_{-1} \times \left( 1 + \text{LEVA} \times \frac{O_0 - O_{-1}}{O_{-1}} \right) $$
+                    </p>
+                </div>
 
                 <h3>Legenda:</h3>
                 <ul>
@@ -183,6 +189,7 @@
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         title: {
                             display: true,
