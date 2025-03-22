@@ -62,7 +62,7 @@
 
             <div class="chart-container">
                 <h2>Confronto Normalizzato vs Non Normalizzato</h2>
-                <p>Questo grafico mostra come la normalizzazione influisce sulla visualizzazione dei valori, ma non sulla variazione percentuale.</p>
+                <p>Questo grafico mostra come la normalizzazione influisce sulla visualizzazione dei valori, ma non sulla variazione percentuale. Disattivando la visualizzazione dei valori normalizzati o viceversa, si nota come i due grafici siano sovrapponibili, a dimostrazione che a meno di un fattore di scala derivante dal momento di ingresso, le variazioni % in tutto il periodo sono indipendenti dal momento di ingresso.</p>
                 
                 <div class="chart-wrapper" style="height:700px;">
                     <canvas id="chartNormalizzazione"></canvas>
@@ -168,15 +168,14 @@
                 valoreLevaPospostoGiorno40[i + 1] = valoreLevaPospostoGiorno40[i] * (1 + variazioniGiornaliere[i] * leva);
             }
             
-            // Calcola l'andamento con disinvestimento e reinvestimento
-            const valoreLevaDiInvestimento = [100];
-            for (let i = 0; i < giorni; i++) {
-                if (i === momentoInterruzione) {
-                    // Disinvestimento e reinvestimento immediato (stesso valore)
-                    valoreLevaDiInvestimento.push(valoreLevaDiInvestimento[i]);
-                } else {
-                    valoreLevaDiInvestimento.push(valoreLevaDiInvestimento[i] * (1 + variazioniGiornaliere[i] * leva));
-                }
+            // Rimuovo la serie valoreLevaDiInvestimento che non è più necessaria
+            
+            // Calcola l'andamento della nuova serie che parte dal giorno del reinvestimento
+            const valoreLevaDalReinvestimento = Array(momentoInterruzione + 1).fill(null);
+            // Imposta il valore iniziale uguale al valore della leva al momento del reinvestimento
+            valoreLevaDalReinvestimento[momentoInterruzione] = valoreLeva[momentoInterruzione];
+            for (let i = momentoInterruzione; i < giorni; i++) {
+                valoreLevaDalReinvestimento[i + 1] = valoreLevaDalReinvestimento[i] * (1 + variazioniGiornaliere[i] * leva);
             }
             
             // Calcola l'andamento con leva non normalizzato
@@ -258,7 +257,19 @@
                     plugins: {
                         tooltip: {
                             mode: 'index',
-                            intersect: false
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y.toFixed(2) + ' €';
+                                    }
+                                    return label;
+                                }
+                            }
                         },
                         legend: {
                             position: 'top'
@@ -289,13 +300,14 @@
                             fill: false
                         },
                         {
-                            label: `Leva ${leva}x (con disinvestimento al giorno ${momentoInterruzione})`,
-                            data: valoreLevaDiInvestimento,
+                            label: `Leva ${leva}x (con ingresso al giorno ${momentoInterruzione} con stessa cifra di uscita)`,
+                            data: valoreLevaDalReinvestimento,
                             borderColor: 'green',
                             backgroundColor: 'rgba(0, 255, 0, 0.1)',
                             fill: false,
-                            pointRadius: (ctx) => ctx.dataIndex === momentoInterruzione + 1 ? 8 : 0,
-                            pointBackgroundColor: 'rgba(0, 128, 0, 0.8)'
+                            pointRadius: (ctx) => ctx.dataIndex === momentoInterruzione ? 8 : 0,
+                            pointBackgroundColor: 'rgba(0, 128, 0, 0.8)',
+                            order: -1 // Negative order to ensure this series is drawn on top
                         }
                     ]
                 },
@@ -319,7 +331,19 @@
                     plugins: {
                         tooltip: {
                             mode: 'index',
-                            intersect: false
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y.toFixed(2) + ' €';
+                                    }
+                                    return label;
+                                }
+                            }
                         },
                         legend: {
                             position: 'top'
@@ -404,7 +428,19 @@
                     plugins: {
                         tooltip: {
                             mode: 'index',
-                            intersect: false
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y.toFixed(2) + ' €';
+                                    }
+                                    return label;
+                                }
+                            }
                         },
                         legend: {
                             position: 'top'
