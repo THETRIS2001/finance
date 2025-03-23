@@ -19,9 +19,7 @@
             <a href="index.html" class="back-link">← Torna alla pagina principale</a>
 
             <div class="chart-container">
-                <h2>Variazione Percentuale con Leva vs Periodo di Inizio</h2>
-                <p>Questo grafico dimostra che la variazione percentuale con leva non cambia in base al periodo di inizio, ma cambia solo il valore assoluto finale.</p>
-                
+
                 <div class="chart-controls">
                     <div>
                         <label for="leva">Leva:</label>
@@ -40,11 +38,16 @@
                         <input type="number" id="volatilita" value="1.5" min="0" max="10" step="0.1">
                     </div>
                     <div>
-                        <label for="momento_interruzione">Momento interruzione (giorno):</label>
+                        <label for="momento_interruzione">Momento interruzione:</label>
                         <input type="number" id="momento_interruzione" value="50" min="1">
                     </div>
                     <button id="aggiorna">Aggiorna Grafici</button>
                 </div>
+            </div>
+
+            <div class="chart-container">
+                <h2>Variazione Percentuale con Leva vs Periodo di Inizio</h2>
+                <p>Questo grafico dimostra che la variazione percentuale con leva non cambia in base al periodo di inizio, ma cambia solo il valore assoluto finale.</p>        
                 
                 <div class="chart-wrapper" style="height:700px;">
                     <canvas id="chartVariazionePercentuale"></canvas>
@@ -53,7 +56,7 @@
 
             <div class="chart-container">
                 <h2>Disinvestimento e Reinvestimento con Leva</h2>
-                <p>Questo grafico dimostra che disinvestire e reinvestire immediatamente con leva non fa perdere il vantaggio dell'interesse composto.</p>
+                <p>Questo grafico dimostra che disinvestire e reinvestire immediatamente con leva non fa perdere il vantaggio dell'interesse composto. Ciò è una naturale conseguenza del grafico di sopra. Se la variazione % non cambia in base al periodo di ingresso, è ovvio che se entro con la stessa cifra, troverò valori finale identici.</p>
                 
                 <div class="chart-wrapper" style="height:700px;">
                     <canvas id="chartDisinvestimento"></canvas>
@@ -62,7 +65,7 @@
 
             <div class="chart-container">
                 <h2>Confronto Normalizzato vs Non Normalizzato</h2>
-                <p>Questo grafico mostra come la normalizzazione influisce sulla visualizzazione dei valori, ma non sulla variazione percentuale. Disattivando la visualizzazione dei valori normalizzati o viceversa, si nota come i due grafici siano sovrapponibili, a dimostrazione che a meno di un fattore di scala derivante dal momento di ingresso, le variazioni % in tutto il periodo sono indipendenti dal momento di ingresso.</p>
+                <p>Questo grafico mostra come la normalizzazione influisce sulla visualizzazione dei valori, ma non sulla variazione percentuale. Disattivando la visualizzazione dei valori normalizzati o viceversa, si nota come i due grafici siano sovrapponibili, a dimostrazione che a meno di un fattore di scala derivante dalla cifra di ingresso, le variazioni % in tutto il periodo sono indipendenti dal momento di ingresso.</p>
                 
                 <div class="chart-wrapper" style="height:700px;">
                     <canvas id="chartNormalizzazione"></canvas>
@@ -70,24 +73,23 @@
             </div>
 
             <div class="info-section" style="margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                <h2>Concetti Chiave sulla Leva Ricalcolata Giornalmente</h2>
+                <h2>Concetti Chiave sulla Leva Fissa con Ricalcolo Giornaliero</h2>
                 
                 <div class="info-card" style="margin-bottom: 20px;">
                     <h3>La variazione percentuale non dipende dal periodo di inizio</h3>
-                    <p>Con la leva ricalcolata giornalmente, la <strong>variazione percentuale</strong> tra due date specifiche <strong>non cambia</strong> in base al momento in cui si inizia l'investimento. Ciò che cambia è solo il <strong>valore assoluto</strong> a cui si arriva.</p>
-                    <p>Questo accade perché la leva amplifica le variazioni giornaliere in modo proporzionale, indipendentemente dal valore iniziale dell'investimento.</p>
+                    <p>Con la leva, la <strong>variazione percentuale</strong> tra due date specifiche <strong>non cambia</strong> in base al momento in cui si inizia l'investimento. Ciò che cambia è solo il <strong>valore assoluto</strong> a cui si arriva.</p>
+                    <p>Questo accade perché la leva amplifica le variazioni giornaliere in modo proporzionale, indipendentemente dal valore iniziale dell'investimento, nel senso che la variazione percentuale non dipende dal capitale iniziale.</p>
                 </div>
                 
                 <div class="info-card" style="margin-bottom: 20px;">
                     <h3>Disinvestire e reinvestire non fa perdere l'interesse composto</h3>
-                    <p>Se <strong>disinvesti e reinvesti immediatamente</strong> l'intero capitale (compresi gli interessi maturati) in uno strumento a leva, <strong>non perdi alcun vantaggio</strong> dell'interesse composto.</p>
-                    <p>La leva si comporta esattamente come un investimento senza leva: se reinvesti la stessa cifra con cui sei uscito, il risultato finale sarà identico a quello che avresti ottenuto senza mai disinvestire.</p>
+                    <p>Se <strong>disinvesti e reinvesti immediatamente</strong> l'intero capitale (compresi gli interessi maturati) in uno strumento a leva, <strong>non perdi alcun vantaggio</strong> dell'interesse composto (se non contiamo le tasse da pagare al momento della vendita).</p>
+                    <p>La leva si comporta esattamente come un investimento senza leva: se reinvesti la stessa cifra con cui sei uscito, il risultato finale sarà identico a quello che avresti ottenuto senza mai disinvestire (a meno di tasse).</p>
                 </div>
                 
                 <div class="info-card">
                     <h3>Normalizzazione e valori assoluti</h3>
-                    <p>Quando i grafici vengono <strong>normalizzati</strong> (ad esempio, partendo tutti da un valore di 100), il valore finale può sembrare diverso tra due investimenti iniziati in momenti diversi. Tuttavia, la <strong>variazione percentuale</strong> nello stesso intervallo di tempo rimane identica.</p>
-                    <p>Se non si normalizza il valore di partenza, il valore finale di un sottostante sarà sempre lo stesso, indipendentemente da quando si visualizza il grafico. Con la leva, invece, il valore assoluto finale dipenderà dal momento di ingresso, ma la variazione percentuale in un dato intervallo sarà sempre la stessa.</p>
+                    <p>Quando i grafici vengono <strong>normalizzati</strong> (ad esempio, partendo tutti da un valore di 100), si evidenzia come la <strong>variazione percentuale</strong> nello stesso intervallo di tempo rimane identica. Questo vale sia per il sottostante che per la leva.</p>
                 </div>
             </div>
         </main>
