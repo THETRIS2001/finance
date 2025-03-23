@@ -338,8 +338,8 @@
 
                     // Troviamo il miglior giorno d'ingresso (rendimento massimo)
                     const migliorRendimentoIndex = rendimentiValues.indexOf(max_ret);
-                    const migliorGiorno = rendimentiArray[migliorRendimentoIndex].data_ingresso;
-                    const migliorDataUscita = rendimentiArray[migliorRendimentoIndex].data_uscita;
+                    const migliorGiorno = rendimentiArray[migliorRendimentoIndex]?.data_ingresso;
+                    const migliorDataUscita = rendimentiArray[migliorRendimentoIndex]?.data_uscita;
                     const migliorRendimento = max_ret;
                     const rendimentoAnnuo = ((1 + migliorRendimento / 100) ** (1 / periodoAnni) - 1) * 100;
 
@@ -353,9 +353,9 @@
 
                     const maxRendimentoAnnuo = Math.max(...rendimentiAnnui.map(r => r.rendimento_annuo));
                     const migliorGiornoAnnuoIndex = rendimentiAnnui.findIndex(r => r.rendimento_annuo === maxRendimentoAnnuo);
-                    const migliorGiornoAnnuo = rendimentiAnnui[migliorGiornoAnnuoIndex].data_ingresso;
-                    const migliorDataUscitaAnnuo = rendimentiAnnui[migliorGiornoAnnuoIndex].data_uscita;
-                    const migliorRendimentoAnnuo = rendimentiAnnui[migliorGiornoAnnuoIndex].rendimento;
+                    const migliorGiornoAnnuo = rendimentiAnnui[migliorGiornoAnnuoIndex]?.data_ingresso;
+                    const migliorDataUscitaAnnuo = rendimentiAnnui[migliorGiornoAnnuoIndex]?.data_uscita;
+                    const migliorRendimentoAnnuo = rendimentiAnnui[migliorGiornoAnnuoIndex]?.rendimento;
                     
                     // Aggiungiamo i risultati di questo periodo all'array di tutti i rendimenti
                     tuttiRendimenti.push({
@@ -374,21 +374,25 @@
                     });
                     
                     // Aggiungiamo i migliori giorni per questo periodo
-                    tuttiMiglioriGiorni.push({
-                        periodo: periodoAnni,
-                        giorno: migliorGiorno,
-                        dataUscita: migliorDataUscita,
-                        rendimento: migliorRendimento,
-                        rendimentoAnnuo: rendimentoAnnuo
-                    });
+                    if (migliorGiorno && migliorDataUscita) {
+                        tuttiMiglioriGiorni.push({
+                            periodo: periodoAnni,
+                            giorno: migliorGiorno,
+                            dataUscita: migliorDataUscita,
+                            rendimento: migliorRendimento,
+                            rendimentoAnnuo: rendimentoAnnuo
+                        });
+                    }
                     
-                    tuttiMiglioriGiorniAnnui.push({
-                        periodo: periodoAnni,
-                        giorno: migliorGiornoAnnuo,
-                        dataUscita: migliorDataUscitaAnnuo,
-                        rendimento: migliorRendimentoAnnuo,
-                        rendimentoAnnuo: maxRendimentoAnnuo
-                    });
+                    if (migliorGiornoAnnuo && migliorDataUscitaAnnuo) {
+                        tuttiMiglioriGiorniAnnui.push({
+                            periodo: periodoAnni,
+                            giorno: migliorGiornoAnnuo,
+                            dataUscita: migliorDataUscitaAnnuo,
+                            rendimento: migliorRendimentoAnnuo,
+                            rendimentoAnnuo: maxRendimentoAnnuo
+                        });
+                    }
                 } // Fine del ciclo per ogni periodo
                 
                 // Mostriamo i grafici con tutti i periodi
@@ -410,7 +414,7 @@
                             'Mesi': Math.round(periodoStats.periodoMesi),
                             '% giorni negativi': periodoStats.negative_pct,
                             'Rendimento massimo (%)': periodoStats.max_ret,
-                            'Rendimento massimo annualizzato (%)': migliorGiorno.rendimentoAnnuo.toFixed(2) + '% / annuo',
+                            'Rendimento massimo annualizzato (%)': migliorGiorno?.rendimentoAnnuo.toFixed(2) + '% / annuo',
                             'Rendimento minimo (%)': periodoStats.min_ret,
                             'Rendimento medio (%)': periodoStats.mean_ret,
                             'Rendimento annuo medio (%)': periodoStats.rendimento_annuo_medio,
@@ -832,9 +836,9 @@
                                 label: function(tooltipItem) {
                                     const leva = parseFloat(document.getElementById('leva').value);
                                     if (leva === 1) {
-                                        return `Prezzo: ${tooltipItem.raw.y.toFixed(2)} €`;
+                                        return `Rispetto all'inizio: ${(tooltipItem.raw.y-100).toFixed(2)} %`;
                                     } else {
-                                        return `Prezzo con leva ${leva.toFixed(1)}: ${tooltipItem.raw.y.toFixed(2)} €`;
+                                        return `Rispetto all'inizio con leva ${leva.toFixed(1)}: ${(tooltipItem.raw.y-100).toFixed(2)} %`;
                                     }
                                 }
                             }
