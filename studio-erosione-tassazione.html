@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studio Erosione Tassazione</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Studio Erosione Tassazione</h1>
+        </header>
+        <main>
+            <a href="index.html" class="back-link">← Torna alla pagina principale</a>
+
+            <div class="chart-container">
+                <div class="chart-controls">
+                    <div>
+                        <label for="capitale_iniziale">Capitale iniziale:</label>
+                        <input type="number" id="capitale_iniziale" value="100" min="1">
+                    </div>
+                    <div>
+                        <label for="anni">Anni totali:</label>
+                        <input type="number" id="anni" value="30" min="1" max="100">
+                    </div>
+                    <div>
+                        <label for="anno_interruzione">Anno interruzione:</label>
+                        <input type="number" id="anno_interruzione" value="20" min="1" max="30">
+                    </div>
+                    <div>
+                        <label for="tasso">Tasso annuo (%):</label>
+                        <input type="number" id="tasso" value="10" min="0" max="100" step="0.1">
+                    </div>
+                    <div>
+                        <label for="tassazione">Tassazione (%):</label>
+                        <input type="number" id="tassazione" value="26" min="0" max="100" step="0.1">
+                    </div>
+                    <div>
+                    </div>
+                    <button id="aggiorna">Aggiorna Grafico</button>
+                </div>
+                <div id="chart-wrapper" style="height: 600px;">
+                    <canvas id="myChart"></canvas>
+                </div>
+                <div id="risultati"
+                    style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
+                    <h3>Risultati dell'analisi</h3>
+                    <div id="tassi_effettivi"></div>
+                    <div id="perdite_percentuali"></div>
+                </div>
+                
+                <div class="info-section" style="margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h2>Note Importanti</h2>
+                    
+                    <div class="info-card" style="margin-bottom: 20px;">
+                        <h3>Impatto della Tassazione sul Rendimento</h3>
+                        <p>La tassazione annuale degli interessi riduce significativamente il rendimento composto nel lungo periodo. Questo effetto è particolarmente evidente con tassi di interesse più elevati e periodi di investimento più lunghi.</p>
+                    </div>
+                    
+                    <div class="info-card" style="margin-bottom: 20px;">
+                        <h3>Strategie di Investimento</h3>
+                        <p>Considerare strumenti finanziari con tassazione differita (come alcuni fondi di investimento o piani pensionistici) può aiutare a mitigare l'erosione fiscale sul lungo termine.</p>
+                    </div>
+                    
+                    <div class="info-card">
+                        <h3>Effetto della Suddivisione dell'Investimento</h3>
+                        <p><strong>Spezzare l'investimento</strong> non influisce sull'<strong>interesse composto</strong>, a meno che non si debbano <strong>pagare le tasse</strong>. In presenza di tassazione, la suddivisione può avere effetti significativi sul rendimento finale.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <script>
+        // Inizializza il grafico al caricamento della pagina
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Aggiungi event listener per l'anno di interruzione
+            document.getElementById('anno_interruzione').addEventListener('change', function () {
+                const anniTotali = parseInt(document.getElementById('anni').value);
+                const annoInterruzione = parseInt(this.value);
+
+                if (annoInterruzione > anniTotali) {
+                    this.value = anniTotali;
+                }
+            });
+
+            // Aggiungi event listener per gli anni totali
+            document.getElementById('anni').addEventListener('change', function () {
+                const anniTotali = parseInt(this.value);
+                const annoInterruzioneInput = document.getElementById('anno_interruzione');
+                const annoInterruzione = parseInt(annoInterruzioneInput.value);
+
+                if (annoInterruzione > anniTotali) {
+                    annoInterruzioneInput.value = anniTotali;
+                }
+            });
+
+            // Genera il grafico iniziale
+            setTimeout(generaGrafico, 500);
+        });
+
+        // Funzione per calcolare il tasso annuo medio
+        function calcolaTassoAnnuo(iniziale, finale, anni) {
+            return Math.pow(finale / iniziale, 1 / anni) - 1;
+        }
+
+        // Funzione per generare il grafico
+        function generaGrafico() {
+            // Ottieni i parametri dall'interfaccia
+            const capitaleIniziale = parseFloat(document.getElementById('capitale_iniziale').value);
+            const anni = parseInt(document.getElementById('anni').value);
+            const annoInterruzione = parseInt(document.getElementById('anno_interruzione').value);
+            const tasso = parseFloat(document.getElementById('tasso').value) / 100;
+            const tassazione = parseFloat(document.getElementById('tassazione').value) / 100;
+
+            // Liste per salvare i capitali anno per anno per ogni scenario
+            const capitaleTaxAnnuale = [capitaleIniziale];  // Tassato ogni anno
+            const capitaleNoTax = [capitaleIniziale];       // Non tassato
+            const capitaleTaxFinale = [capitaleIniziale];   // Tassato solo a fine periodo
+            const capitaleInterrotto = [capitaleIniziale];   // Scenario: interruzione a 'annoInterruzione'
+
+            let capitaleInterruzioneNet = null;  // Salva il capitale netto al momento dell'interruzione
+
+            // Simulazione per gli anni specificati
+            for (let anno = 1; anno <= anni; anno++) {
+                // Scenario tassato annualmente
+                const capitalePrev = capitaleTaxAnnuale[anno - 1];
+                const guadagnoLordo = capitalePrev * tasso;
+                const tasse = guadagnoLordo * tassazione;
+                const guadagnoNetto = guadagnoLordo - tasse;
+                const capitaleFinaleAnnuale = capitalePrev + guadagnoNetto;
+                capitaleTaxAnnuale.push(capitaleFinaleAnnuale);
+
+                // Scenario non tassato (interesse composto semplice)
+                const capitaleFinaleNoTax = capitaleNoTax[anno - 1] * (1 + tasso);
+                capitaleNoTax.push(capitaleFinaleNoTax);
+
+                // Scenario tassato solo a fine periodo
+                if (anno < anni) {
+                    capitaleTaxFinale.push(capitaleNoTax[anno]);
+                } else {
+                    const guadagnoTotale = capitaleNoTax[anno] - capitaleIniziale;
+                    const capitaleFinaleConTax = capitaleNoTax[anno] - guadagnoTotale * tassazione;
+                    capitaleTaxFinale.push(capitaleFinaleConTax);
+                }
+
+                // Simulazione scenario "Interruzione a 'annoInterruzione'" con due tassazioni
+                if (anno < annoInterruzione) {
+                    // Crescita fino all'interruzione senza tassazione
+                    capitaleInterrotto.push(capitaleInterrotto[anno - 1] * (1 + tasso));
+                } else if (anno === annoInterruzione) {
+                    // Alla fine dell'anno di interruzione: tassazione sulla plusvalenza accumulata fino a questo punto
+                    const amount = capitaleInterrotto[anno - 1] * (1 + tasso);
+                    const guadagno = amount - capitaleIniziale;
+                    const netAmount = capitaleIniziale + guadagno * (1 - tassazione);
+                    capitaleInterrotto.push(netAmount);
+                    capitaleInterruzioneNet = netAmount;
+                } else {
+                    if (anno < anni) {
+                        // Crescita normale dal capitale tassato al momento dell'interruzione
+                        capitaleInterrotto.push(capitaleInterrotto[anno - 1] * (1 + tasso));
+                    } else {
+                        // Ultimo anno: applica una seconda tassazione sulle plusvalenze del periodo post-interruzione
+                        const amount = capitaleInterrotto[anno - 1] * (1 + tasso);
+                        const guadagnoPost = amount - capitaleInterruzioneNet;
+                        const netAmount = capitaleInterruzioneNet + guadagnoPost * (1 - tassazione);
+                        capitaleInterrotto.push(netAmount);
+                    }
+                }
+            }
+
+            // Calcolo dei tassi annui effettivi per ogni scenario
+            const tassoAnnuoTaxAnnuale = calcolaTassoAnnuo(capitaleIniziale, capitaleTaxAnnuale[anni], anni) * 100;
+            const tassoAnnuoNoTax = calcolaTassoAnnuo(capitaleIniziale, capitaleNoTax[anni], anni) * 100;
+            const tassoAnnuoTaxFinale = calcolaTassoAnnuo(capitaleIniziale, capitaleTaxFinale[anni], anni) * 100;
+            const tassoAnnuoInterrotto = calcolaTassoAnnuo(capitaleIniziale, capitaleInterrotto[anni], anni) * 100;
+
+            // Calcolo delle perdite percentuali rispetto al scenario "Non Tassato"
+            const perditaTaxAnnuale = (capitaleNoTax[anni] - capitaleTaxAnnuale[anni]) / capitaleNoTax[anni] * 100;
+            const perditaTaxFinale = (capitaleNoTax[anni] - capitaleTaxFinale[anni]) / capitaleNoTax[anni] * 100;
+            const perditaInterrotto = (capitaleNoTax[anni] - capitaleInterrotto[anni]) / capitaleNoTax[anni] * 100;
+
+            // Aggiorna i risultati testuali
+            document.getElementById('tassi_effettivi').innerHTML = `
+                <p><strong>Tassi annui effettivi:</strong></p>
+                <ul>
+                    <li>Non Tassato: ${tassoAnnuoNoTax.toFixed(2)}% annuo</li>
+                    <li>Tassato Ogni Anno: ${tassoAnnuoTaxAnnuale.toFixed(2)}% annuo</li>
+                    <li>Tassato Solo a Fine Periodo: ${tassoAnnuoTaxFinale.toFixed(2)}% annuo</li>
+                    <li>Interruzione a ${annoInterruzione} anni: ${tassoAnnuoInterrotto.toFixed(2)}% annuo</li>
+                </ul>
+            `;
+
+            document.getElementById('perdite_percentuali').innerHTML = `
+            <p><strong>Perdite percentuali rispetto allo scenario "Non Tassato":</strong></p>
+            <ul>
+                <li>Tassato Ogni Anno: ${perditaTaxAnnuale.toFixed(2)}%</li>
+                <li>Tassato Solo a Fine Periodo: ${perditaTaxFinale.toFixed(2)}%</li>
+                <li>Interruzione a ${annoInterruzione} anni: ${perditaInterrotto.toFixed(2)}%</li>
+            </ul>
+            <p><em>Spezzare l'investimento non influisce sull'interesse composto, a meno che non si debbano pagare le tasse.</em></p>
+            <p><em>Il caso "Tassato Solo a Fine Periodo" non avrà sempre perdita % rispetto al caso non tassato del 26% perchè la perdita tiene conto del valore iniziale. Se ho 100 €, arrivo a 110 €, pago il 26% di 10 € quindi non ho perso il 26% rispetto al caso non tassato, ho semplicemente perso il 26% delle plusvalenze (10 €)<p><em>
+            `;
+
+            // Preparazione dei dati per Chart.js
+            const labels = Array.from({ length: anni + 1 }, (_, i) => i);
+            const datasets = [
+                {
+                    label: `Non Tassato`,
+                    data: capitaleNoTax,
+                    borderColor: 'blue',
+                    backgroundColor: 'rgba(0, 0, 255, 0.1)',
+                    fill: false
+                },
+                {
+                    label: `Tassato Ogni Anno`,
+                    data: capitaleTaxAnnuale,
+                    borderColor: 'red',
+                    backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                    fill: false
+                },
+                {
+                    label: `Tassato Solo a Fine Periodo`,
+                    data: capitaleTaxFinale,
+                    borderColor: 'green',
+                    backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                    fill: false
+                },
+                {
+                    label: `Interruzione a ${annoInterruzione} anni`,
+                    data: capitaleInterrotto,
+                    borderColor: 'purple',
+                    backgroundColor: 'rgba(128, 0, 128, 0.1)',
+                    fill: false
+                }
+            ];
+
+            // Distruggi il grafico esistente se presente
+            if (window.myChartInstance) {
+                window.myChartInstance.destroy();
+            }
+
+            // Crea il nuovo grafico
+            const ctx = document.getElementById('myChart').getContext('2d');
+            window.myChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    elements: {
+                        point: {
+                            radius: 4, // Rimuove i punti dal grafico
+                            hoverRadius: 7 // Mostra i punti solo al passaggio del mouse
+                        },
+                        line: {
+                            tension: 0 // Disabilita le curve bezier per migliorare le prestazioni
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Crescita del Capitale: Confronto tra Diverse Modalità di Tassazione',
+                            font: { size: 16 }
+                        },
+                        legend: { position: 'top' },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function (tooltipItem) {
+                                    return `${tooltipItem.dataset.label}: ${tooltipItem.raw.toFixed(2)} €`;
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Anno'
+                                }
+                            },
+                            y: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Capitale'
+                                },
+                                grid: {
+                                    drawBorder: true,
+                                    color: 'rgba(0, 0, 0, 0.1)'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        document.getElementById('aggiorna').addEventListener('click', generaGrafico);
+
+        window.addEventListener('error', function (event) {
+            console.error('Errore JavaScript:', event.error);
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error').innerHTML = `<p>Errore: ${event.error.message}</p>`;
+        });
+    </script>
+</body>
+
+</html>

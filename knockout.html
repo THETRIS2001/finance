@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcolatore Knockout</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>">
+    <!-- Aggiungi MathJax per il rendering delle formule -->
+    <script type="text/javascript" async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Calcolatore Knockout</h1>
+        </header>
+        <main>
+            <a href="index.html" class="back-link">← Torna alla pagina principale</a>
+
+            <!-- Calcolatore -->
+            <div class="chart-container">
+                <h2>Calcolatore Relazione Leva-Knockout-Sottostante</h2>
+                <p>Calcola uno dei tre parametri conoscendone due: leva, livello knockout e valore sottostante.</p>
+                
+                <div id="messaggio_errore_relazione" style="margin-bottom: 20px; padding: 12px; background-color: #ffebee; border-left: 4px solid #f44336; border-radius: 4px; display: none;">
+                    <p id="testo_errore_relazione" style="margin: 0; color: #d32f2f;"></p>
+                </div>
+                
+                <div class="chart-controls">
+                    <div>
+                        <label for="sottostante">Valore sottostante:</label>
+                        <input type="number" id="sottostante" step="0.01" min="0" placeholder="Es: 100">
+                    </div>
+                    <div>
+                        <label for="knockout_leva">Valore knockout:</label>
+                        <input type="number" id="knockout_leva" step="0.01" min="0" placeholder="Es: 80">
+                    </div>
+                    <div>
+                        <label for="leva">Leva:</label>
+                        <input type="number" id="leva" step="0.01" min="0" placeholder="Es: 5">
+                    </div>
+                    <button id="calcola_relazione">Calcola</button>
+                    <button id="reset_relazione">Reset</button>
+                </div>
+                <div id="risultato_relazione" style="margin-top: 20px; padding: 15px; background-color: #ffffff; border-radius: 5px; display: none;">
+                    <h3>Risultato del calcolo</h3>
+                    <p id="risultato_relazione_testo" style="font-size: 1.2em; font-weight: bold;"></p>
+                    <p id="dettaglio_relazione"></p>
+                    <p id="percentuale_discesa" style="margin-top: 10px; font-size: 1.2em; font-weight: bold;"></p>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <h3>Formule utilizzate:</h3>
+                    <p>La formula che lega leva, sottostante e livello knockout è:</p>
+                    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                        <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                            \[ \text{leva} = \frac{\text{sottostante}}{\text{sottostante} - \text{knockout}} \]
+                        </p>
+                    </div>
+                    <p>Da questa formula si possono ricavare:</p>
+                    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                        <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                            \[ \text{knockout} = \text{sottostante} - \frac{\text{sottostante}}{\text{leva}} \]
+                        </p>
+                    </div>
+                    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                        <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                            \[ \text{sottostante} = \text{knockout} \times \frac{\text{leva}}{\text{leva} - 1} \]
+                        </p>
+                    </div>
+                    
+                    <p>La percentuale di discesa necessaria per raggiungere il knockout è calcolata con:</p>
+                    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                        <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                            \[ \text{percentuale di discesa} = \left(\frac{\text{sottostante} - \text{knockout}}{\text{sottostante}}\right) \times 100% \]
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementi del calcolatore
+            const sottostante = document.getElementById('sottostante');
+            const knockoutLeva = document.getElementById('knockout_leva');
+            const leva = document.getElementById('leva');
+            const calcolaRelazione = document.getElementById('calcola_relazione');
+            const resetRelazione = document.getElementById('reset_relazione');
+            const risultatoRelazione = document.getElementById('risultato_relazione');
+            const risultatoRelazioneTesto = document.getElementById('risultato_relazione_testo');
+            const dettaglioRelazione = document.getElementById('dettaglio_relazione');
+            const percentualeDiscesa = document.getElementById('percentuale_discesa');
+            const messaggioErroreRelazione = document.getElementById('messaggio_errore_relazione');
+            const testoErroreRelazione = document.getElementById('testo_errore_relazione');
+            
+            // Tiene traccia di quale campo è stato calcolato automaticamente
+            let campoCalcolato = null;
+            
+            // Funzione per mostrare errori nel calcolatore
+            function mostraErroreRelazione(messaggio) {
+                testoErroreRelazione.textContent = messaggio;
+                messaggioErroreRelazione.style.display = 'block';
+                risultatoRelazione.style.display = 'none';
+            }
+            
+            // Funzione per nascondere errori nel calcolatore
+            function nascondiErroreRelazione() {
+                messaggioErroreRelazione.style.display = 'none';
+            }
+            
+            // Funzione per calcolare la percentuale di discesa
+            function calcolaPercentualeDiscesa(vSottostante, vKnockout) {
+                return ((vSottostante - vKnockout) / vSottostante) * 100;
+            }
+            
+            // Funzione per gestire lo stato di input del calcolatore
+            function aggiornaStatiInputRelazione() {
+                const inputs = [sottostante, knockoutLeva, leva];
+                
+                // Ripristina lo stato di tutti i campi
+                inputs.forEach(input => {
+                    if (input !== campoCalcolato) {
+                        input.disabled = false;
+                        input.style.backgroundColor = '';
+                    }
+                });
+                
+                // Se un campo è stato calcolato, lo teniamo bloccato
+                if (campoCalcolato) {
+                    campoCalcolato.disabled = true;
+                    campoCalcolato.style.backgroundColor = '#ffffff';
+                    return;
+                }
+                
+                // Conteggio valori inseriti per gestire il blocco in fase di input
+                const valoriInseriti = inputs.filter(input => input.value.trim() !== '').length;
+                
+                // Solo se ci sono esattamente 2 valori inseriti, disabilitiamo il terzo
+                if (valoriInseriti === 2) {
+                    inputs.forEach(input => {
+                        if (input.value.trim() === '') {
+                            input.disabled = true;
+                            input.style.backgroundColor = '#ffffff';
+                        }
+                    });
+                }
+            }
+            
+            // Aggiungi event listener per gli input
+            [sottostante, knockoutLeva, leva].forEach(input => {
+                input.addEventListener('input', function() {
+                    // Se il campo modificato è diverso da quello calcolato, rimuoviamo lo stato di "calcolato"
+                    if (input !== campoCalcolato && campoCalcolato) {
+                        campoCalcolato = null;
+                    }
+                    aggiornaStatiInputRelazione();
+                });
+            });
+            
+            // Event listeners per il calcolatore
+            calcolaRelazione.addEventListener('click', function() {
+                nascondiErroreRelazione();
+                
+                const vSottostante = parseFloat(sottostante.value);
+                const vKnockout = parseFloat(knockoutLeva.value);
+                const vLeva = parseFloat(leva.value);
+                
+                let valoriInseriti = 0;
+                if (!isNaN(vSottostante)) valoriInseriti++;
+                if (!isNaN(vKnockout)) valoriInseriti++;
+                if (!isNaN(vLeva)) valoriInseriti++;
+                
+                if (valoriInseriti < 2) {
+                    mostraErroreRelazione("Inserisci almeno due valori per effettuare il calcolo.");
+                    return;
+                }
+                
+                if (valoriInseriti === 3) {
+                    mostraErroreRelazione("Inserisci solo due valori per effettuare il calcolo. Il terzo valore sarà calcolato automaticamente.");
+                    return;
+                }
+                
+                // Reset del campo calcolato
+                campoCalcolato = null;
+                
+                // Sottostante e knockout noti, calcola leva
+                if (!isNaN(vSottostante) && !isNaN(vKnockout) && isNaN(vLeva)) {
+                    if (vKnockout >= vSottostante) {
+                        mostraErroreRelazione("Il valore di knockout deve essere inferiore al valore del sottostante.");
+                        return;
+                    }
+                    
+                    const levaCalcolata = vSottostante / (vSottostante - vKnockout);
+                    leva.value = levaCalcolata.toFixed(2);
+                    risultatoRelazioneTesto.textContent = `La leva calcolata teorica è ${levaCalcolata.toFixed(2)}`;
+                    dettaglioRelazione.innerHTML = `Con sottostante a ${vSottostante.toFixed(2)} e knockout a ${vKnockout.toFixed(2)}`;
+                    
+                    // Calcola la percentuale di discesa
+                    const pDiscesa = calcolaPercentualeDiscesa(vSottostante, vKnockout);
+                    percentualeDiscesa.textContent = `Per raggiungere il knockout, il sottostante deve scendere del ${pDiscesa.toFixed(2)}%.`;
+                    
+                    risultatoRelazione.style.display = 'block';
+                    campoCalcolato = leva;
+                }
+                // Sottostante e leva noti, calcola knockout
+                else if (!isNaN(vSottostante) && isNaN(vKnockout) && !isNaN(vLeva)) {
+                    if (vLeva <= 1) {
+                        mostraErroreRelazione("La leva deve essere maggiore di 1.");
+                        return;
+                    }
+                    
+                    const knockoutCalcolato = vSottostante - (vSottostante / vLeva);
+                    knockoutLeva.value = knockoutCalcolato.toFixed(2);
+                    risultatoRelazioneTesto.textContent = `Il knockout calcolato è ${knockoutCalcolato.toFixed(2)}`;
+                    dettaglioRelazione.innerHTML = `Con sottostante a ${vSottostante.toFixed(2)} e leva ${vLeva.toFixed(2)}`;
+                    
+                    // Calcola la percentuale di discesa
+                    const pDiscesa = calcolaPercentualeDiscesa(vSottostante, knockoutCalcolato);
+                    percentualeDiscesa.textContent = `Per raggiungere il knockout, il sottostante deve scendere del ${pDiscesa.toFixed(2)}%.`;
+                    
+                    risultatoRelazione.style.display = 'block';
+                    campoCalcolato = knockoutLeva;
+                }
+                // Knockout e leva noti, calcola sottostante
+                else if (isNaN(vSottostante) && !isNaN(vKnockout) && !isNaN(vLeva)) {
+                    if (vLeva <= 1) {
+                        mostraErroreRelazione("La leva deve essere maggiore di 1.");
+                        return;
+                    }
+                    
+                    const sottostanteCalcolato = vKnockout * (vLeva / (vLeva - 1));
+                    sottostante.value = sottostanteCalcolato.toFixed(2);
+                    risultatoRelazioneTesto.textContent = `Il sottostante calcolato è ${sottostanteCalcolato.toFixed(2)}`;
+                    dettaglioRelazione.innerHTML = `Con knockout a ${vKnockout.toFixed(2)} e leva ${vLeva.toFixed(2)}`;
+                    
+                    // Calcola la percentuale di discesa
+                    const pDiscesa = calcolaPercentualeDiscesa(sottostanteCalcolato, vKnockout);
+                    percentualeDiscesa.textContent = `Per raggiungere il knockout, il sottostante deve scendere del ${pDiscesa.toFixed(2)}%.`;
+                    
+                    risultatoRelazione.style.display = 'block';
+                    campoCalcolato = sottostante;
+                }
+                
+                // Aggiorniamo lo stato degli input dopo il calcolo
+                aggiornaStatiInputRelazione();
+            });
+            
+            resetRelazione.addEventListener('click', function() {
+                sottostante.value = '';
+                knockoutLeva.value = '';
+                leva.value = '';
+                risultatoRelazione.style.display = 'none';
+                nascondiErroreRelazione();
+                
+                // Reset del campo calcolato
+                campoCalcolato = null;
+                
+                // Ripristina tutti i campi
+                [sottostante, knockoutLeva, leva].forEach(input => {
+                    input.disabled = false;
+                    input.style.backgroundColor = '';
+                });
+            });
+        });
+    </script>
+</body>
+
+</html> 

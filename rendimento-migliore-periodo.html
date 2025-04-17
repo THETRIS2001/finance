@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rendimento Migliore Scelto un Periodo</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1/dist/chartjs-adapter-moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Rendimento Migliore Scelto un Periodo</h1>
+        </header>
+        <main>
+            <a href="index.html" class="back-link">← Torna alla pagina principale</a>
+
+            <div class="chart-container">
+                <div class="chart-controls">
+                    <div>
+                        <label for="data_inizio">Data inizio:</label>
+                        <input type="date" id="data_inizio" value="2000-01-01">
+                    </div>
+                    <div>
+                        <label for="data_fine">Data fine:</label>
+                        <input type="date" id="data_fine">
+                    </div>
+                    <div>
+                        <label for="periodi_investimento">Periodi investimento (anni, separati da virgola):</label>
+                        <input type="text" id="periodi_investimento" value="1,5" placeholder="es: 1,3,5">
+                    </div>
+                    <div>
+                        <label for="leva">Leva:</label>
+                        <input type="number" id="leva" value="1" min="0.1" max="10" step="0.1">
+                    </div>
+                    <div>
+                        <label for="ticker">Ticker:</label>
+                        <select id="ticker">
+                            <option value="^GSPC">S&P 500</option>
+                            <option value="AAPL">Apple Inc.</option>
+                            <option value="MSFT">Microsoft Corporation</option>
+                            <option value="AMZN">Amazon.com, Inc.</option>
+                            <option value="GOOGL">Alphabet Inc. (Google)</option>
+                            <option value="TSLA">Tesla, Inc.</option>
+                            <option value="NVDA">Nvidia Corporation</option>
+                            <option value="V">Visa Inc.</option>
+                            <option value="JPM">JPMorgan Chase & Co.</option>
+                            <option value="JNJ">Johnson & Johnson</option>
+                            <option value="BTC-USD">Bitcoin</option>
+                            <option value="GLD">Gold</option>
+                        </select>
+                    </div>
+                    <button id="analizza">Analizza Rendimenti</button>
+                </div>
+
+                <div id="loading" style="display: none; text-align: center; margin: 20px;">
+                    <div class="spinner"></div>
+                    <p>Caricamento dati in corso... Questo potrebbe richiedere alcuni secondi.</p>
+                </div>
+
+                <div id="error"
+                    style="display: none; color: red; margin: 20px; padding: 15px; background-color: #ffeeee; border-radius: 5px;">
+                </div>
+
+                <div id="charts-container" style="display: none;">
+                    <div id="chart-wrapper-returns" style="height: 700px; margin-bottom: 30px;">
+                        <canvas id="returnsChart"></canvas>
+                    </div>
+
+                    <div id="chart-wrapper-price" style="height: 700px;">
+                        <canvas id="priceChart"></canvas>
+                    </div>
+
+                    <div id="stats-container"
+                        style="margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <h2>Statistiche dei Rendimenti</h2>
+                        <div style="overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch;">
+                            <table id="stats-table" style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                                <tbody id="stats-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section"
+                    style="margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h2>Note Importanti</h2>
+
+                    <div class="info-card" style="margin-bottom: 20px;">
+                        <h3>Interpretazione del Grafico dei Rendimenti</h3>
+                        <p>Il primo grafico <strong>non mostra l'andamento dell'azione scelta</strong>, ma mostra il
+                            <strong>risultato in percentuale</strong> di entrare nel mercato in quel momento specifico
+                            per il periodo di tempo selezionato.</p>
+                    </div>
+
+                    <div class="info-card" style="margin-bottom: 20px;">
+                        <h3>Miglior Periodo di Investimento</h3>
+                        <p>Il punto evidenziato in rosso rappresenta il momento di ingresso che avrebbe generato il
+                            rendimento massimo nel periodo analizzato. Il punto blu rappresenta invece il momento con il
+                            miglior rendimento annualizzato.</p>
+                    </div>
+
+                    <div class="info-card">
+                        <h3>Rendimento Annuo Medio Realistico</h3>
+                        <p>Questo valore è calcolato escludendo il 20% dei rendimenti più alti e più bassi, fornendo una
+                            stima più realistica del rendimento atteso in condizioni di mercato normali.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <script>
+        // Variabili globali per i grafici
+        let returnsChartInstance = null;
+        let priceChartInstance = null;
+
+        // Inizializzazione al caricamento della pagina
+        document.addEventListener('DOMContentLoaded', function () {
+            // Impostiamo la data di fine al giorno corrente
+            const oggi = new Date();
+            document.getElementById('data_fine').valueAsDate = oggi;
+            
+            // Aggiungiamo l'event listener per il pulsante di analisi
+            document.getElementById('analizza').addEventListener('click', analizza);
+        });
+
+        // Funzione per formattare le date
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        // Funzione principale per analizzare i rendimenti
+        async function analizza() {
+            try {
+                // Mostriamo il loader
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('error').style.display = 'none';
+                document.getElementById('charts-container').style.display = 'none';
+
+                // Otteniamo i parametri dall'interfaccia
+                const dataInizio = document.getElementById('data_inizio').value;
+                const ticker = document.getElementById('ticker').value;
+
+                // Recuperiamo i dati storici
+                await fetchStockData(ticker, dataInizio);
+            } catch (error) {
+                console.error('Errore nell\'analisi:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').innerHTML = `<p>Errore nell'analisi: ${error.message}</p>`;
+            }
+        }
+
+        // Funzione per calcolare il tasso annuo medio
+        function calcolaTassoAnnuo(iniziale, finale, anni) {
+            return Math.pow(finale / iniziale, 1 / anni) - 1;
+        }
+
+        // Funzione per ottenere i dati storici da Yahoo Finance
+        async function fetchStockData(ticker, startDate) {
+            try {
+                // Utilizziamo l'API di Yahoo Finance tramite proxy per evitare problemi CORS
+                const endDate = document.getElementById('data_fine').value ? new Date(document.getElementById('data_fine').value) : new Date();
+                const startDateFormatted = formatDate(new Date(startDate));
+                const endDateFormatted = formatDate(endDate);
+
+                // Costruiamo l'URL per l'API di Yahoo Finance usando il formato chart
+                const period1 = Math.floor(new Date(startDateFormatted).getTime() / 1000);
+                const period2 = Math.floor(endDate.getTime() / 1000);
+                const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/chart/${ticker}?period1=${period1}&period2=${period2}&interval=1d&events=history`;
+
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`;
+                /*const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`;*/
+
+                // Mostriamo il loader durante il caricamento
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('error').style.display = 'none';
+
+                const response = await fetch(proxyUrl);
+                const parsedData = await response.json();
+
+                if (!parsedData.chart || !parsedData.chart.result || parsedData.chart.result.length === 0) {
+                    throw new Error('Dati non disponibili');
+                }
+
+                const result = parsedData.chart.result[0];
+                const timestamps = result.timestamp;
+                const quotes = result.indicators.quote[0];
+                const closePrices = quotes.close;
+
+                // Creiamo un array di dati nel formato atteso da processStockData
+                const data = [];
+                for (let i = 0; i < timestamps.length; i++) {
+                    if (closePrices[i] !== null) {
+                        data.push({
+                            Date: new Date(timestamps[i] * 1000).toISOString().split('T')[0],
+                            Close: closePrices[i]
+                        });
+                    }
+                }
+
+                // Processiamo i dati
+                processStockData(data);
+                return data;
+            } catch (error) {
+                console.error('Errore nel recupero dei dati:', error);
+                throw error;
+            }
+        }
+
+        // Funzione per gestire il caricamento del file CSV
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const csvData = e.target.result;
+                    // Utilizziamo PapaParse per analizzare il CSV
+                    Papa.parse(csvData, {
+                        header: true,
+                        dynamicTyping: true,
+                        complete: function (results) {
+                            // Nascondiamo il messaggio di errore
+                            document.getElementById('error').style.display = 'none';
+                            // Processiamo i dati
+                            processStockData(results.data);
+                        },
+                        error: function (error) {
+                            console.error('Errore nell\'analisi del CSV:', error);
+                            document.getElementById('error').style.display = 'block';
+                            document.getElementById('error').innerHTML = `<p>Errore nell'analisi del file CSV: ${error.message}</p>`;
+                        }
+                    });
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        // Funzione per processare i dati delle azioni
+        function processStockData(data) {
+            try {
+                // Nascondiamo il loader
+                document.getElementById('loading').style.display = 'none';
+
+                // Otteniamo i parametri dall'interfaccia
+                const periodiInput = document.getElementById('periodi_investimento').value;
+                // Dividiamo i periodi separati da virgola e convertiamo in numeri
+                const periodiAnni = periodiInput.split(',').map(periodo => parseFloat(periodo.trim())).filter(periodo => !isNaN(periodo));
+                const leva = parseFloat(document.getElementById('leva').value);
+
+                // Filtriamo i dati per rimuovere eventuali righe incomplete
+                data = data.filter(row => row.Date && row.Close);
+
+                // Ordiniamo i dati per data
+                data.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+
+                // Calcoliamo i rendimenti giornalieri
+                const closePrices = data.map(row => row.Close || row['Adj Close']);
+                const dates = data.map(row => new Date(row.Date));
+
+                // Calcoliamo i rendimenti giornalieri
+                const dailyReturns = [];
+                for (let i = 1; i < closePrices.length; i++) {
+                    dailyReturns.push((closePrices[i] / closePrices[i - 1]) - 1);
+                }
+
+                // Applichiamo la leva ai rendimenti giornalieri
+                const leveragedReturns = dailyReturns.map(ret => leva * ret);
+
+                // Calcoliamo il valore cumulativo con leva
+                const leveragedData = [100]; // Partiamo da 100
+                for (let i = 0; i < leveragedReturns.length; i++) {
+                    leveragedData.push(leveragedData[leveragedData.length - 1] * (1 + leveragedReturns[i]));
+                }
+
+                // Creiamo un array per contenere i risultati di tutti i periodi
+                const tuttiRendimenti = [];
+                const tuttiMiglioriGiorni = [];
+                const tuttiMiglioriGiorniAnnui = [];
+                
+                // Per ogni periodo di investimento specificato
+                for (let p = 0; p < periodiAnni.length; p++) {
+                    const periodoAnni = periodiAnni[p];
+                    const periodoMesi = periodoAnni * 12;
+                    
+                    // Calcoliamo i rendimenti per il periodo specificato
+                    const giorni_investimento = Math.round(periodoMesi * 21); // Approssimativamente 21 giorni di trading per mese
+                    const rendimenti = {};
+
+                    for (let i = 0; i < leveragedData.length; i++) {
+                        if (i + giorni_investimento < leveragedData.length) {
+                            const data_ingresso = dates[i];
+                            const data_uscita = dates[i + giorni_investimento];
+                            const prezzo_ingresso = leveragedData[i];
+                            const prezzo_uscita = leveragedData[i + giorni_investimento];
+                            const rendimento = ((prezzo_uscita / prezzo_ingresso) - 1) * 100;
+                            rendimenti[data_ingresso] = { rendimento, data_uscita };
+                        }
+                    }
+
+                    // Convertiamo i rendimenti in un array per l'analisi
+                    const rendimentiArray = Object.entries(rendimenti).map(([data_ingresso, { rendimento, data_uscita }]) => {
+                        return {
+                            data_ingresso: new Date(data_ingresso),
+                            rendimento,
+                            data_uscita: new Date(data_uscita),
+                            periodo: periodoAnni
+                        };
+                    });
+
+                    // Calcoliamo le statistiche
+                    const rendimentiValues = rendimentiArray.map(r => r.rendimento);
+                    const negative_pct = (rendimentiValues.filter(r => r < 0).length / rendimentiValues.length) * 100;
+                    const max_ret = Math.max(...rendimentiValues);
+                    const min_ret = Math.min(...rendimentiValues);
+                    const mean_ret = rendimentiValues.reduce((a, b) => a + b, 0) / rendimentiValues.length;
+
+                    // Calcoliamo il rendimento annuo medio
+                    const rendimento_annuo_medio = ((1 + mean_ret / 100) ** (1 / periodoAnni) - 1) * 100;
+
+                    // Calcoliamo il rendimento annuo medio realistico (escludendo il 20% dei rendimenti più alti e più bassi)
+                    const sortedReturns = [...rendimentiValues].sort((a, b) => a - b);
+                    const lowerBoundIndex = Math.floor(sortedReturns.length * 0.2);
+                    const upperBoundIndex = Math.floor(sortedReturns.length * 0.8);
+                    const filteredReturns = sortedReturns.slice(lowerBoundIndex, upperBoundIndex);
+                    const filteredMeanRet = filteredReturns.reduce((a, b) => a + b, 0) / filteredReturns.length;
+                    const rendimento_annuo_medio_realistico = ((1 + filteredMeanRet / 100) ** (1 / periodoAnni) - 1) * 100;
+
+                    // Troviamo il miglior giorno d'ingresso (rendimento massimo)
+                    const migliorRendimentoIndex = rendimentiValues.indexOf(max_ret);
+                    const migliorGiorno = rendimentiArray[migliorRendimentoIndex]?.data_ingresso;
+                    const migliorDataUscita = rendimentiArray[migliorRendimentoIndex]?.data_uscita;
+                    const migliorRendimento = max_ret;
+                    const rendimentoAnnuo = ((1 + migliorRendimento / 100) ** (1 / periodoAnni) - 1) * 100;
+
+                    // Troviamo il miglior giorno d'ingresso per rendimento annualizzato
+                    const rendimentiAnnui = rendimentiArray.map(r => {
+                        return {
+                            ...r,
+                            rendimento_annuo: ((1 + r.rendimento / 100) ** (1 / periodoAnni) - 1) * 100
+                        };
+                    });
+
+                    const maxRendimentoAnnuo = Math.max(...rendimentiAnnui.map(r => r.rendimento_annuo));
+                    const migliorGiornoAnnuoIndex = rendimentiAnnui.findIndex(r => r.rendimento_annuo === maxRendimentoAnnuo);
+                    const migliorGiornoAnnuo = rendimentiAnnui[migliorGiornoAnnuoIndex]?.data_ingresso;
+                    const migliorDataUscitaAnnuo = rendimentiAnnui[migliorGiornoAnnuoIndex]?.data_uscita;
+                    const migliorRendimentoAnnuo = rendimentiAnnui[migliorGiornoAnnuoIndex]?.rendimento;
+                    
+                    // Aggiungiamo i risultati di questo periodo all'array di tutti i rendimenti
+                    tuttiRendimenti.push({
+                        periodo: periodoAnni,
+                        rendimentiArray: rendimentiArray,
+                        stats: {
+                            periodoMesi: periodoMesi.toFixed(1),
+                            periodoAnni: periodoAnni.toFixed(2),
+                            negative_pct: negative_pct.toFixed(2) + '%',
+                            max_ret: max_ret.toFixed(2) + '%',
+                            min_ret: min_ret.toFixed(2) + '%',
+                            mean_ret: mean_ret.toFixed(2) + '%',
+                            rendimento_annuo_medio: rendimento_annuo_medio.toFixed(2) + '% / annuo',
+                            rendimento_annuo_medio_realistico: rendimento_annuo_medio_realistico.toFixed(2) + '% / annuo'
+                        }
+                    });
+                    
+                    // Aggiungiamo i migliori giorni per questo periodo
+                    if (migliorGiorno && migliorDataUscita) {
+                        tuttiMiglioriGiorni.push({
+                            periodo: periodoAnni,
+                            giorno: migliorGiorno,
+                            dataUscita: migliorDataUscita,
+                            rendimento: migliorRendimento,
+                            rendimentoAnnuo: rendimentoAnnuo
+                        });
+                    }
+                    
+                    if (migliorGiornoAnnuo && migliorDataUscitaAnnuo) {
+                        tuttiMiglioriGiorniAnnui.push({
+                            periodo: periodoAnni,
+                            giorno: migliorGiornoAnnuo,
+                            dataUscita: migliorDataUscitaAnnuo,
+                            rendimento: migliorRendimentoAnnuo,
+                            rendimentoAnnuo: maxRendimentoAnnuo
+                        });
+                    }
+                } // Fine del ciclo per ogni periodo
+                
+                // Mostriamo i grafici con tutti i periodi
+                createReturnsChart(tuttiRendimenti, tuttiMiglioriGiorni, tuttiMiglioriGiorniAnnui);
+                createPriceChart(dates, leveragedData, tuttiMiglioriGiorni, tuttiMiglioriGiorniAnnui);
+                
+                // Aggiorniamo la tabella delle statistiche con tutti i periodi in formato tabellare
+                if (tuttiRendimenti.length > 0) {
+                    // Creiamo un array di oggetti con le statistiche per ogni periodo
+                    const statsArray = [];
+                    
+                    for (let i = 0; i < tuttiRendimenti.length; i++) {
+                        const periodoStats = tuttiRendimenti[i].stats;
+                        const periodo = tuttiRendimenti[i].periodo;
+                        const migliorGiorno = tuttiMiglioriGiorni.find(mg => mg.periodo === periodo);
+                        // Creiamo un oggetto con le statistiche di base per questo periodo
+                        const periodoObj = {
+                            'Anni': Math.round(periodoStats.periodoAnni),
+                            'Mesi': Math.round(periodoStats.periodoMesi),
+                            '% giorni negativi': periodoStats.negative_pct,
+                            'Rendimento massimo (%)': periodoStats.max_ret,
+                            'Rendimento massimo annualizzato (%)': migliorGiorno?.rendimentoAnnuo.toFixed(2) + '% / annuo',
+                            'Rendimento minimo (%)': periodoStats.min_ret,
+                            'Rendimento medio (%)': periodoStats.mean_ret,
+                            'Rendimento annuo medio (%)': periodoStats.rendimento_annuo_medio,
+                            'Rendimento annuo medio realistico (%)': periodoStats.rendimento_annuo_medio_realistico
+                        };
+                        
+                        // Aggiungiamo informazioni sui migliori giorni per questo periodo
+                        
+                        if (migliorGiorno) {
+                            periodoObj['Miglior data ingresso'] = migliorGiorno.giorno.toLocaleDateString();
+                            periodoObj['Miglior data uscita'] = migliorGiorno.dataUscita.toLocaleDateString();
+                        }
+                        
+                        // Aggiungiamo informazioni sui migliori giorni per rendimento annualizzato
+                        const migliorGiornoAnnuo = tuttiMiglioriGiorniAnnui.find(mg => mg.periodo === periodo);
+                        
+                        statsArray.push(periodoObj);
+                    }
+                    
+                    updateStatsTable(statsArray);
+                }
+                
+                // Mostriamo il container dei grafici
+                document.getElementById('charts-container').style.display = 'block';
+
+                // Mostriamo il container dei grafici
+                document.getElementById('charts-container').style.display = 'block';
+            } catch (error) {
+                console.error('Errore nell\'elaborazione dei dati:', error);
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').innerHTML = `<p>Errore nell'elaborazione dei dati: ${error.message}</p>`;
+            }
+        }
+
+        // Funzione per creare il grafico dei rendimenti
+        function createReturnsChart(tuttiRendimenti, tuttiMiglioriGiorni, tuttiMiglioriGiorniAnnui) {
+            // Distruggiamo il grafico esistente se presente
+            if (returnsChartInstance) {
+                returnsChartInstance.destroy();
+            }
+
+            // Assicuriamoci che il container dei grafici sia visibile
+            document.getElementById('charts-container').style.display = 'block';
+            
+            // Creiamo il nuovo grafico
+            const ctx = document.getElementById('returnsChart').getContext('2d');
+            console.log('Inizializzazione grafico dei rendimenti...');
+            
+            // Colori predefiniti per i diversi periodi
+            const colors = [
+                { bg: 'rgba(0, 123, 255, 0.5)', border: 'rgba(0, 123, 255, 1)' },  // Blu
+                { bg: 'rgba(40, 167, 69, 0.5)', border: 'rgba(40, 167, 69, 1)' },    // Verde
+                { bg: 'rgba(220, 53, 69, 0.5)', border: 'rgba(220, 53, 69, 1)' },     // Rosso
+                { bg: 'rgba(255, 193, 7, 0.5)', border: 'rgba(255, 193, 7, 1)' },     // Giallo
+                { bg: 'rgba(111, 66, 193, 0.5)', border: 'rgba(111, 66, 193, 1)' },   // Viola
+                { bg: 'rgba(23, 162, 184, 0.5)', border: 'rgba(23, 162, 184, 1)' }     // Ciano
+            ];
+            
+            // Prepariamo i dataset per ogni periodo
+            const datasets = [];
+            
+            // Aggiungiamo un dataset per ogni periodo (solo le linee di rendimento)
+            for (let i = 0; i < tuttiRendimenti.length; i++) {
+                const periodo = tuttiRendimenti[i].periodo;
+                const rendimentiArray = tuttiRendimenti[i].rendimentiArray;
+                const colorIndex = i % colors.length;
+                
+                // Dataset per i rendimenti di questo periodo
+                datasets.push({
+                    label: `Rendimenti (${periodo} anni)`,
+                    data: rendimentiArray.map(r => ({
+                        x: r.data_ingresso,
+                        y: r.rendimento
+                    })),
+                    backgroundColor: colors[colorIndex].bg,
+                    borderColor: colors[colorIndex].border,
+                    borderWidth: 1,
+                    pointRadius: 0,
+                    pointHoverRadius: 5
+                });
+            }
+            
+            // Troviamo il miglior rendimento complessivo (il più alto tra tutti i periodi)
+            let migliorRendimentoComplessivo = null;
+            let migliorRendimentoCompletoInfo = null;
+            
+            for (let i = 0; i < tuttiMiglioriGiorni.length; i++) {
+                const migliorGiorno = tuttiMiglioriGiorni[i];
+                if (migliorRendimentoComplessivo === null || migliorGiorno.rendimento > migliorRendimentoComplessivo) {
+                    migliorRendimentoComplessivo = migliorGiorno.rendimento;
+                    migliorRendimentoCompletoInfo = {
+                        periodo: migliorGiorno.periodo,
+                        giorno: migliorGiorno.giorno,
+                        rendimento: migliorGiorno.rendimento,
+                        rendimentoAnnuo: migliorGiorno.rendimentoAnnuo
+                    };
+                }
+            }
+            
+            // Troviamo il miglior rendimento annualizzato (il più alto tra tutti i periodi)
+            let migliorRendimentoAnnuoComplessivo = null;
+            let migliorRendimentoAnnuoInfo = null;
+            
+            for (let i = 0; i < tuttiMiglioriGiorniAnnui.length; i++) {
+                const migliorGiornoAnnuo = tuttiMiglioriGiorniAnnui[i];
+                if (migliorRendimentoAnnuoComplessivo === null || migliorGiornoAnnuo.rendimentoAnnuo > migliorRendimentoAnnuoComplessivo) {
+                    migliorRendimentoAnnuoComplessivo = migliorGiornoAnnuo.rendimentoAnnuo;
+                    migliorRendimentoAnnuoInfo = {
+                        periodo: migliorGiornoAnnuo.periodo,
+                        giorno: migliorGiornoAnnuo.giorno,
+                        rendimento: migliorGiornoAnnuo.rendimento,
+                        rendimentoAnnuo: migliorGiornoAnnuo.rendimentoAnnuo
+                    };
+                }
+            }
+            
+            // Aggiungiamo il punto per il miglior rendimento complessivo
+            if (migliorRendimentoCompletoInfo) {
+                datasets.push({
+                    label: `Miglior rendimento: ${migliorRendimentoCompletoInfo.rendimento.toFixed(2)}% (${migliorRendimentoCompletoInfo.periodo} anni)`,
+                    data: [{ x: migliorRendimentoCompletoInfo.giorno, y: migliorRendimentoCompletoInfo.rendimento }],
+                    backgroundColor: 'rgba(255, 0, 0, 1)',
+                    borderColor: 'rgba(255, 0, 0, 1)',
+                    borderWidth: 1,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    order: -1, // Valore più basso per essere disegnato sopra (in primo piano)
+                    z: 10 // Valore più alto per essere in primo piano
+                });
+            }
+            
+            // Aggiungiamo il punto per il miglior rendimento annualizzato
+            if (migliorRendimentoAnnuoInfo) {
+                datasets.push({
+                    label: `Miglior rendimento annuo: ${migliorRendimentoAnnuoInfo.rendimentoAnnuo.toFixed(2)}% annuo (${migliorRendimentoAnnuoInfo.periodo} anni)`,
+                    data: [{ x: migliorRendimentoAnnuoInfo.giorno, y: migliorRendimentoAnnuoInfo.rendimento }],
+                    backgroundColor: 'rgba(0, 0, 255, 1)',
+                    borderColor: 'rgba(0, 0, 255, 1)',
+                    borderWidth: 1,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    order: -2, // Valore più basso per essere disegnato sopra (in primo piano)
+                    z: 10 // Valore più alto per essere in primo piano
+                });
+            }
+            
+            returnsChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    elements: {
+                        point: {
+                            radius: 0, // Rimuove i punti dal grafico
+                            hoverRadius: 7 // Mostra i punti solo al passaggio del mouse
+                        },
+                        line: {
+                            tension: 0.4 // Aggiunge una leggera curva per rendere la linea più fluida
+                        }
+                    },
+                    plugins: {
+                        annotation: {
+                            annotations: {
+                                zeroLine: {
+                                    type: 'line',
+                                    yMin: 0,
+                                    yMax: 0,
+                                    borderColor: 'black',
+                                    borderWidth: 2,
+                                    borderDash: [5, 5],
+                                    drawTime: 'beforeDatasetsDraw'
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Rendimenti per Diversi Periodi di Investimento',
+                            font: { size: 16 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const point = context.raw;
+                                    const date = new Date(point.x);
+                                    
+                                    // Cerchiamo la data di uscita corrispondente nei dati originali
+                                    let dataUscita = null;
+                                    const datasetIndex = context.datasetIndex;
+                                    const datasetLabel = context.dataset.label;
+                                    
+                                    // Se è un punto normale (non un punto speciale come miglior rendimento)
+                                    if (datasetLabel.includes('Rendimenti (')) {
+                                        // Troviamo il periodo corrispondente dal label (es. "Rendimenti (5 anni)")
+                                        const periodoMatch = datasetLabel.match(/\((\d+) anni\)/);
+                                        if (periodoMatch && periodoMatch[1]) {
+                                            const periodo = parseFloat(periodoMatch[1]);
+                                            
+                                            // Troviamo i dati originali per questo periodo
+                                            const periodoData = tuttiRendimenti.find(r => r.periodo === periodo);
+                                            if (periodoData) {
+                                                // Troviamo il rendimento specifico per questa data di ingresso
+                                                const rendimento = periodoData.rendimentiArray.find(r => 
+                                                    r.data_ingresso.getTime() === date.getTime());
+                                                if (rendimento) {
+                                                    dataUscita = rendimento.data_uscita;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Se abbiamo trovato la data di uscita, la mostriamo
+                                    if (dataUscita) {
+                                        const dataIngressoFormattata = date.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' });
+                                        const dataUscitaFormattata = dataUscita.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' });
+                                        return `Intervallo: ${dataIngressoFormattata} - ${dataUscitaFormattata}, Rendimento: ${point.y.toFixed(2)}%`;
+                                    } else {
+                                        // Fallback al comportamento originale
+                                        return `Data: ${date.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}, Rendimento: ${point.y.toFixed(2)}%`;
+                                    }
+                                },
+                                title: function(tooltipItems) {
+                                    const date = new Date(tooltipItems[0].raw.x);
+                                    return date.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' });
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'month',
+                                displayFormats: {
+                                    month: 'MMM YYYY'
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Data di Ingresso'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Rendimento (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Funzione per creare il grafico del prezzo
+        function createPriceChart(dates, leveragedData, tuttiMiglioriGiorni, tuttiMiglioriGiorniAnnui) {
+            // Prepariamo i dati per il grafico
+            const data = [];
+            for (let i = 0; i < dates.length && i < leveragedData.length; i++) {
+                data.push({
+                    x: dates[i],
+                    y: leveragedData[i]
+                });
+            }
+            
+            // Definiamo una palette di colori per i diversi periodi
+            // Colori per i migliori rendimenti assoluti (stesso colore per ingresso/uscita)
+            const coloriRendimentiAssoluti = [
+                { ingresso: 'rgba(255, 0, 0, 0.7)', uscita: 'rgba(255, 0, 0, 0.7)' },  // rosso
+                { ingresso: 'rgba(0, 128, 0, 0.7)', uscita: 'rgba(0, 128, 0, 0.7)' }, // verde scuro
+                { ingresso: 'rgba(128, 0, 128, 0.7)', uscita: 'rgba(128, 0, 128, 0.7)' }, // viola
+                { ingresso: 'rgba(165, 42, 42, 0.7)', uscita: 'rgba(165, 42, 42, 0.7)' },  // marrone
+                { ingresso: 'rgba(0, 139, 139, 0.7)', uscita: 'rgba(0, 139, 139, 0.7)' }   // teal
+            ];
+            
+            // Colori per i migliori rendimenti annui (stesso colore per ingresso/uscita)
+            const coloriRendimentiAnnui = [
+                { ingresso: 'rgba(0, 0, 255, 0.7)', uscita: 'rgba(0, 0, 255, 0.7)' },   // blu
+                { ingresso: 'rgba(220, 20, 60, 0.7)', uscita: 'rgba(220, 20, 60, 0.7)' },  // cremisi
+                { ingresso: 'rgba(75, 0, 130, 0.7)', uscita: 'rgba(75, 0, 130, 0.7)' },  // indaco
+                { ingresso: 'rgba(0, 100, 0, 0.7)', uscita: 'rgba(0, 100, 0, 0.7)' },    // verde foresta
+                { ingresso: 'rgba(184, 134, 11, 0.7)', uscita: 'rgba(184, 134, 11, 0.7)' }  // marrone dorato
+            ];
+            
+            // Verifichiamo che ci siano dati validi per i migliori giorni
+            const annotations = {};
+
+            // Distruggiamo il grafico esistente se presente
+            if (priceChartInstance) {
+                priceChartInstance.destroy();
+            }
+
+            // Creiamo le annotazioni per tutti i periodi
+            // Iteriamo su tutti i periodi per i migliori rendimenti assoluti
+            for (let i = 0; i < tuttiMiglioriGiorni.length; i++) {
+                const periodo = tuttiMiglioriGiorni[i].periodo;
+                const giorno = tuttiMiglioriGiorni[i].giorno;
+                const dataUscita = tuttiMiglioriGiorni[i].dataUscita;
+                const colorIndex = i % coloriRendimentiAssoluti.length;
+                
+                // Aggiungiamo l'annotazione per il giorno di ingresso
+                annotations[`migliorGiorno_${i}`] = {
+                    type: 'line',
+                    xMin: giorno,
+                    xMax: giorno,
+                    borderColor: coloriRendimentiAssoluti[colorIndex].ingresso,
+                    borderWidth: 3,
+                    label: {
+                        content: `Ingresso ${periodo} anni`,
+                        enabled: true,
+                        position: 'start'
+                    }
+                };
+                
+                // Aggiungiamo l'annotazione per il giorno di uscita
+                annotations[`migliorDataUscita_${i}`] = {
+                    type: 'line',
+                    xMin: dataUscita,
+                    xMax: dataUscita,
+                    borderColor: coloriRendimentiAssoluti[colorIndex].uscita,
+                    borderWidth: 3,
+                    label: {
+                        content: `Uscita ${periodo} anni`,
+                        enabled: true,
+                        position: 'start'
+                    }
+                };
+            }
+            
+            // Iteriamo su tutti i periodi per i migliori rendimenti annui
+            for (let i = 0; i < tuttiMiglioriGiorniAnnui.length; i++) {
+                const periodo = tuttiMiglioriGiorniAnnui[i].periodo;
+                const giorno = tuttiMiglioriGiorniAnnui[i].giorno;
+                const dataUscita = tuttiMiglioriGiorniAnnui[i].dataUscita;
+                const colorIndex = i % coloriRendimentiAnnui.length;
+                
+                // Aggiungiamo l'annotazione per il giorno di ingresso annuo
+                annotations[`migliorGiornoAnnuo_${i}`] = {
+                    type: 'line',
+                    xMin: giorno,
+                    xMax: giorno,
+                    borderColor: coloriRendimentiAnnui[colorIndex].ingresso,
+                    borderWidth: 3,
+                    label: {
+                        content: `Ingresso Annuo ${periodo} anni`,
+                        enabled: true,
+                        position: 'end'
+                    }
+                };
+                
+                // Aggiungiamo l'annotazione per il giorno di uscita annuo
+                annotations[`migliorDataUscitaAnnuo_${i}`] = {
+                    type: 'line',
+                    xMin: dataUscita,
+                    xMax: dataUscita,
+                    borderColor: coloriRendimentiAnnui[colorIndex].uscita,
+                    borderWidth: 3,
+                    label: {
+                        content: `Uscita Annuo ${periodo} anni`,
+                        enabled: true,
+                        position: 'end'
+                    }
+                };
+            }
+
+            // Creiamo il nuovo grafico
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            priceChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Prezzo con Leva',
+                            data: data,
+                            borderColor: 'rgba(40, 167, 69, 1)',
+                            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                            fill: false,
+                            borderWidth: 1,
+                            pointRadius: 0,
+                            pointHoverRadius: 5,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Variazione percentuale nel Periodo Analizzato',
+                            font: { size: 16 }
+                        },
+                        annotation: {
+                            annotations: {
+                                ...annotations,
+                                lineaRiferimento100: {
+                                    type: 'line',
+                                    yMin: 100,
+                                    yMax: 100,
+                                    borderColor: 'rgba(0, 0, 0, 0.5)',
+                                    borderWidth: 2,
+                                    borderDash: [5, 5],
+                                    label: {
+                                        content: '100%',
+                                        enabled: true,
+                                        position: 'start'
+                                    }
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    const date = new Date(tooltipItems[0].raw.x);
+                                    return date.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
+                                },
+                                label: function(tooltipItem) {
+                                    const leva = parseFloat(document.getElementById('leva').value);
+                                    if (leva === 1) {
+                                        return `Rispetto all'inizio: ${(tooltipItem.raw.y-100).toFixed(2)} %`;
+                                    } else {
+                                        return `Rispetto all'inizio con leva ${leva.toFixed(1)}: ${(tooltipItem.raw.y-100).toFixed(2)} %`;
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'month',
+                                displayFormats: {
+                                    month: 'MMM YYYY'
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Data'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Valore'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Funzione per aggiornare la tabella delle statistiche
+        function updateStatsTable(stats) {
+            const tbody = document.getElementById('stats-body');
+            tbody.innerHTML = '';
+            
+            // Aggiorniamo lo stile della tabella per gestire meglio le colonne
+            const table = document.getElementById('stats-table');
+            table.style.tableLayout = 'auto'; // Permette alle colonne di adattarsi al contenuto
+            
+            // Se stats è un array di oggetti, dobbiamo creare una tabella con periodi per righe
+            if (Array.isArray(stats) && stats.length > 0) {
+                // Otteniamo tutte le chiavi (metriche) dal primo oggetto
+                const metriche = Object.keys(stats[0]);
+                
+                // Creiamo la riga di intestazione con tutte le colonne
+                const headerRow = document.createElement('tr');
+                headerRow.style.backgroundColor = '#e9ecef';
+                
+                // Aggiungiamo la cella di intestazione per la colonna dei periodi
+                const periodoHeaderCell = document.createElement('th');
+                periodoHeaderCell.style.padding = '10px';
+                periodoHeaderCell.style.textAlign = 'left';
+                periodoHeaderCell.style.border = '1px solid #dee2e6';
+                periodoHeaderCell.style.whiteSpace = 'nowrap'; // Impedisce il wrapping del testo
+                periodoHeaderCell.textContent = 'Periodo';
+                headerRow.appendChild(periodoHeaderCell);
+                
+                // Aggiungiamo le celle di intestazione per ogni metrica
+                metriche.forEach(metrica => {
+                    const metricaHeaderCell = document.createElement('th');
+                    metricaHeaderCell.style.padding = '10px';
+                    metricaHeaderCell.style.textAlign = 'right';
+                    metricaHeaderCell.style.border = '1px solid #dee2e6';
+                    metricaHeaderCell.style.whiteSpace = 'nowrap'; // Impedisce il wrapping del testo
+                    metricaHeaderCell.style.minWidth = 'fit-content'; // Assicura che la colonna sia abbastanza larga
+                    metricaHeaderCell.textContent = metrica;
+                    headerRow.appendChild(metricaHeaderCell);
+                });
+                
+                tbody.appendChild(headerRow);
+                
+                // Creiamo una riga per ogni periodo
+                stats.forEach((statObj, index) => {
+                    const row = document.createElement('tr');
+                    
+                    // Aggiungiamo la cella con l'identificatore del periodo
+                    const periodoCell = document.createElement('td');
+                    periodoCell.style.padding = '8px';
+                    periodoCell.style.fontWeight = 'bold';
+                    periodoCell.style.border = '1px solid #dee2e6';
+                    periodoCell.style.whiteSpace = 'nowrap'; // Impedisce il wrapping del testo
+                    periodoCell.textContent = `Periodo ${index + 1}`;
+                    row.appendChild(periodoCell);
+                    
+                    // Aggiungiamo una cella per ogni metrica di questo periodo
+                    metriche.forEach(metrica => {
+                        const valueCell = document.createElement('td');
+                        valueCell.style.padding = '8px';
+                        valueCell.style.border = '1px solid #dee2e6';
+                        valueCell.style.textAlign = 'right';
+                        valueCell.style.whiteSpace = 'nowrap'; // Impedisce il wrapping del testo
+                        valueCell.textContent = statObj[metrica] || '-';
+                        row.appendChild(valueCell);
+                    });
+                    
+                    tbody.appendChild(row);
+                });
+            } else if (typeof stats === 'object' && stats !== null) {
+                // Caso di un singolo oggetto (per retrocompatibilità)
+                // Convertiamo in array e richiamiamo la stessa funzione
+                updateStatsTable([stats]);
+            }
+        else if (!stats || typeof stats !== 'object') {
+            // Comportamento originale per un singolo oggetto
+            for (const [key, value] of Object.entries(stats)) {
+                const row = document.createElement('tr');
+
+                const keyCell = document.createElement('td');
+                keyCell.style.padding = '8px';
+                keyCell.style.border = '1px solid #dee2e6';
+                keyCell.style.whiteSpace = 'nowrap'; // Impedisce il wrapping del testo
+                keyCell.textContent = key;
+
+                const valueCell = document.createElement('td');
+                valueCell.style.padding = '8px';
+                valueCell.style.border = '1px solid #dee2e6';
+                valueCell.style.textAlign = 'right';
+                valueCell.style.whiteSpace = 'nowrap'; // Impedisce il wrapping del testo
+                valueCell.textContent = value;
+
+                row.appendChild(keyCell);
+                row.appendChild(valueCell);
+                tbody.appendChild(row);
+            }
+        }
+    }
+</script>
+</body>
+
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcolatore Percentuale Precedente</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Aggiungi MathJax per il rendering delle formule -->
+    <script type="text/javascript" async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Calcolatore Percentuale Precedente</h1>
+        </header>
+        <main>
+            <a href="index.html" class="back-link">← Torna alla pagina principale</a>
+
+            <div class="chart-container">
+                <div class="chart-controls">
+                    <div>
+                        <label for="percentuale_extra">Percentuale extra da ieri (%):</label>
+                        <input type="number" id="percentuale_extra" value="16" step="0.01">
+                    </div>
+                    <div>
+                        <label for="percentuale_oggi">Percentuale oggi rispetto all'inizio (%):</label>
+                        <input type="number" id="percentuale_oggi" value="-48" step="0.01">
+                    </div>
+                    <div>
+                        <label for="guadagno_oggi">Guadagno/perdita oggi rispetto all'inizio (€):</label>
+                        <input type="number" id="guadagno_oggi" value="-150" step="0.01">
+                    </div>
+                    <button id="calcola">Calcola Valori Precedenti</button>
+                </div>
+                <div id="risultato" style="margin-top: 20px; padding: 15px; background-color: #ffffff; border-radius: 5px; display: none;">
+                    <h3>Risultato del calcolo</h3>
+                    <p id="percentuale_ieri" style="font-size: 1.2em; font-weight: bold;"></p>
+                    <p id="guadagno_ieri" style="font-size: 1.2em; font-weight: bold;"></p>
+                    <p id="guadagno_rispetto_a_ieri" style="font-size: 1.2em; font-weight: bold;"></p>
+                    <p id="dettagli_calcolo"></p>
+                </div>
+            </div>
+
+            <section>
+                <h2>Note sul Calcolo</h2>
+                <p>Questo calcolatore determina la percentuale precedente e il guadagno/perdita precedente basandosi sui valori attuali e sulla Percentuale extra da ieri.</p>
+                
+                <h3>Formula per la percentuale precedente:</h3>
+                <p>La percentuale precedente è calcolata con la seguente formula:</p>
+                <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                        \[ (1 + \frac{\text{percentuale ieri}}{100}) \times (1 + \frac{\text{Percentuale extra da ieri}}{100}) = (1 + \frac{\text{percentuale oggi}}{100}) \]
+                    </p>
+                </div>
+                
+                <h3>Formula per il guadagno/perdita precedente:</h3>
+                <p>Il guadagno/perdita precedente è calcolato con la seguente proporzione:</p>
+                <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                        \[ \frac{\text{guadagno ieri}}{\text{percentuale ieri}} = \frac{\text{guadagno oggi}}{\text{percentuale oggi}} \]
+                    </p>
+                </div>
+                
+                <h3>Esempio:</h3>
+                <p>Se abbiamo:</p>
+                <ul>
+                    <li>Percentuale extra da ieri: +16%</li>
+                    <li>Percentuale oggi: -48%</li>
+                    <li>Guadagno/perdita oggi: -150€</li>
+                </ul>
+                <p>Allora:</p>
+                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                    \[ (1 + \frac{x}{100}) \times (1 + 0.16) = (1 - 0.48) \]
+                    <br>
+                    \[ (1 + \frac{x}{100}) \times 1.16 = 0.52 \]
+                    <br>
+                    \[ (1 + \frac{x}{100}) = \frac{0.52}{1.16} \approx 0.448 \]
+                    <br>
+                    \[ \frac{x}{100} = 0.448 - 1 = -0.552 \]
+                    <br>
+                    \[ x = -55.2% \]
+                </p>
+                <p>E per il guadagno/perdita precedente:</p>
+                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                    \[ \frac{\text{guadagno ieri}}{-55.2} = \frac{-150}{-48} \]
+                    <br>
+                    \[ \text{guadagno ieri} = \frac{-55.2 \times (-150)}{-48} \approx -172.5€ \]
+                </p>
+            </section>
+        </main>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Aggiungi event listener per il pulsante di calcolo
+            document.getElementById('calcola').addEventListener('click', calcolaValoriPrecedenti);
+        });
+        
+        // Funzione per calcolare i valori precedenti
+        function calcolaValoriPrecedenti() {
+            // Ottieni i valori dai campi di input
+            const percentualeExtra = parseFloat(document.getElementById('percentuale_extra').value) / 100;
+            const percentualeoggi = parseFloat(document.getElementById('percentuale_oggi').value) / 100;
+            const guadagnooggi = parseFloat(document.getElementById('guadagno_oggi').value);
+            
+            // Calcola la percentuale precedente
+            // (1 + percentualeIeri/100) * (1 + percentualeExtra) = (1 + percentualeoggi)
+            // (1 + percentualeIeri/100) = (1 + percentualeoggi) / (1 + percentualeExtra)
+            const fattoreIeri = (1 + percentualeoggi) / (1 + percentualeExtra);
+            const percentualeIeri = (fattoreIeri - 1) * 100;
+            
+            // Calcola il guadagno/perdita precedente usando la proporzione
+            // guadagnoIeri / percentualeIeri = guadagnooggi / percentualeoggi
+            // guadagnoIeri = (percentualeIeri * guadagnooggi) / percentualeoggi
+            const guadagnoIeri = (percentualeIeri * guadagnooggi) / (percentualeoggi * 100);
+            
+            // Mostra i risultati
+            document.getElementById('percentuale_ieri').textContent = `Percentuale ieri rispetto all'inizio: ${percentualeIeri.toFixed(2)}%`;
+            document.getElementById('guadagno_ieri').textContent = `Guadagno/perdita ieri rispetto all'inizio: ${guadagnoIeri.toFixed(2)}€`;
+            document.getElementById('guadagno_rispetto_a_ieri').textContent = `Guadagno/perdita rispetto a ieri: ${(guadagnooggi - guadagnoIeri).toFixed(2)}€`;
+
+            
+            // Aggiungi dettagli del calcolo
+            let dettagli = `Calcolo percentuale ieri: (1 + ${percentualeoggi.toFixed(4)}) / (1 + ${percentualeExtra.toFixed(4)}) - 1 = ${(fattoreIeri - 1).toFixed(4)} = ${percentualeIeri.toFixed(2)}%<br>`;
+            dettagli += `Calcolo guadagno/perdita ieri: (${percentualeIeri.toFixed(2)} × ${guadagnooggi.toFixed(2)}) / (${(percentualeoggi * 100).toFixed(2)}) = ${guadagnoIeri.toFixed(2)}€`;
+            
+            document.getElementById('dettagli_calcolo').innerHTML = dettagli;
+            document.getElementById('risultato').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

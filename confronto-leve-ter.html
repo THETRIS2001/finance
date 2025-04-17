@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confronto fra Sottostante e Diverse Leve</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Confronto fra Sottostante e Diverse Leve (con/senza TER)</h1>
+        </header>
+        <main>
+            <a href="index.html" class="back-link">← Torna alla pagina principale</a>
+
+            <div class="chart-container">
+                <div class="chart-controls">
+                    <div>
+                        <label for="data_inizio">Data inizio:</label>
+                        <input type="date" id="data_inizio" value="2024-01-01">
+                    </div>
+                    <div>
+                        <label for="data_fine">Data fine:</label>
+                        <input type="date" id="data_fine">
+                    </div>
+                    <div>
+                        <label for="ticker">Ticker:</label>
+                        <select id="ticker">
+                            <option value="^GSPC">S&P 500</option>
+                            <option value="AAPL">Apple Inc.</option>
+                            <option value="MSFT">Microsoft Corporation</option>
+                            <option value="AMZN">Amazon.com, Inc.</option>
+                            <option value="GOOGL">Alphabet Inc. (Google)</option>
+                            <option value="TSLA">Tesla, Inc.</option>
+                            <option value="NVDA">Nvidia Corporation</option>
+                            <option value="V">Visa Inc.</option>
+                            <option value="JPM">JPMorgan Chase & Co.</option>
+                            <option value="JNJ">Johnson & Johnson</option>
+                            <option value="BTC-USD">Bitcoin</option>
+                            <option value="GLD">Gold</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="leve">Leve (separate da virgola):</label>
+                        <input type="text" id="leve" value="2" style="width: 200px;">
+                    </div>
+                    <div>
+                        <label for="ter">TER (%):</label>
+                        <input type="number" id="ter" value="0" min="0" max="5" step="0.1">
+                    </div>
+                    <div>
+                        <label for="scala_logaritmica">Scala logaritmica:</label>
+                        <input type="checkbox" id="scala_logaritmica">
+                    </div>
+                    <button id="aggiorna">Aggiorna Grafico</button>
+                </div>
+                <div id="loading" style="display: none; text-align: center; margin: 20px;">
+                    <div class="spinner"></div>
+                    <p>Caricamento dati in corso... Questo potrebbe richiedere alcuni secondi.</p>
+                </div>
+                <div id="error" style="display: none; color: red; margin: 20px; padding: 15px; background-color: #ffeeee; border-radius: 5px;">
+                    <p>Errore nel caricamento dei dati. Riprova più tardi.</p>
+                </div>
+                <div id="chart-wrapper" style="height: 800px;">
+                    <canvas id="myChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="info-section" style="margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                <h2>Note Importanti</h2>
+                
+                <div class="info-card" style="margin-bottom: 20px;">
+                    <h3>Il grafico dipende dal momento di inizio</h3>
+                    <p>Essendo normalizzato a 100 il valore finale dipenderà dal momento di inizio. Si stanno cioè confrontando le variazioni percentuali in un dato intervallo temporale.</p>
+                </div>
+                
+                <div class="info-card">
+                    <h3>Impatto del TER sulla Performance</h3>
+                    <ul>
+                        <li>La <strong>percentuale di diminuzione</strong> causata dal <strong>TER</strong> non dipende dalla leva, in quanto il <strong>TER</strong> è fisso, pari allo <strong>0.6% annuo</strong> per ogni anno.</li>
+                        <li>Tuttavia, <strong>gli strumenti a leva</strong> tendono ad avere un <strong>TER più alto</strong> rispetto agli strumenti non a leva.</li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Imposta la data di fine al giorno corrente e inizializza il grafico
+        document.addEventListener('DOMContentLoaded', function () {
+            const oggi = new Date();
+            const dataFineInput = document.getElementById('data_fine');
+            dataFineInput.value = oggi.toISOString().split('T')[0];
+            setTimeout(generaGrafico, 500);
+            
+            // Aggiungi event listener per il checkbox della scala logaritmica
+            document.getElementById('scala_logaritmica').addEventListener('change', function() {
+                generaGrafico();
+            });
+        });
+
+        // Funzione per scaricare i dati storici da Yahoo Finance utilizzando Thingproxy per aggirare CORS
+        async function scaricaDati(ticker, dataInizio, dataFine) {
+            try {
+                const startDate = new Date(dataInizio).getTime();
+                const endDate = new Date(dataFine).getTime();
+                const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/chart/${ticker}?period1=${Math.floor(startDate / 1000)}&period2=${Math.floor(endDate / 1000)}&interval=1d&events=history`;
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`;
+                /*const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`;*/
+
+                const response = await fetch(proxyUrl);
+                const parsedData = await response.json();
+
+                if (!parsedData.chart || !parsedData.chart.result || parsedData.chart.result.length === 0) {
+                    throw new Error('Dati non disponibili');
+                }
+
+                const result = parsedData.chart.result[0];
+                const timestamps = result.timestamp;
+                const quotes = result.indicators.quote[0];
+                const closePrices = quotes.close;
+
+                const prezzi = [];
+                for (let i = 0; i < timestamps.length; i++) {
+                    if (closePrices[i] !== null) {
+                        prezzi.push({
+                            data: new Date(timestamps[i] * 1000),
+                            prezzo: closePrices[i]
+                        });
+                    }
+                }
+                return prezzi;
+            } catch (error) {
+                console.error('Errore nel caricamento dei dati:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                throw error;
+            }
+        }
+
+        // Funzione per calcolare i rendimenti giornalieri
+        function calcolaRendimentiGiornalieri(prezzi) {
+            const rendimenti = [];
+            for (let i = 1; i < prezzi.length; i++) {
+                rendimenti.push({
+                    data: prezzi[i].data,
+                    rendimento: (prezzi[i].prezzo / prezzi[i - 1].prezzo) - 1
+                });
+            }
+            return rendimenti;
+        }
+
+        // Funzione per calcolare l'andamento con leva
+        function calcolaAndamentoLeva(rendimentiGiornalieri, leva, ter) {
+            const terGiornaliero = ter / 252;
+            let valoreCorrente = 100;
+            const andamento = [{ data: rendimentiGiornalieri[0].data, valore: valoreCorrente }];
+
+            for (let i = 0; i < rendimentiGiornalieri.length; i++) {
+                const rendimentoConLeva = rendimentiGiornalieri[i].rendimento * leva;
+                valoreCorrente = valoreCorrente * (1 + rendimentoConLeva);
+                if (ter > 0) {
+                    valoreCorrente = valoreCorrente * (1 - terGiornaliero);
+                }
+                andamento.push({ data: rendimentiGiornalieri[i].data, valore: valoreCorrente });
+            }
+
+            return andamento;
+        }
+
+        // Funzione per generare il grafico
+        async function generaGrafico() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('chart-wrapper').style.display = 'none';
+
+            try {
+                const dataInizio = document.getElementById('data_inizio').value;
+                const dataFine = document.getElementById('data_fine').value;
+                const ticker = document.getElementById('ticker').value;
+                const leveInput = document.getElementById('leve').value;
+                const leve = leveInput.split(',').map(leva => parseFloat(leva.trim())).filter(leva => !isNaN(leva));
+                const ter = parseFloat(document.getElementById('ter').value) / 100;
+
+                const prezzi = await scaricaDati(ticker, dataInizio, dataFine);
+                const rendimentiGiornalieri = calcolaRendimentiGiornalieri(prezzi);
+                const prezziNormalizzati = prezzi.map((p, index) => ({
+                    data: p.data,
+                    valore: (p.prezzo / prezzi[0].prezzo) * 100
+                }));
+
+                const datasets = [{
+                    label: `${ticker} - Base`,
+                    data: prezziNormalizzati.map(p => ({ x: p.data, y: p.valore })),
+                    borderColor: 'blue',
+                    backgroundColor: 'rgba(0, 0, 255, 0.1)',
+                    borderWidth: 2,
+                    fill: false
+                }];
+
+                const colors = ['red', 'green', 'magenta', 'cyan', 'orange', 'purple', 'brown', 'pink'];
+
+                leve.forEach((leva, index) => {
+                    // Processa tutte le leve, inclusa la leva 1 se presente
+                        const color = colors[index % colors.length];
+                        const rgbValues = {
+                            r: (index * 50) % 255,
+                            g: ((index + 1) * 70) % 255,
+                            b: ((index + 2) * 90) % 255
+                        };
+                        
+                        // Linea normale senza TER
+                        const andamentoLeva = calcolaAndamentoLeva(rendimentiGiornalieri, leva, 0);
+                        datasets.push({
+                            label: `Leva ${leva.toFixed(1)}x`,
+                            data: andamentoLeva.map(p => ({ x: p.data, y: p.valore })),
+                            borderColor: color,
+                            backgroundColor: `rgba(${rgbValues.r}, ${rgbValues.g}, ${rgbValues.b}, 0.1)`,
+                            borderWidth: 2,
+                            fill: false
+                        });
+
+                        // Linea con TER applicato (solo se TER > 0)
+                        if (ter > 0) {
+                            const andamentoLevaConTer = calcolaAndamentoLeva(rendimentiGiornalieri, leva, ter);
+                            datasets.push({
+                                label: `Leva ${leva.toFixed(1)}x con TER ${(ter * 100).toFixed(1)}%`,
+                                data: andamentoLevaConTer.map(p => ({ x: p.data, y: p.valore })),
+                                borderColor: color,
+                                backgroundColor: `rgba(${rgbValues.r}, ${rgbValues.g}, ${rgbValues.b}, 0.05)`,
+                                borderDash: [3, 3],
+                                borderWidth: 2,
+                                fill: false
+                            });
+                        }
+                });
+
+                if (window.myChartInstance) {
+                    window.myChartInstance.destroy();
+                }
+
+                const ctx = document.getElementById('myChart').getContext('2d');
+                window.myChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: { datasets: datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        elements: {
+                            point: {
+                                radius: 0, // Rimuove i punti dal grafico
+                                hoverRadius: 7 // Mostra i punti solo al passaggio del mouse
+                            },
+                            line: {
+                                tension: 0 // Disabilita le curve bezier per migliorare le prestazioni
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: `Confronto ${ticker} vs Derivati con diverse leve${ter > 0 ? ' (con/senza TER)' : ''}`,
+                                font: { size: 16 }
+                            },
+                            legend: { position: 'top' },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    label: function (tooltipItem) {
+                                        return `${tooltipItem.dataset.label}: ${tooltipItem.raw.y.toFixed(2)} €`;
+                                    },
+                                    title: function (tooltipItems) {
+                                        // Formatta la data per mostrare giorno, mese e anno
+                                        const date = new Date(tooltipItems[0].raw.x);
+                                        return date.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'month',
+                                    displayFormats: { month: 'MMM YYYY' }
+                                },
+                                display: true,
+                                title: { display: true, text: 'Data' }
+                            },
+                            y: {
+                                display: true,
+                                type: document.getElementById('scala_logaritmica').checked ? 'logarithmic' : 'linear',
+                                title: { display: true, text: 'Valore (Base 100)' },
+                                grid: { drawBorder: true, color: 'rgba(0, 0, 0, 0.1)' }
+                            }
+                        }
+                    }
+                });
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('chart-wrapper').style.display = 'block';
+            } catch (error) {
+                console.error('Errore nella generazione del grafico:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+            }
+        }
+
+        document.getElementById('aggiorna').addEventListener('click', generaGrafico);
+
+        window.addEventListener('error', function (event) {
+            console.error('Errore JavaScript:', event.error);
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error').innerHTML = `<p>Errore: ${event.error.message}</p>`;
+        });
+
+        console.log('Script di confronto-leve-ter.html caricato correttamente');
+    </script>
+</body>
+
+</html>

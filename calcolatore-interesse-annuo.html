@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcolatore Interesse Annuo</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Aggiungi MathJax per il rendering delle formule -->
+    <script type="text/javascript" async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Calcolatore Interesse Annuo</h1>
+        </header>
+        <main>
+            <a href="index.html" class="back-link">← Torna alla pagina principale</a>
+
+            <div class="chart-container">
+                <div class="chart-controls">
+                    <div>
+                        <label for="data_iniziale">Data iniziale:</label>
+                        <input type="date" id="data_iniziale" value="2000-01-03">
+                    </div>
+                    <div>
+                        <label for="data_finale">Data finale:</label>
+                        <input type="date" id="data_finale" value="2025-03-05">
+                    </div>
+                    <div>
+                        <label for="aumento_percentuale">Aumento percentuale (%):</label>
+                        <input type="number" id="aumento_percentuale" value="150" step="0.000001">
+                    </div>
+                    <button id="calcola">Calcola Tasso Annuo</button>
+                </div>
+                <div id="risultato" style="margin-top: 20px; padding: 15px; background-color: #ffffff; border-radius: 5px; display: none;">
+                    <h3>Risultato del calcolo</h3>
+                    <p id="tasso_annuo" style="font-size: 1.2em; font-weight: bold;"></p>
+                    <p id="dettagli_calcolo"></p>
+                </div>
+            </div>
+
+            <section>
+                <h2>Note sul Calcolo</h2>
+                <p>Questo calcolatore determina il tasso di interesse annuo composto necessario per ottenere un determinato aumento percentuale in un periodo di tempo specificato.</p>
+                
+                <h3>Formula utilizzata:</h3>
+                <p>Il tasso di interesse annuo composto è calcolato con la seguente formula:</p>
+                <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                        \[ \text{tasso}_{\text{annuo}} = \left(1 + \frac{\text{aumento %}}{100}\right)^{\frac{1}{\text{anni}}} - 1 \]
+                    </p>
+                </div>
+                
+                <h3>Esempio:</h3>
+                <p>Se un investimento è aumentato dell'80% in 10 anni, il tasso di interesse annuo composto sarebbe:</p>
+                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                    \[ \text{tasso}_{\text{annuo}} = \left(1 + \frac{80}{100}\right)^{\frac{1}{10}} - 1 = 1.8^{0.1} - 1 \approx 0.0603 = 6.03% \]
+                </p>
+                
+                <h3>Nota importante:</h3>
+                <p>L'aumento percentuale si calcola come:</p>
+                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                    \[ \text{aumento}_{\text{percentuale}} = \left(\frac{\text{valore}_{\text{finale}}}{\text{valore}_{\text{iniziale}}} - 1\right) \times 100 \]
+                </p>
+                <p>Ad esempio, un aumento da 500 a 900 corrisponde a un aumento percentuale di:</p>
+                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                    \[ \left(\frac{900}{500} - 1\right) \times 100 = 1.8 - 1 = 0.8 \times 100 = 80% \]
+                </p>
+            </section>
+        </main>
+
+    </div>
+
+    <script>
+        // Imposta le date predefinite
+        document.addEventListener('DOMContentLoaded', function() {
+            // Imposta le date predefinite nel formato richiesto da input type="date"
+            const dataIniziale = document.getElementById('data_iniziale');
+            const dataFinale = document.getElementById('data_finale');
+            
+            // Aggiungi event listener per il pulsante di calcolo
+            document.getElementById('calcola').addEventListener('click', calcolaTassoAnnuo);
+        });
+        
+        // Funzione per calcolare il tasso annuo
+        function calcolaTassoAnnuo() {
+            // Ottieni i valori dai campi di input
+            const dataIniziale = new Date(document.getElementById('data_iniziale').value);
+            const dataFinale = new Date(document.getElementById('data_finale').value);
+            const aumentoPercentuale = parseFloat(document.getElementById('aumento_percentuale').value);
+            
+            // Calcola il numero di anni tra le due date
+            const millisecondiPerAnno = 1000 * 60 * 60 * 24 * 365.25; // Consideriamo gli anni bisestili
+            const anni = (dataFinale - dataIniziale) / millisecondiPerAnno;
+            
+            // Calcola il tasso di interesse annuo composto
+            const tassoAnnuo = Math.pow(1 + aumentoPercentuale / 100, 1 / anni) - 1;
+            
+            // Mostra il risultato
+            const risultatoDiv = document.getElementById('risultato');
+            risultatoDiv.style.display = 'block';
+            
+            document.getElementById('tasso_annuo').textContent = 
+                `Il tasso di interesse annuo composto è: ${(tassoAnnuo * 100).toFixed(2)}%`;
+            
+            document.getElementById('dettagli_calcolo').innerHTML = 
+                `Periodo di calcolo: ${formatDate(dataIniziale)} - ${formatDate(dataFinale)}<br>` +
+                `Durata: ${anni.toFixed(2)} anni<br>` +
+                `Aumento percentuale totale: ${aumentoPercentuale.toFixed(2)}%`;
+        }
+        
+        // Funzione per formattare la data nel formato italiano
+        function formatDate(date) {
+            return date.toLocaleDateString('it-IT', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+    </script>
+</body>
+
+</html>

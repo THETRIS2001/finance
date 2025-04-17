@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcolatore Recupero Leva</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Aggiungi MathJax per il rendering delle formule -->
+    <script type="text/javascript" async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Calcolatore % di Recupero Leva in X Giorni</h1>
+        </header>
+        <main>
+            <a href="index.html" class="back-link">← Torna alla pagina principale</a>
+
+            <div class="chart-container">
+                <div class="chart-controls">
+                    <div>
+                        <label for="loss_percent">Percentuale di perdita (%):</label>
+                        <input type="number" id="loss_percent" value="-70" step="0.01">
+                    </div>
+                    <div>
+                        <label for="leva">Leva:</label>
+                        <input type="number" id="leva" value="5" min="1" step="0.1">
+                    </div>
+                    <div>
+                        <label for="n_days">Numero di giorni:</label>
+                        <input type="number" id="n_days" value="15" min="1" step="1">
+                    </div>
+                    <button id="calcola">Calcola Recupero</button>
+                </div>
+                <div id="risultato" style="margin-top: 20px; padding: 15px; background-color: #ffffff; border-radius: 5px; display: none;">
+                    <h3>Risultato del calcolo</h3>
+                    <p id="guadagno_giornaliero" style="font-size: 1.2em; font-weight: bold;"></p>
+                    <p id="dettagli_calcolo"></p>
+                </div>
+            </div>
+
+            <section>
+                <h2>Note sul Calcolo</h2>
+                <p>Questo calcolatore determina la percentuale di guadagno giornaliero necessaria per il sottostante affinché un derivato con leva recuperi completamente una perdita in un determinato numero di giorni.</p>
+                
+                <h3>Formula utilizzata:</h3>
+                <p>Il calcolo si basa sulle seguenti formule:</p>
+                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                    \[ V_0 = 1 + \frac{\text{perdita}}{100} \]
+                </p>
+                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                    \[ \text{moltiplicatore}_{\text{giornaliero}} = \left(\frac{1}{V_0}\right)^{\frac{1}{\text{giorni}}} \]
+                </p>
+                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                    \[\text{guadagno}_{\text{giornaliero, derivato}} = \text{moltiplicatore}_{\text{giornaliero}} - 1 \]
+                </p>
+                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                    \[ \text{guadagno}_{\text{giornaliero, sottostante}} = \frac{\text{guadagno}_{\text{giornaliero, derivato}}}{\text{leva}} \]
+                </p>
+                
+                <h3>Esempio:</h3>
+                <p>Se un derivato con leva 5 ha subito una perdita del 71% e si desidera recuperare completamente in 3 giorni:</p>
+                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                    \[ V_0 = 1 + \frac{-71}{100} = 0.29 \]
+                </p>
+                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                    \[ \text{moltiplicatore}_\text{giornaliero} = \left(\frac{1}{0.29}\right)^{\frac{1}{3}} \approx 1.51 \]
+                </p>
+                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                    \[ \text{guadagno}_{\text{giornaliero, derivato}} = 1.51 - 1 = 0.51 = 51% \]
+                </p>
+                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                    \[ \text{guadagno}_{\text{giornaliero, sottostante}} = \frac{0.51}{5} = 0.102 = 10.2% \]
+                </p>
+                
+                <h3>Nota importante:</h3>
+                <p>Questo calcolo presuppone un comportamento ideale del derivato con leva, senza considerare eventuali costi di gestione (TER) o altri fattori che potrebbero influenzare il rendimento effettivo.</p>
+            </section>
+        </main>
+
+    </div>
+
+    <script>
+        // Imposta i valori predefiniti e aggiungi event listener
+        document.addEventListener('DOMContentLoaded', function() {
+            // Aggiungi event listener per il pulsante di calcolo
+            document.getElementById('calcola').addEventListener('click', calcolaRecuperoLeva);
+            
+            // Esegui il calcolo all'avvio per mostrare il risultato con i valori predefiniti
+            calcolaRecuperoLeva();
+        });
+        
+        // Funzione per calcolare il recupero della leva
+        function calcolaRecuperoLeva() {
+            // Ottieni i valori dai campi di input
+            const lossPercent = parseFloat(document.getElementById('loss_percent').value);
+            const leva = parseFloat(document.getElementById('leva').value);
+            const nDays = parseInt(document.getElementById('n_days').value);
+            
+            // Conversione della percentuale in valore decimale
+            const lossDecimal = lossPercent / 100;
+            
+            // Valore attuale del derivato dopo la perdita
+            const V0 = 1 + lossDecimal;
+            
+            // Calcolo del moltiplicatore giornaliero necessario per il derivato
+            const dailyMultiplierDerivative = Math.pow(1 / V0, 1 / nDays);
+            const dailyGainDerivative = dailyMultiplierDerivative - 1;
+            
+            // Calcolo del guadagno giornaliero richiesto per il sottostante (considerando la leva)
+            const dailyGainUnderlying = dailyGainDerivative / leva;
+            
+            // Mostra il risultato
+            const risultatoDiv = document.getElementById('risultato');
+            risultatoDiv.style.display = 'block';
+            
+            document.getElementById('guadagno_giornaliero').textContent = 
+                `Il sottostante deve guadagnare giornalmente: ${(dailyGainUnderlying * 100).toFixed(2)}%`;
+            
+            document.getElementById('dettagli_calcolo').innerHTML = 
+                `Perdita iniziale: ${lossPercent.toFixed(2)}%<br>` +
+                `Leva: ${leva.toFixed(1)}x<br>` +
+                `Periodo di recupero: ${nDays} giorni<br>` +
+                `Guadagno giornaliero del derivato: ${(dailyGainDerivative * 100).toFixed(2)}%`;
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concetti sulla Leva Ricalcolata Giornalmente</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Concetti sulla Leva Ricalcolata Giornalmente</h1>
+        </header>
+        <main>
+            <a href="index.html" class="back-link">← Torna alla pagina principale</a>
+
+            <div class="chart-container">
+
+                <div class="chart-controls">
+                    <div>
+                        <label for="leva">Leva:</label>
+                        <input type="number" id="leva" value="2" min="1" max="10" step="1">
+                    </div>
+                    <div>
+                        <label for="giorni">Giorni di simulazione:</label>
+                        <input type="number" id="giorni" value="100" min="10" max="500">
+                    </div>
+                    <div>
+                        <label for="variazione_giornaliera">Variazione giornaliera (%):</label>
+                        <input type="number" id="variazione_giornaliera" value="0.5" min="-5" max="5" step="0.1">
+                    </div>
+                    <div>
+                        <label for="volatilita">Volatilità (%):</label>
+                        <input type="number" id="volatilita" value="1.5" min="0" max="10" step="0.1">
+                    </div>
+                    <div>
+                        <label for="momento_interruzione">Momento interruzione:</label>
+                        <input type="number" id="momento_interruzione" value="50" min="1">
+                    </div>
+                    <button id="aggiorna">Aggiorna Grafici</button>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h2>Variazione Percentuale con Leva vs Periodo di Inizio</h2>
+                <p>Questo grafico dimostra che la variazione percentuale con leva non cambia in base al periodo di inizio, ma cambia solo il valore assoluto finale.</p>        
+                
+                <div class="chart-wrapper" style="height:700px;">
+                    <canvas id="chartVariazionePercentuale"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h2>Disinvestimento e Reinvestimento con Leva</h2>
+                <p>Questo grafico dimostra che disinvestire e reinvestire immediatamente con leva non fa perdere il vantaggio dell'interesse composto. Ciò è una naturale conseguenza del grafico di sopra. Se la variazione % non cambia in base al periodo di ingresso, è ovvio che se entro con la stessa cifra, troverò valori finale identici.</p>
+                
+                <div class="chart-wrapper" style="height:700px;">
+                    <canvas id="chartDisinvestimento"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h2>Confronto Normalizzato vs Non Normalizzato</h2>
+                <p>Questo grafico mostra come la normalizzazione influisce sulla visualizzazione dei valori, ma non sulla variazione percentuale. Disattivando la visualizzazione dei valori normalizzati o viceversa, si nota come i due grafici siano sovrapponibili, a dimostrazione che a meno di un fattore di scala derivante dalla cifra di ingresso, le variazioni % in tutto il periodo sono indipendenti dal momento di ingresso.</p>
+                
+                <div class="chart-wrapper" style="height:700px;">
+                    <canvas id="chartNormalizzazione"></canvas>
+                </div>
+            </div>
+
+            <div class="info-section" style="margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h2>Concetti Chiave sulla Leva Fissa con Ricalcolo Giornaliero</h2>
+                
+                <div class="info-card" style="margin-bottom: 20px;">
+                    <h3>La variazione percentuale non dipende dal periodo di inizio</h3>
+                    <p>Con la leva, la <strong>variazione percentuale</strong> tra due date specifiche <strong>non cambia</strong> in base al momento in cui si inizia l'investimento. Ciò che cambia è solo il <strong>valore assoluto</strong> a cui si arriva.</p>
+                    <p>Questo accade perché la leva amplifica le variazioni giornaliere in modo proporzionale, indipendentemente dal valore iniziale dell'investimento, nel senso che la variazione percentuale non dipende dal capitale iniziale.</p>
+                </div>
+                
+                <div class="info-card" style="margin-bottom: 20px;">
+                    <h3>Disinvestire e reinvestire non fa perdere l'interesse composto</h3>
+                    <p>Se <strong>disinvesti e reinvesti immediatamente</strong> l'intero capitale (compresi gli interessi maturati) in uno strumento a leva, <strong>non perdi alcun vantaggio</strong> dell'interesse composto (se non contiamo le tasse da pagare al momento della vendita).</p>
+                    <p>La leva si comporta esattamente come un investimento senza leva: se reinvesti la stessa cifra con cui sei uscito, il risultato finale sarà identico a quello che avresti ottenuto senza mai disinvestire (a meno di tasse).</p>
+                </div>
+                
+                <div class="info-card">
+                    <h3>Normalizzazione e valori assoluti</h3>
+                    <p>Quando i grafici vengono <strong>normalizzati</strong> (ad esempio, partendo tutti da un valore di 100), si evidenzia come la <strong>variazione percentuale</strong> nello stesso intervallo di tempo rimane identica. Questo vale sia per il sottostante che per la leva.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Registra il plugin di annotazione
+        // Chart.register(ChartAnnotation);
+        
+        // Inizializza i grafici al caricamento della pagina
+        document.addEventListener('DOMContentLoaded', function() {
+            // Imposta il valore massimo per il momento di interruzione
+            const giorniInput = document.getElementById('giorni');
+            const momentoInterruzioneInput = document.getElementById('momento_interruzione');
+            
+            giorniInput.addEventListener('change', function() {
+                const giorni = parseInt(this.value);
+                if (parseInt(momentoInterruzioneInput.value) > giorni) {
+                    momentoInterruzioneInput.value = Math.floor(giorni / 2);
+                }
+                momentoInterruzioneInput.max = giorni - 1;
+            });
+            
+            // Genera i grafici iniziali
+            setTimeout(generaGrafici, 500);
+            
+            // Aggiungi event listener per il pulsante di aggiornamento
+            document.getElementById('aggiorna').addEventListener('click', generaGrafici);
+        });
+        
+        // Funzione per generare numeri casuali con distribuzione normale
+        function randomNormale(media, deviazione) {
+            let u = 0, v = 0;
+            while (u === 0) u = Math.random();
+            while (v === 0) v = Math.random();
+            const z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+            return z * deviazione + media;
+        }
+        
+        // Funzione per generare i grafici
+        function generaGrafici() {
+            // Ottieni i parametri dall'interfaccia
+            const leva = parseFloat(document.getElementById('leva').value);
+            const giorni = parseInt(document.getElementById('giorni').value);
+            const variazioneMedia = parseFloat(document.getElementById('variazione_giornaliera').value) / 100;
+            const volatilita = parseFloat(document.getElementById('volatilita').value) / 100;
+            const momentoInterruzione = parseInt(document.getElementById('momento_interruzione').value);
+            
+            // Genera una serie di variazioni giornaliere casuali
+            const variazioniGiornaliere = [];
+            for (let i = 0; i < giorni; i++) {
+                variazioniGiornaliere.push(randomNormale(variazioneMedia, volatilita));
+            }
+            
+            // Calcola l'andamento del sottostante
+            const valoreSottostante = [100];
+            for (let i = 0; i < giorni; i++) {
+                valoreSottostante.push(valoreSottostante[i] * (1 + variazioniGiornaliere[i]));
+            }
+            
+            // Calcola l'andamento con leva (inizio dal giorno 0)
+            const valoreLeva = [100];
+            for (let i = 0; i < giorni; i++) {
+                valoreLeva.push(valoreLeva[i] * (1 + variazioniGiornaliere[i] * leva));
+            }
+            
+            // Calcola l'andamento con leva (inizio dal giorno 20)
+            const valoreLevaPospostoGiorno20 = Array(21).fill(null);
+            valoreLevaPospostoGiorno20[20] = 100;
+            for (let i = 20; i < giorni; i++) {
+                valoreLevaPospostoGiorno20[i + 1] = valoreLevaPospostoGiorno20[i] * (1 + variazioniGiornaliere[i] * leva);
+            }
+            
+            // Calcola l'andamento con leva (inizio dal giorno 40)
+            const valoreLevaPospostoGiorno40 = Array(41).fill(null);
+            valoreLevaPospostoGiorno40[40] = 100;
+            for (let i = 40; i < giorni; i++) {
+                valoreLevaPospostoGiorno40[i + 1] = valoreLevaPospostoGiorno40[i] * (1 + variazioniGiornaliere[i] * leva);
+            }
+            
+            // Rimuovo la serie valoreLevaDiInvestimento che non è più necessaria
+            
+            // Calcola l'andamento della nuova serie che parte dal giorno del reinvestimento
+            const valoreLevaDalReinvestimento = Array(momentoInterruzione + 1).fill(null);
+            // Imposta il valore iniziale uguale al valore della leva al momento del reinvestimento
+            valoreLevaDalReinvestimento[momentoInterruzione] = valoreLeva[momentoInterruzione];
+            for (let i = momentoInterruzione; i < giorni; i++) {
+                valoreLevaDalReinvestimento[i + 1] = valoreLevaDalReinvestimento[i] * (1 + variazioniGiornaliere[i] * leva);
+            }
+            
+            // Calcola l'andamento con leva non normalizzato
+            const valoreInizialeCasuale = 5020; // Valore iniziale arbitrario
+            const valoreLevaNonNormalizzato = [valoreInizialeCasuale];
+            const valoreSottostanteNonNormalizzato = [valoreInizialeCasuale];
+            
+            for (let i = 0; i < giorni; i++) {
+                valoreLevaNonNormalizzato.push(valoreLevaNonNormalizzato[i] * (1 + variazioniGiornaliere[i] * leva));
+                valoreSottostanteNonNormalizzato.push(valoreSottostanteNonNormalizzato[i] * (1 + variazioniGiornaliere[i]));
+            }
+            
+            // Crea le etichette per l'asse X
+            const labels = Array.from({ length: giorni + 1 }, (_, i) => `Giorno ${i}`);
+            
+            // Distruggi i grafici esistenti se presenti
+            const chartElements = ['chartVariazionePercentuale', 'chartDisinvestimento', 'chartNormalizzazione'];
+            chartElements.forEach(id => {
+                const ctx = document.getElementById(id).getContext('2d');
+                if (ctx.chart) {
+                    ctx.chart.destroy();
+                }
+            });
+            
+            // Crea il grafico per la variazione percentuale
+            const ctxVariazione = document.getElementById('chartVariazionePercentuale').getContext('2d');
+            ctxVariazione.chart = new Chart(ctxVariazione, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Sottostante',
+                            data: valoreSottostante,
+                            borderColor: 'blue',
+                            backgroundColor: 'rgba(0, 0, 255, 0.1)',
+                            fill: false
+                        },
+                        {
+                            label: `Leva ${leva}x (inizio giorno 0)`,
+                            data: valoreLeva,
+                            borderColor: 'red',
+                            backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                            fill: false
+                        },
+                        {
+                            label: `Leva ${leva}x (inizio giorno 20)`,
+                            data: valoreLevaPospostoGiorno20,
+                            borderColor: 'green',
+                            backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                            fill: false
+                        },
+                        {
+                            label: `Leva ${leva}x (inizio giorno 40)`,
+                            data: valoreLevaPospostoGiorno40,
+                            borderColor: 'purple',
+                            backgroundColor: 'rgba(128, 0, 128, 0.1)',
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Giorni'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Valore (normalizzato a 100)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y.toFixed(2) + ' €';
+                                    }
+                                    return label;
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+            
+            // Crea il grafico per il disinvestimento e reinvestimento
+            const ctxDisinvestimento = document.getElementById('chartDisinvestimento').getContext('2d');
+            ctxDisinvestimento.chart = new Chart(ctxDisinvestimento, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Sottostante',
+                            data: valoreSottostante,
+                            borderColor: 'blue',
+                            backgroundColor: 'rgba(0, 0, 255, 0.1)',
+                            fill: false
+                        },
+                        {
+                            label: `Leva ${leva}x (senza interruzione)`,
+                            data: valoreLeva,
+                            borderColor: 'red',
+                            backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                            fill: false
+                        },
+                        {
+                            label: `Leva ${leva}x (con ingresso al giorno ${momentoInterruzione} con stessa cifra di uscita)`,
+                            data: valoreLevaDalReinvestimento,
+                            borderColor: 'green',
+                            backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                            fill: false,
+                            pointRadius: (ctx) => ctx.dataIndex === momentoInterruzione ? 8 : 0,
+                            pointBackgroundColor: 'rgba(0, 128, 0, 0.8)',
+                            order: -1 // Negative order to ensure this series is drawn on top
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Giorni'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Valore (normalizzato a 100)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y.toFixed(2) + ' €';
+                                    }
+                                    return label;
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'top'
+                        },
+                        annotation: {
+                            annotations: {
+                                line1: {
+                                    type: 'line',
+                                    xMin: momentoInterruzione,
+                                    xMax: momentoInterruzione,
+                                    borderColor: 'rgba(0, 128, 0, 0.5)',
+                                    borderWidth: 2,
+                                    borderDash: [5, 5],
+                                    label: {
+                                        content: 'Disinvestimento',
+                                        enabled: true,
+                                        position: 'top'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Crea il grafico per il confronto normalizzato vs non normalizzato
+            const ctxNormalizzazione = document.getElementById('chartNormalizzazione').getContext('2d');
+            ctxNormalizzazione.chart = new Chart(ctxNormalizzazione, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Sottostante (normalizzato)',
+                            data: valoreSottostante,
+                            borderColor: 'blue',
+                            backgroundColor: 'rgba(0, 0, 255, 0.1)',
+                            fill: false
+                        },
+                        {
+                            label: `Leva ${leva}x (normalizzato)`,
+                            data: valoreLeva,
+                            borderColor: 'red',
+                            backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                            fill: false
+                        },
+                        {
+                            label: 'Sottostante (non normalizzato)',
+                            data: valoreSottostanteNonNormalizzato,
+                            borderColor: 'darkblue',
+                            backgroundColor: 'rgba(0, 0, 139, 0.1)',
+                            borderDash: [5, 5],
+                            fill: false
+                        },
+                        {
+                            label: `Leva ${leva}x (non normalizzato)`,
+                            data: valoreLevaNonNormalizzato,
+                            borderColor: 'darkred',
+                            backgroundColor: 'rgba(139, 0, 0, 0.1)',
+                            borderDash: [5, 5],
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Giorni'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Valore'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y.toFixed(2) + ' €';
+                                    }
+                                    return label;
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcolatore Ricavo Desiderato</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>">
+    <!-- Aggiungi MathJax per il rendering delle formule -->
+    <script type="text/javascript" async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+    <style>
+        /* Stile per i selettori radio */
+        .radio-group {
+            margin-top: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .radio-group label {
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .radio-group input[type="radio"] {
+            margin-right: 5px;
+        }
+        
+        .leva-container {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            background-color: #f9f9f9;
+        }
+        
+        .leva-container h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+        
+        /* Visibilità condizionale */
+        .tipo-profitto {
+            display: none;
+        }
+        
+        .tipo-profitto.visible {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Calcolatore Ricavo Desiderato</h1>
+        </header>
+        <main>
+            <a href="index.html" class="back-link">← Torna alla pagina principale</a>
+
+            <!-- Calcolatore -->
+            <div class="chart-container">
+                <h2>Calcolo del Prezzo Obiettivo e Ricavo</h2>
+                <p>Calcola uno dei tre parametri conoscendone due: prezzo di acquisto, prezzo di vendita o profitto percentuale.</p>
+                
+                <div id="messaggio_errore" style="margin-bottom: 20px; padding: 12px; background-color: #ffebee; border-left: 4px solid #f44336; border-radius: 4px; display: none;">
+                    <p id="testo_errore" style="margin: 0; color: #d32f2f;"></p>
+                </div>
+                
+                <div class="chart-controls">
+                    <div>
+                        <label for="prezzo_attuale">Prezzo di acquisto:</label>
+                        <input type="number" id="prezzo_attuale" step="0.01" min="0" placeholder="Es: 100">
+                    </div>
+                    <div>
+                        <label for="prezzo_obiettivo">Prezzo di vendita:</label>
+                        <input type="number" id="prezzo_obiettivo" step="0.01" min="0" placeholder="Es: 120">
+                    </div>
+                    <div>
+                        <label for="percentuale_profitto">Profitto %:</label>
+                        <input type="number" id="percentuale_profitto" step="0.01" placeholder="Es: 20">
+                    </div>
+                    
+                    <div class="leva-container">
+                        <h4>Impostazioni leva (opzionale):</h4>
+                        <div>
+                            <label for="leva">Leva:</label>
+                            <input type="number" id="leva" step="0.01" min="0" placeholder="Es: 10">
+                        </div>
+                        
+                        <div id="tipo_profitto_container" class="tipo-profitto">
+                            <p style="margin-top: 10px; margin-bottom: 5px;">Il profitto % inserito è relativo a:</p>
+                            <div class="radio-group">
+                                <label>
+                                    <input type="radio" name="tipo_profitto" id="profitto_totale" value="totale" checked>
+                                    Valore con leva
+                                </label>
+                                <label>
+                                    <input type="radio" name="tipo_profitto" id="profitto_sottostante" value="sottostante">
+                                    Sottostante
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button id="calcola">Calcola</button>
+                    <button id="reset">Reset</button>
+                </div>
+                <div id="risultato" style="margin-top: 20px; padding: 15px; background-color: #ffffff; border-radius: 5px; display: none;">
+                    <h3>Risultato del calcolo</h3>
+                    <p id="risultato_testo" style="font-size: 1.2em; font-weight: bold;"></p>
+                    <p id="dettaglio"></p>
+                    <p id="risultato_leva" style="font-size: 1.2em; font-weight: bold; margin-top: 10px;"></p>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <h3>Formule utilizzate:</h3>
+                    <p>La relazione tra prezzo di acquisto, prezzo di vendita e profitto percentuale è:</p>
+                    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                        <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                            \[ \text{prezzo di vendita} = \text{prezzo di acquisto} \times \left(1 + \frac{\text{profitto %}}{100}\right) \]
+                        </p>
+                    </div>
+                    <p>Da questa formula si possono ricavare:</p>
+                    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                        <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                            \[ \text{profitto %} = \left(\frac{\text{prezzo di vendita}}{\text{prezzo di acquisto}} - 1\right) \times 100% \]
+                        </p>
+                    </div>
+                    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                        <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                            \[ \text{prezzo di acquisto} = \frac{\text{prezzo di vendita}}{1 + \frac{\text{profitto %}}{100}} \]
+                        </p>
+                    </div>
+                    <p>Quando è specificata una leva, la variazione percentuale del sottostante si calcola con:</p>
+                    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                        <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
+                            \[ \text{variazione sottostante %} = \frac{\text{profitto %}}{\text{leva}} \]
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementi del calcolatore
+            const prezzoAttuale = document.getElementById('prezzo_attuale');
+            const prezzoObiettivo = document.getElementById('prezzo_obiettivo');
+            const percentualeProfitto = document.getElementById('percentuale_profitto');
+            const leva = document.getElementById('leva');
+            const tipoProfittoContainer = document.getElementById('tipo_profitto_container');
+            const profittoTotale = document.getElementById('profitto_totale');
+            const profittoSottostante = document.getElementById('profitto_sottostante');
+            const calcola = document.getElementById('calcola');
+            const reset = document.getElementById('reset');
+            const risultato = document.getElementById('risultato');
+            const risultatoTesto = document.getElementById('risultato_testo');
+            const dettaglio = document.getElementById('dettaglio');
+            const risultatoLeva = document.getElementById('risultato_leva');
+            const messaggioErrore = document.getElementById('messaggio_errore');
+            const testoErrore = document.getElementById('testo_errore');
+            
+            // Tiene traccia di quale campo è stato calcolato automaticamente
+            let campoCalcolato = null;
+            
+            // Mostra/nascondi opzioni tipo profitto in base alla presenza di un valore di leva
+            leva.addEventListener('input', function() {
+                if (this.value.trim() !== '') {
+                    tipoProfittoContainer.classList.add('visible');
+                } else {
+                    tipoProfittoContainer.classList.remove('visible');
+                }
+            });
+            
+            // Funzione per mostrare errori nel calcolatore
+            function mostraErrore(messaggio) {
+                testoErrore.textContent = messaggio;
+                messaggioErrore.style.display = 'block';
+                risultato.style.display = 'none';
+            }
+            
+            // Funzione per nascondere errori nel calcolatore
+            function nascondiErrore() {
+                messaggioErrore.style.display = 'none';
+            }
+            
+            // Funzione per gestire lo stato di input del calcolatore
+            function aggiornaStatiInput() {
+                const inputs = [prezzoAttuale, prezzoObiettivo, percentualeProfitto];
+                
+                // Ripristina lo stato di tutti i campi
+                inputs.forEach(input => {
+                    if (input !== campoCalcolato) {
+                        input.disabled = false;
+                        input.style.backgroundColor = '';
+                    }
+                });
+                
+                // Se un campo è stato calcolato, lo teniamo bloccato
+                if (campoCalcolato) {
+                    campoCalcolato.disabled = true;
+                    campoCalcolato.style.backgroundColor = '#ffffff';
+                    return;
+                }
+                
+                // Conteggio valori inseriti per gestire il blocco in fase di input
+                const valoriInseriti = inputs.filter(input => input.value.trim() !== '').length;
+                
+                // Solo se ci sono esattamente 2 valori inseriti, disabilitiamo il terzo
+                if (valoriInseriti === 2) {
+                    inputs.forEach(input => {
+                        if (input.value.trim() === '') {
+                            input.disabled = true;
+                            input.style.backgroundColor = '#ffffff';
+                        }
+                    });
+                }
+            }
+            
+            // Aggiungi event listener per gli input
+            [prezzoAttuale, prezzoObiettivo, percentualeProfitto].forEach(input => {
+                input.addEventListener('input', function() {
+                    // Se il campo modificato è diverso da quello calcolato, rimuoviamo lo stato di "calcolato"
+                    if (input !== campoCalcolato && campoCalcolato) {
+                        campoCalcolato = null;
+                    }
+                    aggiornaStatiInput();
+                });
+            });
+            
+            // Event listeners per il calcolatore
+            calcola.addEventListener('click', function() {
+                nascondiErrore();
+                
+                const vPrezzoAttuale = parseFloat(prezzoAttuale.value);
+                const vPrezzoObiettivo = parseFloat(prezzoObiettivo.value);
+                let vPercentualeProfitto = parseFloat(percentualeProfitto.value);
+                const vLeva = parseFloat(leva.value);
+                
+                let valoriInseriti = 0;
+                if (!isNaN(vPrezzoAttuale)) valoriInseriti++;
+                if (!isNaN(vPrezzoObiettivo)) valoriInseriti++;
+                if (!isNaN(vPercentualeProfitto)) valoriInseriti++;
+                
+                if (valoriInseriti < 2) {
+                    mostraErrore("Inserisci almeno due valori per effettuare il calcolo.");
+                    return;
+                }
+                
+                if (valoriInseriti === 3) {
+                    mostraErrore("Inserisci solo due valori per effettuare il calcolo. Il terzo valore sarà calcolato automaticamente.");
+                    return;
+                }
+                
+                // Se il profitto è relativo al sottostante e abbiamo una leva, lo convertiamo
+                let vProfittoOriginale = vPercentualeProfitto;
+                if (!isNaN(vLeva) && vLeva > 0 && !isNaN(vPercentualeProfitto) && profittoSottostante.checked) {
+                    vPercentualeProfitto = vPercentualeProfitto * vLeva;
+                }
+                
+                // Reset del campo calcolato
+                campoCalcolato = null;
+                
+                // Prezzo attuale e prezzo obiettivo noti, calcola percentuale profitto
+                if (!isNaN(vPrezzoAttuale) && !isNaN(vPrezzoObiettivo) && isNaN(vPercentualeProfitto)) {
+                    if (vPrezzoAttuale <= 0) {
+                        mostraErrore("Il prezzo di acquisto deve essere maggiore di zero.");
+                        return;
+                    }
+                    
+                    const profittoCalcolato = ((vPrezzoObiettivo / vPrezzoAttuale) - 1) * 100;
+                    // Non aggiorniamo più il campo di input
+                    // percentualeProfitto.value = profittoCalcolato.toFixed(2);
+                    risultatoTesto.textContent = `Il profitto calcolato è ${profittoCalcolato.toFixed(2)}%`;
+                    dettaglio.innerHTML = `Con prezzo di acquisto di ${vPrezzoAttuale.toFixed(2)} e prezzo di vendita di ${vPrezzoObiettivo.toFixed(2)}`;
+                    
+                    // Calcolo con leva
+                    if (!isNaN(vLeva) && vLeva > 0) {
+                        const varSottostante = profittoCalcolato / vLeva;
+                        risultatoLeva.textContent = `Con leva ${vLeva.toFixed(2)}, il sottostante varia del ${varSottostante.toFixed(2)}% (${profittoCalcolato.toFixed(2)}% con leva)`;
+                    } else {
+                        risultatoLeva.textContent = '';
+                    }
+                    
+                    risultato.style.display = 'block';
+                    // Non impostiamo più il campo calcolato
+                    // campoCalcolato = percentualeProfitto;
+                }
+                // Prezzo attuale e percentuale profitto noti, calcola prezzo obiettivo
+                else if (!isNaN(vPrezzoAttuale) && isNaN(vPrezzoObiettivo) && !isNaN(vPercentualeProfitto)) {
+                    if (vPrezzoAttuale <= 0) {
+                        mostraErrore("Il prezzo di acquisto deve essere maggiore di zero.");
+                        return;
+                    }
+                    
+                    const obiettivoCalcolato = vPrezzoAttuale * (1 + vPercentualeProfitto / 100);
+                    // Non aggiorniamo più il campo di input
+                    // prezzoObiettivo.value = obiettivoCalcolato.toFixed(2);
+                    risultatoTesto.textContent = `Il prezzo di vendita calcolato è ${obiettivoCalcolato.toFixed(2)}`;
+                    
+                    // Se il profitto era relativo al sottostante, mostra il valore originale
+                    let dettaglioTesto = '';
+                    if (!isNaN(vLeva) && vLeva > 0 && profittoSottostante.checked) {
+                        dettaglioTesto = `Con prezzo di acquisto di ${vPrezzoAttuale.toFixed(2)} e profitto del sottostante del ${vProfittoOriginale.toFixed(2)}% (${vPercentualeProfitto.toFixed(2)}% con leva ${vLeva.toFixed(2)})`;
+                    } else {
+                        dettaglioTesto = `Con prezzo di acquisto di ${vPrezzoAttuale.toFixed(2)} e profitto del ${vPercentualeProfitto.toFixed(2)}%`;
+                    }
+                    dettaglio.innerHTML = dettaglioTesto;
+                    
+                    // Calcolo con leva
+                    if (!isNaN(vLeva) && vLeva > 0) {
+                        // Se il profitto era già relativo al sottostante
+                        let varSottostante = vPercentualeProfitto / vLeva;
+                        if (profittoSottostante.checked) {
+                            varSottostante = vProfittoOriginale;
+                            // Se il profitto era già relativo al sottostante, modifichiamo il messaggio
+                            risultatoLeva.textContent = `Con leva ${vLeva.toFixed(2)}, il valore con leva varia del ${vPercentualeProfitto.toFixed(2)}%`;
+                        } else {
+                            // Solo nel caso standard mostriamo la variazione del sottostante
+                            risultatoLeva.textContent = `Con leva ${vLeva.toFixed(2)}, il sottostante deve variare del ${varSottostante.toFixed(2)}%`;
+                        }
+                    } else {
+                        risultatoLeva.textContent = '';
+                    }
+                    
+                    risultato.style.display = 'block';
+                    // Non impostiamo più il campo calcolato
+                    // campoCalcolato = prezzoObiettivo;
+                }
+                // Prezzo obiettivo e percentuale profitto noti, calcola prezzo attuale
+                else if (isNaN(vPrezzoAttuale) && !isNaN(vPrezzoObiettivo) && !isNaN(vPercentualeProfitto)) {
+                    if (vPercentualeProfitto <= -100) {
+                        mostraErrore("Il profitto deve essere maggiore di -100%.");
+                        return;
+                    }
+                    
+                    const attualeCalcolato = vPrezzoObiettivo / (1 + vPercentualeProfitto / 100);
+                    // Non aggiorniamo più il campo di input
+                    // prezzoAttuale.value = attualeCalcolato.toFixed(2);
+                    risultatoTesto.textContent = `Il prezzo di acquisto calcolato è ${attualeCalcolato.toFixed(2)}`;
+                    
+                    // Se il profitto era relativo al sottostante, mostra il valore originale
+                    let dettaglioTesto = '';
+                    if (!isNaN(vLeva) && vLeva > 0 && profittoSottostante.checked) {
+                        dettaglioTesto = `Con prezzo di vendita di ${vPrezzoObiettivo.toFixed(2)} e profitto del sottostante del ${vProfittoOriginale.toFixed(2)}% (${vPercentualeProfitto.toFixed(2)}% con leva ${vLeva.toFixed(2)})`;
+                    } else {
+                        dettaglioTesto = `Con prezzo di vendita di ${vPrezzoObiettivo.toFixed(2)} e profitto del ${vPercentualeProfitto.toFixed(2)}%`;
+                    }
+                    dettaglio.innerHTML = dettaglioTesto;
+                    
+                    // Calcolo con leva
+                    if (!isNaN(vLeva) && vLeva > 0) {
+                        // Se il profitto era già relativo al sottostante
+                        let varSottostante = vPercentualeProfitto / vLeva;
+                        if (profittoSottostante.checked) {
+                            varSottostante = vProfittoOriginale;
+                            // Se il profitto era già relativo al sottostante, modifichiamo il messaggio
+                            risultatoLeva.textContent = `Con leva ${vLeva.toFixed(2)}, il valore con leva varia del ${vPercentualeProfitto.toFixed(2)}%`;
+                        } else {
+                            // Solo nel caso standard mostriamo la variazione del sottostante
+                            risultatoLeva.textContent = `Con leva ${vLeva.toFixed(2)}, il sottostante deve variare del ${varSottostante.toFixed(2)}%`;
+                        }
+                    } else {
+                        risultatoLeva.textContent = '';
+                    }
+                    
+                    risultato.style.display = 'block';
+                    // Non impostiamo più il campo calcolato
+                    // campoCalcolato = prezzoAttuale;
+                }
+                
+                // Non c'è più bisogno di aggiornare lo stato degli input qui
+                // aggiornaStatiInput();
+            });
+            
+            reset.addEventListener('click', function() {
+                prezzoAttuale.value = '';
+                prezzoObiettivo.value = '';
+                percentualeProfitto.value = '';
+                leva.value = '';
+                profittoTotale.checked = true;
+                tipoProfittoContainer.classList.remove('visible');
+                risultato.style.display = 'none';
+                nascondiErrore();
+                
+                // Reset del campo calcolato
+                campoCalcolato = null;
+                
+                // Ripristina tutti i campi
+                [prezzoAttuale, prezzoObiettivo, percentualeProfitto].forEach(input => {
+                    input.disabled = false;
+                    input.style.backgroundColor = '';
+                });
+            });
+        });
+    </script>
+</body>
+
+</html> 

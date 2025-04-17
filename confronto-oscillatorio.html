@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confronto Sottostante Oscillatorio con Leve</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Aggiungi MathJax per il rendering delle formule -->
+    <script type="text/javascript" async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
+        </script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Confronto Sottostante Oscillatorio con Leve</h1>
+        </header>
+        <main>
+            <a href="index.html" class="back-link">← Torna alla pagina principale</a>
+
+            <div class="chart-container">
+                <div class="chart-controls">
+                    <div>
+                        <label for="giorni">Giorni:</label>
+                        <input type="number" id="giorni" value="150" min="10" max="500">
+                    </div>
+                    <div>
+                        <label for="leve">Leve (separate da virgola):</label>
+                        <input type="text" id="leve" value="1.5, 2, 3" style="width: 150px;">
+                    </div>
+                    <div>
+                        <label for="oscillazione_plus">Tasso di oscillazione (+%):</label>
+                        <input type="number" id="oscillazione_plus" value="10" step="0.1">
+                    </div>
+                    <div>
+                        <label for="oscillazione_minus">Tasso di oscillazione (-%):</label>
+                        <input type="number" id="oscillazione_minus" value="-10" step="0.1">
+                    </div>
+                    <button id="calcola_minus">Calcola Tasso -</button>
+                    <button id="aggiorna">Aggiorna Grafico</button>
+                </div>
+                <div class="chart-wrapper" style="height:700px;">
+                    <canvas id="myChart"></canvas>
+                </div>
+            </div>
+
+            <section>
+                <h2>Note sul Calcolo</h2>
+                <!-- La parte delle note resta invariata -->
+                <h3>Caso 1: Primo giorno di calcolo, la formula sarà:</h3>
+                <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <p>
+                        $$ O_{-1} \times \left( 1 + \text{LEVA} \times \frac{O_0 - O_{-1}}{O_{-1}} \right) $$
+                    </p>
+                </div>
+
+                <h3>Caso 2: Giorni successivi</h3>
+                <p>
+                    Se non è il primo giorno, la formula sarà quella originale:
+                </p>
+                <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <p>
+                        $$ L_{-1} \times \left( 1 + \text{LEVA} \times \frac{O_0 - O_{-1}}{O_{-1}} \right) $$
+                    </p>
+                </div>
+
+                <h3>Legenda:</h3>
+                <ul>
+                    <li>$$ O_{-1} $$ è il valore dell'originale di ieri.</li>
+                    <li>$$ O_0 $$ è il valore dell'originale odierno (di oggi).</li>
+                    <li>$$ L_{-1} $$ è il valore della leva del giorno precedente.</li>
+                    <li>$$ \text{LEVA} $$ è il valore della leva.</li>
+                    <li>$$ r $$ è il rendimento del sottostante, definito come:
+                        $$ r = \frac{O_0 - O_{-1}}{O_{-1}} $$
+                    </li>
+                </ul>
+
+                <h2>Quando conviene utilizzare la leva</h2>
+                <p>In un mercato <strong>poco volatile</strong> e con un <strong>trend crescente</strong>, l'utilizzo
+                    della leva può essere vantaggioso. Questo perché, in un contesto stabile e in crescita, l'effetto
+                    della leva amplifica i guadagni, consentendo di ottenere rendimenti più elevati senza aumentare
+                    proporzionalmente il rischio di perdita.</p>
+
+                <h2>Quando evitare la leva</h2>
+                <p>Anche se un mercato è in <strong>trend crescente</strong>, se è <strong>molto volatile</strong>
+                    (ossia soggetto a forti oscillazioni), l'utilizzo della leva può essere
+                    <strong>penalizzante</strong>. In mercati instabili, la leva amplifica sia i guadagni che le
+                    perdite, e durante le fluttuazioni elevate, si corre il rischio di incorrere in perdite maggiori
+                    rispetto a un mercato più stabile.</p>
+
+                <h2>Conclusioni</h2>
+                <ul>
+                    <li><strong>Mercato poco volatile e crescente</strong>: la leva può essere un'ottima scelta,
+                        amplificando i guadagni.</li>
+                    <li><strong>Mercato molto volatile</strong>: la leva può essere rischiosa, aumentando le perdite in
+                        caso di oscillazioni significative.</li>
+                </ul>
+            </section>
+        </main>
+
+    </div>
+
+    <script>
+        // Funzione per calcolare il tasso opposto che riporta al valore originale
+        function calcolaTassoOpposto(tasso) {
+            if (tasso < 0) {
+                // Calcola il tasso positivo che riporta al valore originale
+                return (1 / (1 - tasso / 100)) - 1; // Utilizzo della formula corretta per recupero
+            }
+            return -(1-100/(100*(1+tasso/100)));
+        }
+
+        // Funzione per generare il grafico
+        function generaGrafico() {
+            // Ottieni i parametri dall'interfaccia
+            const giorni = parseInt(document.getElementById('giorni').value);
+            const leveInput = document.getElementById('leve').value;
+            const leve = leveInput.split(',').map(leva => parseFloat(leva.trim())).filter(leva => !isNaN(leva));
+            const tassoOscillazionePlus = parseFloat(document.getElementById('oscillazione_plus').value);
+            let tassoOscillazioneMinus = parseFloat(document.getElementById('oscillazione_minus').value);
+
+            // Se il tasso negativo è stato bloccato, calcola automaticamente quello compensatorio
+            if (tassoOscillazioneMinus === 0) {
+                tassoOscillazioneMinus = calcolaTassoOpposto(tassoOscillazionePlus) * 100;
+            }
+
+            // Generazione di una sequenza alternata di variazioni basata sul tasso positivo e negativo
+            const osc_sottostante_alt = [];
+            for (let i = 0; i < giorni; i++) {
+                osc_sottostante_alt.push(i % 2 === 0 ? tassoOscillazionePlus / 100 : tassoOscillazioneMinus / 100);
+            }
+
+            // Calcolo della serie storica del sottostante (partenza da 100 €)
+            const sottostante_alt = [100];
+            for (let i = 0; i < osc_sottostante_alt.length; i++) {
+                sottostante_alt.push(sottostante_alt[sottostante_alt.length - 1] * (1 + osc_sottostante_alt[i]));
+            }
+
+            // Calcolo delle serie storiche per ciascun livello di leva
+            const derivati_alt = {};
+            for (const leva of leve) {
+                derivati_alt[leva] = [100]; // Valore iniziale 100 €
+                for (let i = 0; i < osc_sottostante_alt.length; i++) {
+                    derivati_alt[leva].push(derivati_alt[leva][derivati_alt[leva].length - 1] * (1 + leva * osc_sottostante_alt[i]));
+                }
+            }
+
+            // Preparazione dei dati per Chart.js
+            const labels = Array.from({ length: giorni + 1 }, (_, i) => i);
+            const datasets = [
+                {
+                    label: 'Sottostante',
+                    data: sottostante_alt,
+                    borderColor: 'blue',
+                    backgroundColor: 'rgba(0, 0, 255, 0.1)',
+                    fill: false
+                }
+            ];
+
+            // Colori per le curve delle leve
+            const colors = ['red', 'green', 'magenta', 'cyan', 'orange', 'purple'];
+
+            // Aggiungi i dataset per ciascuna leva
+            leve.forEach((leva, index) => {
+                datasets.push({
+                    label: `Derivato leva ${leva}x`,
+                    data: derivati_alt[leva],
+                    borderColor: colors[index % colors.length],
+                    backgroundColor: `rgba(${index % 2 * 255}, ${(index + 1) % 3 * 127}, ${(index + 2) % 4 * 63}, 0.1)`,
+                    fill: false
+                });
+            });
+
+            // Distruggi il grafico esistente se presente
+            if (window.myChartInstance) {
+                window.myChartInstance.destroy();
+            }
+
+            // Crea il nuovo grafico
+            const ctx = document.getElementById('myChart').getContext('2d');
+            window.myChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Sottostante (alternato) vs Derivati con diverse leve (€)',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y.toFixed(2) + ' €';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Giorni'
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Valore (€)'
+                            },
+                            grid: {
+                                drawBorder: true,
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + ' €';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Genera il grafico all'avvio
+        document.addEventListener('DOMContentLoaded', generaGrafico);
+
+        // Aggiorna il grafico quando si preme il pulsante
+        document.getElementById('aggiorna').addEventListener('click', generaGrafico);
+
+        // Calcola il tasso negativo compensatorio quando si preme il pulsante
+        document.getElementById('calcola_minus').addEventListener('click', () => {
+            const tassoPlus = parseFloat(document.getElementById('oscillazione_plus').value);
+            const tassoCompensatorio = calcolaTassoOpposto(tassoPlus) * 100;
+            document.getElementById('oscillazione_minus').value = tassoCompensatorio.toFixed(2);
+            // Non disabilitiamo il campo per permettere modifiche successive
+        });
+    </script>
+</body>
+
+</html>

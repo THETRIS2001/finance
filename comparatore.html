@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparatore di Ticker</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1/dist/chartjs-adapter-moment.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Comparatore di Ticker</h1>
+        </header>
+        <main>
+            <a href="index.html" class="back-link">← Torna alla pagina principale</a>
+
+            <div class="chart-container">
+                <div class="chart-controls">
+                    <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <label for="numero_confronti" style="font-weight: bold;">Numero di confronti:</label>
+                            <input type="number" id="numero_confronti" value="2" min="1" max="5" step="1" style="padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 60px; text-align: center;">
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <input type="checkbox" id="scala_logaritmica" style="cursor: pointer;">
+                                <label for="scala_logaritmica" style="font-weight: bold; cursor: pointer;">Scala logaritmica</label>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-left: auto;">
+                            <button id="aggiorna_confronti" class="button" style="background-color: #f0f0f0; color: #333; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background-color 0.2s;">Aggiorna Confronti</button>
+                            <button id="genera_grafico" class="button" style="background-color: #0080ff; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background-color 0.2s;">Genera Grafico</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="confronti_container">
+                    <!-- I campi di confronto verranno generati dinamicamente qui -->
+                </div>
+                <div id="loading" style="display: none; text-align: center; margin: 20px;">
+                    <div class="spinner"></div>
+                    <p>Caricamento dati in corso... Questo potrebbe richiedere alcuni secondi.</p>
+                </div>
+
+                <div id="error" style="display: none; color: red; margin: 20px; padding: 15px; background-color: #ffeeee; border-radius: 5px;">
+                </div>
+
+                <div id="chart-wrapper" style="height: 700px; margin-top: 30px;">
+                    <canvas id="comparatoreChart"></canvas>
+                </div>
+
+                <div class="info-section" style="margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h2>Note Importanti</h2>
+
+                    <div class="info-card" style="margin-bottom: 20px;">
+                        <h3>Confronto Normalizzato</h3>
+                        <p>Il grafico mostra la variazione percentuale di ciascun ticker, normalizzato allo 0% all'inizio del periodo selezionato. Questo permette di confrontare le performance relative indipendentemente dal valore assoluto.</p>
+                    </div>
+
+                    <div class="info-card" style="margin-bottom: 20px;">
+                        <h3>Periodi di Tempo Diversi</h3>
+                        <p>È possibile confrontare ticker su periodi di tempo diversi. Il grafico allineerà tutti i ticker al giorno 0 (a sinistra) e mostrerà l'evoluzione percentuale nel tempo in giorni. L'asse X si estenderà fino alla fine del periodo più lungo.</p>
+                    </div>
+                    
+                    <div class="info-card" style="margin-bottom: 20px;">
+                        <h3>Scala Logaritmica</h3>
+                        <p>Attivando la scala logaritmica, il grafico mostrerà le variazioni percentuali su una scala logaritmica. Questo è utile per confrontare asset con performance molto diverse, poiché evidenzia meglio i tassi di crescita relativi piuttosto che le differenze assolute.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Variabili globali
+        let comparatoreChart = null;
+        const colori = [
+            'rgba(255, 99, 132, 1)',   // Rosso
+            'rgba(54, 162, 235, 1)',   // Blu
+            'rgba(255, 206, 86, 1)',   // Giallo
+            'rgba(75, 192, 192, 1)',   // Verde acqua
+            'rgba(153, 102, 255, 1)'   // Viola
+        ];
+
+        // Lista dei ticker disponibili
+        const tickerOptions = [
+            { value: "^GSPC", label: "S&P 500" },
+            { value: "AAPL", label: "Apple Inc." },
+            { value: "MSFT", label: "Microsoft Corporation" },
+            { value: "AMZN", label: "Amazon.com, Inc." },
+            { value: "GOOGL", label: "Alphabet Inc. (Google)" },
+            { value: "TSLA", label: "Tesla, Inc." },
+            { value: "NVDA", label: "Nvidia Corporation" },
+            { value: "V", label: "Visa Inc." },
+            { value: "JPM", label: "JPMorgan Chase & Co." },
+            { value: "JNJ", label: "Johnson & Johnson" },
+            { value: "BTC-USD", label: "Bitcoin" },
+            { value: "GLD", label: "Gold" }
+        ];
+
+        // Inizializzazione al caricamento della pagina
+        document.addEventListener('DOMContentLoaded', function () {
+            // Impostiamo gli event listener
+            document.getElementById('aggiorna_confronti').addEventListener('click', aggiornaConfronti);
+            document.getElementById('genera_grafico').addEventListener('click', generaGrafico);
+            document.getElementById('scala_logaritmica').addEventListener('change', function() {
+                // Se il grafico esiste già, lo aggiorniamo quando cambia la scala
+                if (comparatoreChart) {
+                    generaGrafico();
+                }
+            });
+            
+            // Generiamo i campi iniziali
+            aggiornaConfronti();
+        });
+
+        // Funzione per aggiornare i campi di confronto in base al numero selezionato
+        function aggiornaConfronti() {
+            const numeroConfronti = parseInt(document.getElementById('numero_confronti').value);
+            const confrontiContainer = document.getElementById('confronti_container');
+            
+            // Svuotiamo il container
+            confrontiContainer.innerHTML = '';
+            
+            // Creiamo un wrapper per organizzare i confronti in una griglia
+            const confrontiGrid = document.createElement('div');
+            confrontiGrid.style.display = 'grid';
+            confrontiGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(350px, 1fr))';
+            confrontiGrid.style.gap = '20px';
+            confrontiGrid.style.width = '100%';
+            confrontiContainer.appendChild(confrontiGrid);
+            
+            // Creiamo i campi per ogni confronto
+            for (let i = 0; i < numeroConfronti; i++) {
+                const confrontoDiv = document.createElement('div');
+                confrontoDiv.className = 'confronto-item';
+                confrontoDiv.style.padding = '20px';
+                confrontoDiv.style.backgroundColor = 'white';
+                confrontoDiv.style.borderRadius = '10px';
+                confrontoDiv.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
+                confrontoDiv.style.border = `2px solid ${colori[i % colori.length]}`;
+                confrontoDiv.style.transition = 'transform 0.2s, box-shadow 0.2s';
+                
+                // Effetto hover
+                confrontoDiv.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px)';
+                    this.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.15)';
+                });
+                confrontoDiv.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
+                });
+                
+                // Creiamo l'header del confronto con il titolo
+                const headerDiv = document.createElement('div');
+                headerDiv.style.display = 'flex';
+                headerDiv.style.alignItems = 'center';
+                headerDiv.style.marginBottom = '15px';
+                headerDiv.style.borderBottom = `2px solid ${colori[i % colori.length]}`;
+                headerDiv.style.paddingBottom = '10px';
+                
+                // Indicatore colorato
+                const colorIndicator = document.createElement('div');
+                colorIndicator.style.width = '20px';
+                colorIndicator.style.height = '20px';
+                colorIndicator.style.borderRadius = '50%';
+                colorIndicator.style.backgroundColor = colori[i % colori.length];
+                colorIndicator.style.marginRight = '10px';
+                headerDiv.appendChild(colorIndicator);
+                
+                // Titolo del confronto
+                const titolo = document.createElement('h3');
+                titolo.textContent = `Confronto ${i + 1}`;
+                titolo.style.margin = '0';
+                titolo.style.fontSize = '1.2rem';
+                titolo.style.fontWeight = '600';
+                headerDiv.appendChild(titolo);
+                
+                confrontoDiv.appendChild(headerDiv);
+                
+                // Contenitore per i campi del confronto
+                const contentDiv = document.createElement('div');
+                contentDiv.style.display = 'flex';
+                contentDiv.style.flexDirection = 'column';
+                contentDiv.style.gap = '15px';
+                
+                // Selezione ticker
+                const tickerDiv = document.createElement('div');
+                const tickerLabel = document.createElement('label');
+                tickerLabel.setAttribute('for', `ticker_${i}`);
+                tickerLabel.textContent = 'Ticker:';
+                tickerLabel.style.fontWeight = 'bold';
+                tickerLabel.style.display = 'block';
+                tickerLabel.style.marginBottom = '5px';
+                
+                const tickerSelect = document.createElement('select');
+                tickerSelect.id = `ticker_${i}`;
+                tickerSelect.name = `ticker_${i}`;
+                tickerSelect.style.padding = '10px';
+                tickerSelect.style.border = '1px solid #ddd';
+                tickerSelect.style.borderRadius = '6px';
+                tickerSelect.style.width = '100%';
+                tickerSelect.style.backgroundColor = '#f8f9fa';
+                
+                // Aggiungiamo le opzioni al select
+                tickerOptions.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option.value;
+                    optionElement.textContent = option.label;
+                    tickerSelect.appendChild(optionElement);
+                });
+                
+                tickerDiv.appendChild(tickerLabel);
+                tickerDiv.appendChild(tickerSelect);
+                
+                // Contenitore per le date
+                const dateContainer = document.createElement('div');
+                dateContainer.style.display = 'grid';
+                dateContainer.style.gridTemplateColumns = '1fr 1fr';
+                dateContainer.style.gap = '15px';
+                
+                // Data inizio
+                const dataInizioDiv = document.createElement('div');
+                const dataInizioLabel = document.createElement('label');
+                dataInizioLabel.setAttribute('for', `data_inizio_${i}`);
+                dataInizioLabel.textContent = 'Data inizio:';
+                dataInizioLabel.style.fontWeight = 'bold';
+                dataInizioLabel.style.display = 'block';
+                dataInizioLabel.style.marginBottom = '5px';
+                
+                const dataInizioInput = document.createElement('input');
+                dataInizioInput.type = 'date';
+                dataInizioInput.id = `data_inizio_${i}`;
+                dataInizioInput.name = `data_inizio_${i}`;
+                dataInizioInput.style.padding = '10px';
+                dataInizioInput.style.border = '1px solid #ddd';
+                dataInizioInput.style.borderRadius = '6px';
+                dataInizioInput.style.backgroundColor = '#f8f9fa';
+                
+                // Impostiamo una data di default (5 anni fa per il primo, 2 anni fa per il secondo, ecc.)
+                const oggi = new Date();
+                const dataInizio = new Date();
+                dataInizio.setFullYear(oggi.getFullYear() - (5 - i * 3));
+                dataInizioInput.value = dataInizio.toISOString().split('T')[0];
+                
+                dataInizioDiv.appendChild(dataInizioLabel);
+                dataInizioDiv.appendChild(dataInizioInput);
+                
+                // Data fine
+                const dataFineDiv = document.createElement('div');
+                const dataFineLabel = document.createElement('label');
+                dataFineLabel.setAttribute('for', `data_fine_${i}`);
+                dataFineLabel.textContent = 'Data fine:';
+                dataFineLabel.style.fontWeight = 'bold';
+                dataFineLabel.style.display = 'block';
+                dataFineLabel.style.marginBottom = '5px';
+                
+                const dataFineInput = document.createElement('input');
+                dataFineInput.type = 'date';
+                dataFineInput.id = `data_fine_${i}`;
+                dataFineInput.name = `data_fine_${i}`;
+                dataFineInput.value = oggi.toISOString().split('T')[0];
+                dataFineInput.style.padding = '10px';
+                dataFineInput.style.border = '1px solid #ddd';
+                dataFineInput.style.borderRadius = '6px';
+                dataFineInput.style.backgroundColor = '#f8f9fa';
+                
+                dataFineDiv.appendChild(dataFineLabel);
+                dataFineDiv.appendChild(dataFineInput);
+                
+                // Aggiungiamo le date al loro contenitore
+                dateContainer.appendChild(dataInizioDiv);
+                dateContainer.appendChild(dataFineDiv);
+                
+                // Aggiungiamo tutti i campi al div dei contenuti
+                contentDiv.appendChild(tickerDiv);
+                contentDiv.appendChild(dateContainer);
+                
+                // Aggiungiamo i contenuti al div del confronto
+                confrontoDiv.appendChild(contentDiv);
+                
+                // Aggiungiamo il div del confronto alla griglia
+                confrontiGrid.appendChild(confrontoDiv);
+            }
+        }
+
+        // Funzione per generare il grafico
+        async function generaGrafico() {
+            try {
+                // Mostriamo il loader e nascondiamo eventuali errori precedenti
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('error').style.display = 'none';
+                
+                const numeroConfronti = parseInt(document.getElementById('numero_confronti').value);
+                const datiConfronti = [];
+                
+                // Raccogliamo i dati per ogni confronto
+                for (let i = 0; i < numeroConfronti; i++) {
+                    const ticker = document.getElementById(`ticker_${i}`).value;
+                    const dataInizio = document.getElementById(`data_inizio_${i}`).value;
+                    const dataFine = document.getElementById(`data_fine_${i}`).value;
+                    
+                    // Verifichiamo che le date siano valide
+                    if (!dataInizio || !dataFine) {
+                        throw new Error(`Inserire date valide per il confronto ${i + 1}`);
+                    }
+                    
+                    // Verifichiamo che la data di inizio sia precedente alla data di fine
+                    if (new Date(dataInizio) >= new Date(dataFine)) {
+                        throw new Error(`La data di inizio deve essere precedente alla data di fine per il confronto ${i + 1}`);
+                    }
+                    
+                    // Aggiungiamo i dati del confronto all'array
+                    datiConfronti.push({
+                        ticker,
+                        dataInizio,
+                        dataFine,
+                        label: tickerOptions.find(option => option.value === ticker)?.label || ticker,
+                        colore: colori[i % colori.length]
+                    });
+                }
+                
+                // Carichiamo i dati per ogni confronto
+                const datasets = [];
+                for (const confronto of datiConfronti) {
+                    const dati = await caricaDatiTicker(confronto.ticker, confronto.dataInizio, confronto.dataFine);
+                    datasets.push({
+                        label: `${confronto.label} (${confronto.dataInizio} - ${confronto.dataFine})`,
+                        data: dati.map(d => ({ x: d.giorno, y: d.valorePct })),
+                        borderColor: confronto.colore,
+                        backgroundColor: confronto.colore.replace('1)', '0.1)'),
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        tension: 0.1
+                    });
+                }
+                
+                // Creiamo o aggiorniamo il grafico
+                creaGrafico(datasets);
+                
+                // Nascondiamo il loader
+                document.getElementById('loading').style.display = 'none';
+            } catch (error) {
+                console.error('Errore nella generazione del grafico:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').innerHTML = `<p>Errore: ${error.message}</p>`;
+            }
+        }
+
+        // Funzione per caricare i dati di un ticker
+        async function caricaDatiTicker(ticker, dataInizio, dataFine) {
+            try {
+                // Convertiamo le date in timestamp Unix
+                const period1 = Math.floor(new Date(dataInizio).getTime() / 1000);
+                const period2 = Math.floor(new Date(dataFine).getTime() / 1000);
+                
+                // Costruiamo l'URL per l'API di Yahoo Finance
+                const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/chart/${ticker}?period1=${period1}&period2=${period2}&interval=1d&events=history`;
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`;
+                
+                // Effettuiamo la richiesta
+                const response = await fetch(proxyUrl);
+                const parsedData = await response.json();
+                
+                if (!parsedData.chart || !parsedData.chart.result || parsedData.chart.result.length === 0) {
+                    throw new Error(`Dati non disponibili per ${ticker}`);
+                }
+                
+                const result = parsedData.chart.result[0];
+                const timestamps = result.timestamp;
+                const quotes = result.indicators.quote[0];
+                const closePrices = quotes.close;
+                
+                // Creiamo un array di oggetti con data e prezzo di chiusura
+                const dati = [];
+                for (let i = 0; i < timestamps.length; i++) {
+                    if (closePrices[i] !== null) {
+                        dati.push({
+                            data: new Date(timestamps[i] * 1000),
+                            valore: closePrices[i]
+                        });
+                    }
+                }
+                
+                // Calcoliamo le variazioni percentuali rispetto al valore iniziale
+                const valoreIniziale = dati[0].valore;
+                const dataIniziale = dati[0].data;
+                
+                // Calcoliamo i giorni trascorsi dall'inizio per ogni punto dati
+                return dati.map(d => ({
+                    ...d,
+                    // Calcoliamo i giorni trascorsi dall'inizio (giorno 0)
+                    giorno: Math.floor((d.data - dataIniziale) / (1000 * 60 * 60 * 24)),
+                    valorePct: ((d.valore / valoreIniziale * 100) - 100)
+                }));
+            } catch (error) {
+                console.error(`Errore nel caricamento dei dati per ${ticker}:`, error);
+                throw new Error(`Impossibile caricare i dati per ${ticker}: ${error.message}`);
+            }
+        }
+
+        // Funzione per creare o aggiornare il grafico
+        function creaGrafico(datasets) {
+            const ctx = document.getElementById('comparatoreChart').getContext('2d');
+            const scalaLogaritmica = document.getElementById('scala_logaritmica').checked;
+            
+            // Se esiste già un grafico, lo distruggiamo
+            if (comparatoreChart) {
+                comparatoreChart.destroy();
+            }
+            
+            // Creiamo il nuovo grafico
+            comparatoreChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            title: {
+                                display: true,
+                                text: 'Giorni'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return 'Giorno ' + value;
+                                }
+                            }
+                        },
+                        y: {
+                            type: scalaLogaritmica ? 'logarithmic' : 'linear',
+                            title: {
+                                display: true,
+                                text: 'Variazione (%)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(2) + '%';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    return 'Giorno ' + tooltipItems[0].parsed.x;
+                                },
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}%`;
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Confronto Percentuale fra Ticker'
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
