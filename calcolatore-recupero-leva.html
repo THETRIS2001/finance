@@ -10,6 +10,128 @@
     <script type="text/javascript" async
         src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
     </script>
+    <style>
+        .calculator-container {
+            border-radius: 10px;
+            background-color: #f8f9fa;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+        }
+        
+        .calculator-container:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        .input-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #444;
+        }
+        
+        .input-group input {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .input-group input:focus {
+            border-color: #0080ff;
+            box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.2);
+            outline: none;
+        }
+        
+        .buttons-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            flex: 1;
+        }
+        
+        .btn-primary {
+            background-color: #0080ff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0066cc;
+        }
+        
+        #risultato {
+            background-color: #f0f9ff;
+            border-left: 4px solid #0080ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+            display: none;
+            animation: slideIn 0.4s;
+        }
+        
+        #risultato h3 {
+            margin-top: 0;
+            color: #0080ff;
+            font-size: 1.4rem;
+        }
+        
+        .formula-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .formula-title {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+        
+        .formula-content {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
 </head>
 
 <body>
@@ -20,68 +142,90 @@
         <main>
             <a href="index.html" class="back-link">← Torna alla pagina principale</a>
 
-            <div class="chart-container">
-                <div class="chart-controls">
-                    <div>
+            <div class="calculator-container">
+                <h2>Calcolo del Recupero di un Derivato a Leva</h2>
+                <p>Calcola la percentuale di guadagno giornaliero necessaria per recuperare una perdita in un determinato numero di giorni.</p>
+                
+                <div class="input-grid">
+                    <div class="input-group">
                         <label for="loss_percent">Percentuale di perdita (%):</label>
                         <input type="number" id="loss_percent" value="-70" step="0.01">
                     </div>
-                    <div>
+                    <div class="input-group">
                         <label for="leva">Leva:</label>
                         <input type="number" id="leva" value="5" min="1" step="0.1">
                     </div>
-                    <div>
+                    <div class="input-group">
                         <label for="n_days">Numero di giorni:</label>
                         <input type="number" id="n_days" value="15" min="1" step="1">
                     </div>
-                    <button id="calcola">Calcola Recupero</button>
                 </div>
-                <div id="risultato" style="margin-top: 20px; padding: 15px; background-color: #ffffff; border-radius: 5px; display: none;">
+                
+                <div class="buttons-container">
+                    <button id="calcola" class="btn btn-primary">Calcola Recupero</button>
+                </div>
+                
+                <div id="risultato">
                     <h3>Risultato del calcolo</h3>
                     <p id="guadagno_giornaliero" style="font-size: 1.2em; font-weight: bold;"></p>
                     <p id="dettagli_calcolo"></p>
                 </div>
             </div>
 
-            <section>
-                <h2>Note sul Calcolo</h2>
+            <div class="formula-card">
+                <h3 class="formula-title">Note sul Calcolo</h3>
                 <p>Questo calcolatore determina la percentuale di guadagno giornaliero necessaria per il sottostante affinché un derivato con leva recuperi completamente una perdita in un determinato numero di giorni.</p>
                 
-                <h3>Formula utilizzata:</h3>
+                <h4>Formula utilizzata:</h4>
                 <p>Il calcolo si basa sulle seguenti formule:</p>
-                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
-                    \[ V_0 = 1 + \frac{\text{perdita}}{100} \]
-                </p>
-                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
-                    \[ \text{moltiplicatore}_{\text{giornaliero}} = \left(\frac{1}{V_0}\right)^{\frac{1}{\text{giorni}}} \]
-                </p>
-                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
-                    \[\text{guadagno}_{\text{giornaliero, derivato}} = \text{moltiplicatore}_{\text{giornaliero}} - 1 \]
-                </p>
-                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
-                    \[ \text{guadagno}_{\text{giornaliero, sottostante}} = \frac{\text{guadagno}_{\text{giornaliero, derivato}}}{\text{leva}} \]
-                </p>
+                <div class="formula-content">
+                    <p style="text-align: left;">
+                        \[ V_0 = 1 + \frac{\text{perdita}}{100} \]
+                    </p>
+                </div>
+                <div class="formula-content">
+                    <p style="text-align: left;">
+                        \[ \text{moltiplicatore}_{\text{giornaliero}} = \left(\frac{1}{V_0}\right)^{\frac{1}{\text{giorni}}} \]
+                    </p>
+                </div>
+                <div class="formula-content">
+                    <p style="text-align: left;">
+                        \[\text{guadagno}_{\text{giornaliero, derivato}} = \text{moltiplicatore}_{\text{giornaliero}} - 1 \]
+                    </p>
+                </div>
+                <div class="formula-content">
+                    <p style="text-align: left;">
+                        \[ \text{guadagno}_{\text{giornaliero, sottostante}} = \frac{\text{guadagno}_{\text{giornaliero, derivato}}}{\text{leva}} \]
+                    </p>
+                </div>
                 
-                <h3>Esempio:</h3>
+                <h4>Esempio:</h4>
                 <p>Se un derivato con leva 5 ha subito una perdita del 71% e si desidera recuperare completamente in 3 giorni:</p>
-                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
-                    \[ V_0 = 1 + \frac{-71}{100} = 0.29 \]
-                </p>
-                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
-                    \[ \text{moltiplicatore}_\text{giornaliero} = \left(\frac{1}{0.29}\right)^{\frac{1}{3}} \approx 1.51 \]
-                </p>
-                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
-                    \[ \text{guadagno}_{\text{giornaliero, derivato}} = 1.51 - 1 = 0.51 = 51% \]
-                </p>
-                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
-                    \[ \text{guadagno}_{\text{giornaliero, sottostante}} = \frac{0.51}{5} = 0.102 = 10.2% \]
-                </p>
+                <div class="formula-content">
+                    <p style="text-align: left;">
+                        \[ V_0 = 1 + \frac{-71}{100} = 0.29 \]
+                    </p>
+                </div>
+                <div class="formula-content">
+                    <p style="text-align: left;">
+                        \[ \text{moltiplicatore}_\text{giornaliero} = \left(\frac{1}{0.29}\right)^{\frac{1}{3}} \approx 1.51 \]
+                    </p>
+                </div>
+                <div class="formula-content">
+                    <p style="text-align: left;">
+                        \[ \text{guadagno}_{\text{giornaliero, derivato}} = 1.51 - 1 = 0.51 = 51% \]
+                    </p>
+                </div>
+                <div class="formula-content">
+                    <p style="text-align: left;">
+                        \[ \text{guadagno}_{\text{giornaliero, sottostante}} = \frac{0.51}{5} = 0.102 = 10.2% \]
+                    </p>
+                </div>
                 
-                <h3>Nota importante:</h3>
+                <h4>Nota importante:</h4>
                 <p>Questo calcolo presuppone un comportamento ideale del derivato con leva, senza considerare eventuali costi di gestione (TER) o altri fattori che potrebbero influenzare il rendimento effettivo.</p>
-            </section>
+            </div>
         </main>
-
     </div>
 
     <script>

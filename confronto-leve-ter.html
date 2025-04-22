@@ -9,6 +9,136 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
+    <style>
+        .calculator-container {
+            border-radius: 10px;
+            background-color: #f8f9fa;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+        }
+        
+        .calculator-container:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        .input-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #444;
+        }
+        
+        .input-group input, .input-group select {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .input-group input:focus, .input-group select:focus {
+            border-color: #0080ff;
+            box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.2);
+            outline: none;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            margin-top: 10px;
+            background-color: #0080ff;
+            color: white;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background-color: #0066cc;
+        }
+        
+        .loading-indicator {
+            text-align: center;
+            margin: 20px;
+            display: none;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #0080ff;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        .error-message {
+            color: red;
+            margin: 20px;
+            padding: 15px;
+            background-color: #ffeeee;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .chart-wrapper {
+            height: 800px;
+        }
+        
+        .info-section {
+            margin-top: 30px;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .info-card {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .info-card h3 {
+            margin-top: 0;
+            color: #333;
+            font-size: 1.2rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 
 <body>
@@ -19,17 +149,25 @@
         <main>
             <a href="index.html" class="back-link">← Torna alla pagina principale</a>
 
-            <div class="chart-container">
-                <div class="chart-controls">
-                    <div>
+            <div class="calculator-container">
+                <h2>Analisi Comparativa degli Strumenti a Leva</h2>
+                <p>Questo strumento ti permette di confrontare le performance di un sottostante con quelle di strumenti a leva, considerando o meno l'effetto del TER (Total Expense Ratio).</p>
+                
+                <div class="input-grid">
+                    <div class="input-group">
                         <label for="data_inizio">Data inizio:</label>
-                        <input type="date" id="data_inizio" value="2024-01-01">
+                        <div style="display: flex; width: 100%;">
+                            <input type="date" id="data_inizio" value="2018-01-01" style="flex-grow: 1; border-top-right-radius: 0; border-bottom-right-radius: 0;">
+                            <button id="data_minima_btn" style="border: 2px solid #e0e0e0; background-color: #f8f9fa; padding: 0 10px; border-left: none; border-top-right-radius: 8px; border-bottom-right-radius: 8px; cursor: pointer;" title="Imposta alla data minima disponibile">
+                                Min
+                            </button>
+                        </div>
                     </div>
-                    <div>
+                    <div class="input-group">
                         <label for="data_fine">Data fine:</label>
                         <input type="date" id="data_fine">
                     </div>
-                    <div>
+                    <div class="input-group">
                         <label for="ticker">Ticker:</label>
                         <select id="ticker">
                             <option value="^GSPC">S&P 500</option>
@@ -42,40 +180,46 @@
                             <option value="V">Visa Inc.</option>
                             <option value="JPM">JPMorgan Chase & Co.</option>
                             <option value="JNJ">Johnson & Johnson</option>
+                            <option value="BRK-B">Berkshire Hathaway</option>
                             <option value="BTC-USD">Bitcoin</option>
                             <option value="GLD">Gold</option>
                         </select>
                     </div>
-                    <div>
+                    <div class="input-group">
                         <label for="leve">Leve (separate da virgola):</label>
-                        <input type="text" id="leve" value="2" style="width: 200px;">
+                        <input type="text" id="leve" value="2">
                     </div>
-                    <div>
+                    <div class="input-group">
                         <label for="ter">TER (%):</label>
                         <input type="number" id="ter" value="0" min="0" max="5" step="0.1">
                     </div>
-                    <div>
-                        <label for="scala_logaritmica">Scala logaritmica:</label>
-                        <input type="checkbox" id="scala_logaritmica">
-                    </div>
-                    <button id="aggiorna">Aggiorna Grafico</button>
                 </div>
-                <div id="loading" style="display: none; text-align: center; margin: 20px;">
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="scala_logaritmica">
+                    <label for="scala_logaritmica">Usa scala logaritmica</label>
+                </div>
+                
+                <button id="aggiorna" class="btn">Aggiorna Grafico</button>
+                
+                <div id="loading" class="loading-indicator">
                     <div class="spinner"></div>
                     <p>Caricamento dati in corso... Questo potrebbe richiedere alcuni secondi.</p>
                 </div>
-                <div id="error" style="display: none; color: red; margin: 20px; padding: 15px; background-color: #ffeeee; border-radius: 5px;">
+                
+                <div id="error" class="error-message">
                     <p>Errore nel caricamento dei dati. Riprova più tardi.</p>
                 </div>
-                <div id="chart-wrapper" style="height: 800px;">
+                
+                <div id="chart-wrapper" class="chart-wrapper">
                     <canvas id="myChart"></canvas>
                 </div>
             </div>
             
-            <div class="info-section" style="margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow-x: auto; -webkit-overflow-scrolling: touch;">
+            <div class="info-section">
                 <h2>Note Importanti</h2>
                 
-                <div class="info-card" style="margin-bottom: 20px;">
+                <div class="info-card">
                     <h3>Il grafico dipende dal momento di inizio</h3>
                     <p>Essendo normalizzato a 100 il valore finale dipenderà dal momento di inizio. Si stanno cioè confrontando le variazioni percentuali in un dato intervallo temporale.</p>
                 </div>
@@ -83,7 +227,7 @@
                 <div class="info-card">
                     <h3>Impatto del TER sulla Performance</h3>
                     <ul>
-                        <li>La <strong>percentuale di diminuzione</strong> causata dal <strong>TER</strong> non dipende dalla leva, in quanto il <strong>TER</strong> è fisso, pari allo <strong>0.6% annuo</strong> per ogni anno.</li>
+                        <li>La <strong>percentuale di diminuzione</strong> causata dal <strong>TER</strong> non dipende dalla leva, in quanto il <strong>TER</strong> è fisso, pari allo <strong>0.6% annuo</strong> per ogni anno ad esempio.</li>
                         <li>Tuttavia, <strong>gli strumenti a leva</strong> tendono ad avere un <strong>TER più alto</strong> rispetto agli strumenti non a leva.</li>
                     </ul>
                 </div>
@@ -97,13 +241,73 @@
             const oggi = new Date();
             const dataFineInput = document.getElementById('data_fine');
             dataFineInput.value = oggi.toISOString().split('T')[0];
-            setTimeout(generaGrafico, 500);
+            
+            // Aggiungi event listener per il pulsante di aggiornamento
+            document.getElementById('aggiorna').addEventListener('click', generaGrafico);
+            
+            // Aggiungi event listener per il pulsante data minima
+            document.getElementById('data_minima_btn').addEventListener('click', trovaDataMinima);
             
             // Aggiungi event listener per il checkbox della scala logaritmica
             document.getElementById('scala_logaritmica').addEventListener('change', function() {
                 generaGrafico();
             });
+            
+            // Genera il grafico iniziale
+            setTimeout(generaGrafico, 500);
         });
+
+        // Funzione per trovare la data minima disponibile per il ticker selezionato
+        async function trovaDataMinima() {
+            try {
+                // Mostriamo il loader
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('error').style.display = 'none';
+                document.getElementById('chart-wrapper').style.display = 'none';
+                
+                const ticker = document.getElementById('ticker').value;
+                
+                // Data di partenza molto vecchia per assicurarci di ottenere tutti i dati
+                const dataVecchia = new Date('1950-01-01');
+                const oggi = new Date();
+                
+                // Costruiamo l'URL per l'API di Yahoo Finance usando il formato chart
+                const period1 = Math.floor(dataVecchia.getTime() / 1000);
+                const period2 = Math.floor(oggi.getTime() / 1000);
+                const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/chart/${ticker}?period1=${period1}&period2=${period2}&interval=1d&events=history`;
+                
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`;
+                
+                const response = await fetch(proxyUrl);
+                const parsedData = await response.json();
+                
+                if (!parsedData.chart || !parsedData.chart.result || parsedData.chart.result.length === 0) {
+                    throw new Error('Dati non disponibili');
+                }
+                
+                const result = parsedData.chart.result[0];
+                const timestamps = result.timestamp;
+                
+                if (timestamps && timestamps.length > 0) {
+                    // Il primo timestamp è la data più vecchia disponibile
+                    const dataMinima = new Date(timestamps[0] * 1000);
+                    
+                    // Formatta la data nel formato YYYY-MM-DD per l'input date
+                    const dataFormattata = dataMinima.toISOString().split('T')[0];
+                    document.getElementById('data_inizio').value = dataFormattata;
+                    
+                    // Generiamo il grafico con la nuova data
+                    generaGrafico();
+                } else {
+                    throw new Error('Nessun dato disponibile per questo ticker');
+                }
+            } catch (error) {
+                console.error('Errore nel recupero della data minima:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').innerHTML = `<p>Errore nel recupero della data minima: ${error.message}</p>`;
+            }
+        }
 
         // Funzione per scaricare i dati storici da Yahoo Finance utilizzando Thingproxy per aggirare CORS
         async function scaricaDati(ticker, dataInizio, dataFine) {
@@ -208,37 +412,37 @@
 
                 leve.forEach((leva, index) => {
                     // Processa tutte le leve, inclusa la leva 1 se presente
-                        const color = colors[index % colors.length];
-                        const rgbValues = {
-                            r: (index * 50) % 255,
-                            g: ((index + 1) * 70) % 255,
-                            b: ((index + 2) * 90) % 255
-                        };
-                        
-                        // Linea normale senza TER
-                        const andamentoLeva = calcolaAndamentoLeva(rendimentiGiornalieri, leva, 0);
+                    const color = colors[index % colors.length];
+                    const rgbValues = {
+                        r: (index * 50) % 255,
+                        g: ((index + 1) * 70) % 255,
+                        b: ((index + 2) * 90) % 255
+                    };
+                    
+                    // Linea normale senza TER
+                    const andamentoLeva = calcolaAndamentoLeva(rendimentiGiornalieri, leva, 0);
+                    datasets.push({
+                        label: `Leva ${leva.toFixed(1)}x`,
+                        data: andamentoLeva.map(p => ({ x: p.data, y: p.valore })),
+                        borderColor: color,
+                        backgroundColor: `rgba(${rgbValues.r}, ${rgbValues.g}, ${rgbValues.b}, 0.1)`,
+                        borderWidth: 2,
+                        fill: false
+                    });
+
+                    // Linea con TER applicato (solo se TER > 0)
+                    if (ter > 0) {
+                        const andamentoLevaConTer = calcolaAndamentoLeva(rendimentiGiornalieri, leva, ter);
                         datasets.push({
-                            label: `Leva ${leva.toFixed(1)}x`,
-                            data: andamentoLeva.map(p => ({ x: p.data, y: p.valore })),
+                            label: `Leva ${leva.toFixed(1)}x con TER ${(ter * 100).toFixed(1)}%`,
+                            data: andamentoLevaConTer.map(p => ({ x: p.data, y: p.valore })),
                             borderColor: color,
-                            backgroundColor: `rgba(${rgbValues.r}, ${rgbValues.g}, ${rgbValues.b}, 0.1)`,
+                            backgroundColor: `rgba(${rgbValues.r}, ${rgbValues.g}, ${rgbValues.b}, 0.05)`,
+                            borderDash: [3, 3],
                             borderWidth: 2,
                             fill: false
                         });
-
-                        // Linea con TER applicato (solo se TER > 0)
-                        if (ter > 0) {
-                            const andamentoLevaConTer = calcolaAndamentoLeva(rendimentiGiornalieri, leva, ter);
-                            datasets.push({
-                                label: `Leva ${leva.toFixed(1)}x con TER ${(ter * 100).toFixed(1)}%`,
-                                data: andamentoLevaConTer.map(p => ({ x: p.data, y: p.valore })),
-                                borderColor: color,
-                                backgroundColor: `rgba(${rgbValues.r}, ${rgbValues.g}, ${rgbValues.b}, 0.05)`,
-                                borderDash: [3, 3],
-                                borderWidth: 2,
-                                fill: false
-                            });
-                        }
+                    }
                 });
 
                 if (window.myChartInstance) {
@@ -290,7 +494,6 @@
                                     unit: 'month',
                                     displayFormats: { month: 'MMM YYYY' }
                                 },
-                                display: true,
                                 title: { display: true, text: 'Data' }
                             },
                             y: {
@@ -310,17 +513,6 @@
                 document.getElementById('error').style.display = 'block';
             }
         }
-
-        document.getElementById('aggiorna').addEventListener('click', generaGrafico);
-
-        window.addEventListener('error', function (event) {
-            console.error('Errore JavaScript:', event.error);
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('error').style.display = 'block';
-            document.getElementById('error').innerHTML = `<p>Errore: ${event.error.message}</p>`;
-        });
-
-        console.log('Script di confronto-leve-ter.html caricato correttamente');
     </script>
 </body>
 

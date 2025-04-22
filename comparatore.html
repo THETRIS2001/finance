@@ -99,6 +99,7 @@
             { value: "V", label: "Visa Inc." },
             { value: "JPM", label: "JPMorgan Chase & Co." },
             { value: "JNJ", label: "Johnson & Johnson" },
+            { value: "BRK-B", label: "Berkshire Hathaway" },
             { value: "BTC-USD", label: "Bitcoin" },
             { value: "GLD", label: "Gold" }
         ];
@@ -117,6 +118,9 @@
             
             // Generiamo i campi iniziali
             aggiornaConfronti();
+            
+            // Generiamo il grafico iniziale all'avvio della pagina
+            generaGrafico();
         });
 
         // Funzione per aggiornare i campi di confronto in base al numero selezionato

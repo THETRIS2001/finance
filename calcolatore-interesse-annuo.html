@@ -10,6 +10,178 @@
     <script type="text/javascript" async
         src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
     </script>
+    <style>
+        .calculator-container {
+            border-radius: 10px;
+            background-color: #f8f9fa;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+        }
+        
+        .calculator-container:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        .input-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #444;
+        }
+        
+        .input-group input {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .input-group input:focus {
+            border-color: #0080ff;
+            box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.2);
+            outline: none;
+        }
+        
+        .buttons-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            flex: 1;
+        }
+        
+        .btn-primary {
+            background-color: #0080ff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0066cc;
+        }
+        
+        .btn-secondary {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .tab-container {
+            margin-bottom: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            font-weight: bold;
+        }
+        
+        .tab.active {
+            background-color: #0080ff;
+            color: white;
+        }
+        
+        .input-section {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        
+        .input-section.active {
+            display: block;
+        }
+        
+        .calculated-result {
+            background-color: #f0f9ff;
+            border-left: 4px solid #0080ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+            display: none;
+            animation: slideIn 0.4s;
+        }
+        
+        .calculated-result h3 {
+            margin-top: 0;
+            color: #0080ff;
+            font-size: 1.4rem;
+        }
+        
+        .result-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            margin: 10px 0;
+        }
+        
+        .formula-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .formula-title {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+        
+        .formula-content {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
 </head>
 
 <body>
@@ -20,107 +192,310 @@
         <main>
             <a href="index.html" class="back-link">← Torna alla pagina principale</a>
 
-            <div class="chart-container">
-                <div class="chart-controls">
-                    <div>
-                        <label for="data_iniziale">Data iniziale:</label>
-                        <input type="date" id="data_iniziale" value="2000-01-03">
+            <div class="calculator-container">
+                <h2>Calcola il tasso di interesse annuo</h2>
+                <p>Questo calcolatore ti permette di determinare il tasso di interesse annuo necessario per raggiungere un obiettivo di crescita del capitale.</p>
+                
+                <div class="tab-container">
+                    <div class="tabs">
+                        <button class="tab active" id="tab-anni">Calcolo tramite anni</button>
+                        <button class="tab" id="tab-date">Calcolo tramite date</button>
+                        <button class="tab" id="tab-giorni">Calcolo tramite giorni</button>
                     </div>
-                    <div>
-                        <label for="data_finale">Data finale:</label>
-                        <input type="date" id="data_finale" value="2025-03-05">
+                    
+                    <div class="input-section active" id="section-anni">
+                        <div class="input-grid">
+                            <div class="input-group">
+                                <label for="capitale_iniziale">Capitale iniziale (€):</label>
+                                <input type="number" id="capitale_iniziale" placeholder="Inserisci capitale iniziale" value="1000" step="100">
+                            </div>
+                            <div class="input-group">
+                                <label for="capitale_finale">Capitale desiderato (€):</label>
+                                <input type="number" id="capitale_finale" placeholder="Inserisci capitale finale" value="2000" step="100">
+                            </div>
+                            <div class="input-group">
+                                <label for="anni">Numero di anni:</label>
+                                <input type="number" id="anni" placeholder="Inserisci numero di anni" value="10" min="1" step="1">
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label for="aumento_percentuale">Aumento percentuale (%):</label>
-                        <input type="number" id="aumento_percentuale" value="150" step="0.000001">
+                    
+                    <div class="input-section" id="section-date">
+                        <div class="input-grid">
+                            <div class="input-group">
+                                <label for="capitale_iniziale_date">Capitale iniziale (€):</label>
+                                <input type="number" id="capitale_iniziale_date" placeholder="Inserisci capitale iniziale" value="1000" step="100">
+                            </div>
+                            <div class="input-group">
+                                <label for="capitale_finale_date">Capitale desiderato (€):</label>
+                                <input type="number" id="capitale_finale_date" placeholder="Inserisci capitale finale" value="2000" step="100">
+                            </div>
+                            <div class="input-group">
+                                <label for="data_iniziale">Data iniziale:</label>
+                                <input type="date" id="data_iniziale" value="2023-01-01">
+                            </div>
+                            <div class="input-group">
+                                <label for="data_finale">Data finale:</label>
+                                <input type="date" id="data_finale" value="2033-01-01">
+                            </div>
+                        </div>
                     </div>
-                    <button id="calcola">Calcola Tasso Annuo</button>
+                    
+                    <div class="input-section" id="section-giorni">
+                        <div class="input-grid">
+                            <div class="input-group">
+                                <label for="capitale_iniziale_giorni">Capitale iniziale (€):</label>
+                                <input type="number" id="capitale_iniziale_giorni" placeholder="Inserisci capitale iniziale" value="1000" step="100">
+                            </div>
+                            <div class="input-group">
+                                <label for="capitale_finale_giorni">Capitale desiderato (€):</label>
+                                <input type="number" id="capitale_finale_giorni" placeholder="Inserisci capitale finale" value="2000" step="100">
+                            </div>
+                            <div class="input-group">
+                                <label for="giorni">Numero di giorni:</label>
+                                <input type="number" id="giorni" placeholder="Inserisci numero di giorni" value="365" min="1" step="1">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div id="risultato" style="margin-top: 20px; padding: 15px; background-color: #ffffff; border-radius: 5px; display: none;">
+                
+                <div class="buttons-container">
+                    <button id="calcola_interesse" class="btn btn-primary">Calcola interesse annuo</button>
+                    <button id="resetta" class="btn btn-secondary">Resetta valori</button>
+                </div>
+                
+                <div id="risultato_interesse" class="calculated-result">
                     <h3>Risultato del calcolo</h3>
-                    <p id="tasso_annuo" style="font-size: 1.2em; font-weight: bold;"></p>
-                    <p id="dettagli_calcolo"></p>
+                    <p>Per raggiungere l'obiettivo è necessario un tasso di interesse annuo di:</p>
+                    <div class="result-value" id="tasso_interesse"></div>
+                    <p id="dettaglio_risultato"></p>
                 </div>
             </div>
 
-            <section>
-                <h2>Note sul Calcolo</h2>
-                <p>Questo calcolatore determina il tasso di interesse annuo composto necessario per ottenere un determinato aumento percentuale in un periodo di tempo specificato.</p>
+            <div class="formula-card">
+                <h3 class="formula-title">Formula utilizzata</h3>
+                <p>Il tasso di interesse annuo è calcolato utilizzando la formula della crescita esponenziale del capitale:</p>
                 
-                <h3>Formula utilizzata:</h3>
-                <p>Il tasso di interesse annuo composto è calcolato con la seguente formula:</p>
-                <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-                    <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
-                        \[ \text{tasso}_{\text{annuo}} = \left(1 + \frac{\text{aumento %}}{100}\right)^{\frac{1}{\text{anni}}} - 1 \]
+                <div class="formula-content">
+                    <p style="text-align: center;">
+                        \[ C_f = C_i \cdot (1 + r)^n \]
                     </p>
                 </div>
                 
-                <h3>Esempio:</h3>
-                <p>Se un investimento è aumentato dell'80% in 10 anni, il tasso di interesse annuo composto sarebbe:</p>
-                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
-                    \[ \text{tasso}_{\text{annuo}} = \left(1 + \frac{80}{100}\right)^{\frac{1}{10}} - 1 = 1.8^{0.1} - 1 \approx 0.0603 = 6.03% \]
-                </p>
+                <p>Dove:</p>
+                <ul>
+                    <li>\(C_f\) = Capitale finale</li>
+                    <li>\(C_i\) = Capitale iniziale</li>
+                    <li>\(r\) = Tasso di interesse annuo (in forma decimale)</li>
+                    <li>\(n\) = Numero di anni</li>
+                </ul>
                 
-                <h3>Nota importante:</h3>
-                <p>L'aumento percentuale si calcola come:</p>
-                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
-                    \[ \text{aumento}_{\text{percentuale}} = \left(\frac{\text{valore}_{\text{finale}}}{\text{valore}_{\text{iniziale}}} - 1\right) \times 100 \]
-                </p>
-                <p>Ad esempio, un aumento da 500 a 900 corrisponde a un aumento percentuale di:</p>
-                <p style="background-color: #ffffff; padding: 10px; border-radius: 5px; text-align: left;">
-                    \[ \left(\frac{900}{500} - 1\right) \times 100 = 1.8 - 1 = 0.8 \times 100 = 80% \]
-                </p>
-            </section>
+                <p>Risolvendo per \(r\), otteniamo:</p>
+                
+                <div class="formula-content">
+                    <p style="text-align: center;">
+                        \[ r = \left(\frac{C_f}{C_i}\right)^{\frac{1}{n}} - 1 \]
+                    </p>
+                </div>
+                
+                <p>Questa formula permette di calcolare il tasso di interesse annuo necessario per far crescere un capitale iniziale \(C_i\) fino a un capitale finale \(C_f\) in \(n\) anni.</p>
+                
+                <h4>Esempio:</h4>
+                <p>Se si vuole far crescere un capitale di 1.000€ fino a 2.000€ in 10 anni:</p>
+                <div class="formula-content">
+                    <p style="text-align: center;">
+                        \[ r = \left(\frac{2.000}{1.000}\right)^{\frac{1}{10}} - 1 = 2^{0.1} - 1 \approx 0.0718 = 7.18\% \]
+                    </p>
+                </div>
+                <p>Sarà quindi necessario un interesse annuo del 7.18% per raddoppiare il capitale in 10 anni.</p>
+                
+                <h4>Calcolo tramite giorni:</h4>
+                <p>Per il calcolo tramite giorni, convertiamo prima i giorni in anni (dividendo per 365.25 per considerare gli anni bisestili) e poi applichiamo la stessa formula:</p>
+                <div class="formula-content">
+                    <p style="text-align: center;">
+                        \[ n_{anni} = \frac{giorni}{365.25} \]
+                        <br>
+                        \[ r = \left(\frac{C_f}{C_i}\right)^{\frac{1}{n_{anni}}} - 1 \]
+                    </p>
+                </div>
+            </div>
         </main>
-
     </div>
 
     <script>
-        // Imposta le date predefinite
         document.addEventListener('DOMContentLoaded', function() {
-            // Imposta le date predefinite nel formato richiesto da input type="date"
-            const dataIniziale = document.getElementById('data_iniziale');
-            const dataFinale = document.getElementById('data_finale');
+            // Gestione delle tab
+            const tabAnni = document.getElementById('tab-anni');
+            const tabDate = document.getElementById('tab-date');
+            const tabGiorni = document.getElementById('tab-giorni');
+            const sectionAnni = document.getElementById('section-anni');
+            const sectionDate = document.getElementById('section-date');
+            const sectionGiorni = document.getElementById('section-giorni');
             
-            // Aggiungi event listener per il pulsante di calcolo
-            document.getElementById('calcola').addEventListener('click', calcolaTassoAnnuo);
-        });
-        
-        // Funzione per calcolare il tasso annuo
-        function calcolaTassoAnnuo() {
-            // Ottieni i valori dai campi di input
-            const dataIniziale = new Date(document.getElementById('data_iniziale').value);
-            const dataFinale = new Date(document.getElementById('data_finale').value);
-            const aumentoPercentuale = parseFloat(document.getElementById('aumento_percentuale').value);
-            
-            // Calcola il numero di anni tra le due date
-            const millisecondiPerAnno = 1000 * 60 * 60 * 24 * 365.25; // Consideriamo gli anni bisestili
-            const anni = (dataFinale - dataIniziale) / millisecondiPerAnno;
-            
-            // Calcola il tasso di interesse annuo composto
-            const tassoAnnuo = Math.pow(1 + aumentoPercentuale / 100, 1 / anni) - 1;
-            
-            // Mostra il risultato
-            const risultatoDiv = document.getElementById('risultato');
-            risultatoDiv.style.display = 'block';
-            
-            document.getElementById('tasso_annuo').textContent = 
-                `Il tasso di interesse annuo composto è: ${(tassoAnnuo * 100).toFixed(2)}%`;
-            
-            document.getElementById('dettagli_calcolo').innerHTML = 
-                `Periodo di calcolo: ${formatDate(dataIniziale)} - ${formatDate(dataFinale)}<br>` +
-                `Durata: ${anni.toFixed(2)} anni<br>` +
-                `Aumento percentuale totale: ${aumentoPercentuale.toFixed(2)}%`;
-        }
-        
-        // Funzione per formattare la data nel formato italiano
-        function formatDate(date) {
-            return date.toLocaleDateString('it-IT', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
+            tabAnni.addEventListener('click', function() {
+                tabAnni.classList.add('active');
+                tabDate.classList.remove('active');
+                tabGiorni.classList.remove('active');
+                sectionAnni.classList.add('active');
+                sectionDate.classList.remove('active');
+                sectionGiorni.classList.remove('active');
             });
-        }
+            
+            tabDate.addEventListener('click', function() {
+                tabDate.classList.add('active');
+                tabAnni.classList.remove('active');
+                tabGiorni.classList.remove('active');
+                sectionDate.classList.add('active');
+                sectionAnni.classList.remove('active');
+                sectionGiorni.classList.remove('active');
+            });
+            
+            tabGiorni.addEventListener('click', function() {
+                tabGiorni.classList.add('active');
+                tabAnni.classList.remove('active');
+                tabDate.classList.remove('active');
+                sectionGiorni.classList.add('active');
+                sectionAnni.classList.remove('active');
+                sectionDate.classList.remove('active');
+            });
+            
+            // Riferimenti agli elementi del DOM
+            const capitaleInizialeInput = document.getElementById('capitale_iniziale');
+            const capitaleFinaleInput = document.getElementById('capitale_finale');
+            const anniInput = document.getElementById('anni');
+            
+            const capitaleInizialeDateInput = document.getElementById('capitale_iniziale_date');
+            const capitaleFinaleDateInput = document.getElementById('capitale_finale_date');
+            const dataInizialeInput = document.getElementById('data_iniziale');
+            const dataFinaleInput = document.getElementById('data_finale');
+            
+            const capitaleInizialeGiorniInput = document.getElementById('capitale_iniziale_giorni');
+            const capitaleFinaleGiorniInput = document.getElementById('capitale_finale_giorni');
+            const giorniInput = document.getElementById('giorni');
+            
+            const calcolaButton = document.getElementById('calcola_interesse');
+            const resettaButton = document.getElementById('resetta');
+            const risultatoDiv = document.getElementById('risultato_interesse');
+            const tassoInteresseOutput = document.getElementById('tasso_interesse');
+            const dettaglioRisultato = document.getElementById('dettaglio_risultato');
+            
+            // Funzione per calcolare il tasso di interesse annuo
+            function calcolaTassoAnnuo() {
+                // Determina quale modalità è attiva
+                const isAnniMode = sectionAnni.classList.contains('active');
+                const isDateMode = sectionDate.classList.contains('active');
+                const isGiorniMode = sectionGiorni.classList.contains('active');
+                
+                let capitaleIniziale, capitaleFinale, periodo, anni;
+                let dettaglio = '';
+                
+                // Ottieni i valori dagli input in base alla modalità attiva
+                if (isAnniMode) {
+                    capitaleIniziale = parseFloat(capitaleInizialeInput.value);
+                    capitaleFinale = parseFloat(capitaleFinaleInput.value);
+                    anni = parseFloat(anniInput.value);
+                    
+                    if (isNaN(capitaleIniziale) || isNaN(capitaleFinale) || isNaN(anni) || capitaleIniziale <= 0 || capitaleFinale <= 0 || anni <= 0) {
+                        alert("Inserisci valori validi per tutti i campi.");
+                        return;
+                    }
+                    
+                    dettaglio = `Se investi ${capitaleIniziale.toFixed(2)}€ con questo tasso, dopo ${anni} anni avrai ${capitaleFinale.toFixed(2)}€.`;
+                }
+                else if (isDateMode) {
+                    capitaleIniziale = parseFloat(capitaleInizialeDateInput.value);
+                    capitaleFinale = parseFloat(capitaleFinaleDateInput.value);
+                    const dataIniziale = new Date(dataInizialeInput.value);
+                    const dataFinale = new Date(dataFinaleInput.value);
+                    
+                    if (isNaN(capitaleIniziale) || isNaN(capitaleFinale) || capitaleIniziale <= 0 || capitaleFinale <= 0) {
+                        alert("Inserisci valori validi per tutti i campi.");
+                        return;
+                    }
+                    
+                    // Calcola il numero di anni tra le due date
+                    const millisecondiPerAnno = 1000 * 60 * 60 * 24 * 365.25; // Considera gli anni bisestili
+                    anni = (dataFinale - dataIniziale) / millisecondiPerAnno;
+                    
+                    if (anni <= 0) {
+                        alert("La data finale deve essere successiva alla data iniziale.");
+                        return;
+                    }
+                    
+                    dettaglio = `Se investi ${capitaleIniziale.toFixed(2)}€ dal ${formatDate(dataIniziale)} al ${formatDate(dataFinale)} (${anni.toFixed(2)} anni), avrai ${capitaleFinale.toFixed(2)}€.`;
+                }
+                else if (isGiorniMode) {
+                    capitaleIniziale = parseFloat(capitaleInizialeGiorniInput.value);
+                    capitaleFinale = parseFloat(capitaleFinaleGiorniInput.value);
+                    const giorni = parseInt(giorniInput.value);
+                    
+                    if (isNaN(capitaleIniziale) || isNaN(capitaleFinale) || isNaN(giorni) || capitaleIniziale <= 0 || capitaleFinale <= 0 || giorni <= 0) {
+                        alert("Inserisci valori validi per tutti i campi.");
+                        return;
+                    }
+                    
+                    // Converti giorni in anni
+                    anni = giorni / 365.25;
+                    
+                    dettaglio = `Se investi ${capitaleIniziale.toFixed(2)}€ per ${giorni} giorni (${anni.toFixed(4)} anni), avrai ${capitaleFinale.toFixed(2)}€.`;
+                }
+                
+                // Calcolo del tasso di interesse annuo
+                const tassoInteresse = Math.pow(capitaleFinale / capitaleIniziale, 1 / anni) - 1;
+                
+                // Mostra il risultato
+                tassoInteresseOutput.textContent = (tassoInteresse * 100).toFixed(2) + "%";
+                dettaglioRisultato.textContent = dettaglio;
+                
+                // Mostra il div del risultato
+                risultatoDiv.style.display = "block";
+            }
+            
+            // Funzione per resettare i valori
+            function resettaValori() {
+                // Valori per la modalità anni
+                capitaleInizialeInput.value = "1000";
+                capitaleFinaleInput.value = "2000";
+                anniInput.value = "10";
+                
+                // Valori per la modalità date
+                capitaleInizialeDateInput.value = "1000";
+                capitaleFinaleDateInput.value = "2000";
+                dataInizialeInput.value = "2023-01-01";
+                dataFinaleInput.value = "2033-01-01";
+                
+                // Valori per la modalità giorni
+                capitaleInizialeGiorniInput.value = "1000";
+                capitaleFinaleGiorniInput.value = "2000";
+                giorniInput.value = "365";
+                
+                // Nascondi il risultato
+                risultatoDiv.style.display = "none";
+            }
+            
+            // Funzione per formattare la data nel formato italiano
+            function formatDate(date) {
+                return date.toLocaleDateString('it-IT', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            }
+            
+            // Aggiungi event listener ai pulsanti
+            calcolaButton.addEventListener('click', calcolaTassoAnnuo);
+            resettaButton.addEventListener('click', resettaValori);
+            
+            // Imposta valori predefiniti per le date
+            const oggi = new Date();
+            const tradieci = new Date();
+            tradieci.setFullYear(oggi.getFullYear() + 10);
+            dataInizialeInput.valueAsDate = oggi;
+            dataFinaleInput.valueAsDate = tradieci;
+            
+            // Calcola il risultato al caricamento per i valori predefiniti
+            calcolaTassoAnnuo();
+        });
     </script>
 </body>
 
