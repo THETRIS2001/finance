@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confronto Sottostante e Derivato con Knockout</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+    <style>
+        .calculator-container {
+            border-radius: 10px;
+            background-color: #f8f9fa;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+        }
+        
+        .calculator-container:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        .input-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #444;
+        }
+        
+        .input-group input, .input-group select {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .input-group input:focus, .input-group select:focus {
+            border-color: #0080ff;
+            box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.2);
+            outline: none;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            margin-top: 10px;
+            background-color: #0080ff;
+            color: white;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background-color: #0066cc;
+        }
+        
+        .loading-indicator {
+            text-align: center;
+            margin: 20px;
+            display: none;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #0080ff;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        .error-message {
+            color: red;
+            margin: 20px;
+            padding: 15px;
+            background-color: #ffeeee;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .chart-wrapper {
+            height: 600px;
+        }
+        
+        .info-section {
+            margin-top: 30px;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .info-card {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .info-card h3 {
+            margin-top: 0;
+            color: #333;
+            font-size: 1.2rem;
+        }
+
+        .stats-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+        
+        .stat-card {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-title {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #0080ff;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Confronto Sottostante e Derivato con Knockout</h1>
+        </header>
+        <main>
+            <a href="index.html" class="back-link">← Torna alla pagina principale</a>
+
+            <div class="calculator-container">
+                <h2>Analisi Comparativa con Livello Knockout</h2>
+                <p>Questo strumento permette di visualizzare l'andamento di un sottostante rispetto al derivato con leva, 
+                   considerando il livello di knockout. Se il sottostante raggiunge il livello di knockout, il derivato 
+                   viene liquidato e il grafico mostra solo il sottostante a partire da quel momento.</p>
+                
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="punto_partenza">Punto di partenza:</label>
+                        <input type="number" id="punto_partenza" value="100" step="0.01" min="0.01">
+                    </div>
+                    <div class="input-group">
+                        <label for="data_inizio">Data inizio:</label>
+                        <div style="display: flex; width: 100%;">
+                            <input type="date" id="data_inizio" style="flex-grow: 1; border-top-right-radius: 0; border-bottom-right-radius: 0;">
+                            <button id="data_minima_btn" style="border: 2px solid #e0e0e0; background-color: #f8f9fa; padding: 0 10px; border-left: none; border-top-right-radius: 8px; border-bottom-right-radius: 8px; cursor: pointer;" title="Imposta alla data minima disponibile">
+                                Min
+                            </button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="data_fine">Data fine:</label>
+                        <input type="date" id="data_fine">
+                    </div>
+                    <div class="input-group">
+                        <label for="ticker">Ticker:</label>
+                        <select id="ticker">
+                            <option value="^GSPC">S&P 500</option>
+                            <option value="AAPL">Apple Inc.</option>
+                            <option value="MSFT">Microsoft Corporation</option>
+                            <option value="AMZN">Amazon.com, Inc.</option>
+                            <option value="GOOGL">Alphabet Inc. (Google)</option>
+                            <option value="TSLA">Tesla, Inc.</option>
+                            <option value="NVDA">Nvidia Corporation</option>
+                            <option value="V">Visa Inc.</option>
+                            <option value="JPM">JPMorgan Chase & Co.</option>
+                            <option value="JNJ">Johnson & Johnson</option>
+                            <option value="BRK-B">Berkshire Hathaway</option>
+                            <option value="BTC-USD">Bitcoin</option>
+                            <option value="GLD">Gold</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="leva">Leva iniziale:</label>
+                        <input type="number" id="leva" value="3" min="1" max="100" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label for="knockout_manuale">Livello knockout (opzionale):</label>
+                        <input type="number" id="knockout_manuale" placeholder="Lascia vuoto per calcolo automatico" step="0.01">
+                    </div>
+                </div>
+                
+                <button id="calcola_btn" class="btn">Calcola</button>
+                
+                <div id="loading_indicator" class="loading-indicator">
+                    <div class="spinner"></div>
+                    <p>Caricamento dati in corso...</p>
+                </div>
+                
+                <div id="error_message" class="error-message"></div>
+            </div>
+            
+            <div class="calculator-container">
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="scala_logaritmica">
+                        <label for="scala_logaritmica">Usa scala logaritmica</label>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="chart"></canvas>
+                </div>
+            </div>
+            
+            <div class="stats-container" id="stats_container" style="display: none;">
+                <h2>Statistiche</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-title">Livello Knockout</div>
+                        <div class="stat-value" id="knockout_value">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Sottostante Variazione Finale %</div>
+                        <div class="stat-value" id="sottostante_var">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Derivato Variazione Finale %</div>
+                        <div class="stat-value" id="derivato_var">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Stato Knockout</div>
+                        <div class="stat-value" id="knockout_status">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Leva Iniziale</div>
+                        <div class="stat-value" id="leva_iniziale">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Leva Finale</div>
+                        <div class="stat-value" id="leva_finale">-</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h2>Informazioni sul Calcolatore</h2>
+                <div class="info-card">
+                    <h3>Come funziona</h3>
+                    <p>Questo strumento confronta l'andamento di un sottostante con quello di un derivato a leva, tenendo conto del livello di knockout:</p>
+                    <ul>
+                        <li>Scegli un punto di partenza, un intervallo di date e un ticker per il sottostante</li>
+                        <li>Imposta la leva iniziale desiderata</li>
+                        <li>Il livello di knockout viene calcolato automaticamente in base alla leva, oppure puoi specificarlo manualmente</li>
+                        <li>Se il sottostante raggiunge il livello di knockout, il derivato viene liquidato ("knocked out")</li>
+                        <li>Il grafico mostra le variazioni percentuali a partire dal punto di partenza</li>
+                    </ul>
+                </div>
+                <div class="info-card">
+                    <h3>Note</h3>
+                    <p>Questo calcolo è una semplificazione e non tiene conto di tutti i fattori presenti nei derivati reali, come i costi di finanziamento, gli spread bid-ask, o eventuali commissioni.</p>
+                    <p>La formula predefinita per il calcolo del knockout è: <code>Knockout = Valore Iniziale × (1 - (1 / leva))</code></p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Imposta le date di default
+            const oggi = new Date();
+            const unAnnoFa = new Date();
+            unAnnoFa.setFullYear(oggi.getFullYear() - 1);
+            
+            document.getElementById('data_inizio').valueAsDate = unAnnoFa;
+            document.getElementById('data_fine').valueAsDate = oggi;
+            
+            // Riferimenti agli elementi del DOM
+            const calcolaBtn = document.getElementById('calcola_btn');
+            const loadingIndicator = document.getElementById('loading_indicator');
+            const errorMessage = document.getElementById('error_message');
+            const statsContainer = document.getElementById('stats_container');
+            const levaInput = document.getElementById('leva');
+            const knockoutInput = document.getElementById('knockout_manuale');
+            const puntoPartenzaInput = document.getElementById('punto_partenza');
+            const dataMinimaBtn = document.getElementById('data_minima_btn');
+            const scalaLogaritmicaCheckbox = document.getElementById('scala_logaritmica');
+            
+            // Chart.js instance
+            let chart = null;
+            
+            // Funzione per calcolare il knockout basato sulla leva
+            function calcolaKnockout(puntoPartenza, leva) {
+                const protectiveBuffer = 0.00; // 5% di buffer di protezione aggiuntivo
+                return puntoPartenza * (1 - ((1 - protectiveBuffer) / leva));
+            }
+            
+            // Aggiorna il placeholder del knockout quando la leva cambia
+            levaInput.addEventListener('input', function() {
+                const puntoPartenza = parseFloat(puntoPartenzaInput.value) || 100;
+                const leva = parseFloat(levaInput.value) || 3;
+                const knockoutSuggerito = calcolaKnockout(puntoPartenza, leva);
+                knockoutInput.placeholder = `Suggerito: ${knockoutSuggerito.toFixed(2)}`;
+            });
+            
+            // Aggiorna il placeholder del knockout quando il punto di partenza cambia
+            puntoPartenzaInput.addEventListener('input', function() {
+                const puntoPartenza = parseFloat(puntoPartenzaInput.value) || 100;
+                const leva = parseFloat(levaInput.value) || 3;
+                const knockoutSuggerito = calcolaKnockout(puntoPartenza, leva);
+                knockoutInput.placeholder = `Suggerito: ${knockoutSuggerito.toFixed(2)}`;
+            });
+            
+            // Imposta il placeholder iniziale
+            const knockoutSuggerito = calcolaKnockout(
+                parseFloat(puntoPartenzaInput.value) || 100, 
+                parseFloat(levaInput.value) || 3
+            );
+            knockoutInput.placeholder = `Suggerito: ${knockoutSuggerito.toFixed(2)}`;
+            
+            // Event listener per il pulsante di calcolo
+            calcolaBtn.addEventListener('click', function() {
+                // Mostra l'indicatore di caricamento
+                loadingIndicator.style.display = 'block';
+                errorMessage.style.display = 'none';
+                
+                // Ottieni i valori input
+                const puntoPartenza = parseFloat(document.getElementById('punto_partenza').value);
+                const dataInizio = document.getElementById('data_inizio').value;
+                const dataFine = document.getElementById('data_fine').value;
+                const ticker = document.getElementById('ticker').value;
+                const levaIniziale = parseFloat(document.getElementById('leva').value);
+                const knockoutManuale = document.getElementById('knockout_manuale').value;
+                const scalaLogaritmica = document.getElementById('scala_logaritmica').checked;
+                
+                // Determina il livello di knockout (da input o calcolato automaticamente)
+                let knockoutLevel;
+                if (knockoutManuale && !isNaN(parseFloat(knockoutManuale))) {
+                    knockoutLevel = parseFloat(knockoutManuale);
+                } else {
+                    // Usa la funzione calcolaKnockout
+                    knockoutLevel = calcolaKnockout(puntoPartenza, levaIniziale);
+                }
+                
+                // Aggiorna il valore del knockout nelle statistiche
+                document.getElementById('knockout_value').textContent = knockoutLevel.toFixed(2);
+                
+                // Mostra l'indicatore di caricamento
+                loadingIndicator.style.display = 'block';
+                errorMessage.style.display = 'none';
+                
+                // Ottieni i dati reali da Yahoo Finance
+                fetchYahooFinanceData(ticker, dataInizio, dataFine)
+                    .then(datiYahoo => {
+                        try {
+                            if (datiYahoo && datiYahoo.length > 0) {
+                                // Utilizza i dati reali per creare il dataset
+                                const dati = elaboraDatiReali(datiYahoo, puntoPartenza, knockoutLevel, levaIniziale);
+                                
+                                // Crea o aggiorna il grafico
+                                creaGrafico(dati, scalaLogaritmica);
+                                
+                                // Aggiorna statistiche
+                                aggiornaStatistiche(dati);
+                                
+                                // Mostra il container delle statistiche
+                                statsContainer.style.display = 'block';
+                            } else {
+                                throw new Error("Nessun dato disponibile per il ticker selezionato");
+                            }
+                        } catch (error) {
+                            console.error("Errore nell'elaborazione dei dati:", error);
+                            errorMessage.textContent = 'Errore nel calcolo: ' + error.message;
+                            errorMessage.style.display = 'block';
+                        } finally {
+                            // Nascondi l'indicatore di caricamento
+                            loadingIndicator.style.display = 'none';
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Errore nel recupero dei dati:", error);
+                        errorMessage.textContent = 'Errore nel recupero dei dati: ' + error.message;
+                        errorMessage.style.display = 'block';
+                        loadingIndicator.style.display = 'none';
+                    });
+            });
+            
+            // Event listener per il pulsante data minima
+            dataMinimaBtn.addEventListener('click', trovaDataMinima);
+            
+            // Event listener per il checkbox della scala logaritmica
+            scalaLogaritmicaCheckbox.addEventListener('change', function() {
+                // Se c'è un grafico attivo, lo ridisegna con la nuova scala
+                if (chart) {
+                    const scalaLogaritmica = this.checked;
+                    // Aggiorna la scala
+                    chart.options.scales.y.type = scalaLogaritmica ? 'logarithmic' : 'linear';
+                    chart.update();
+                }
+            });
+            
+            // Genera grafico automaticamente all'apertura della pagina
+            generaGraficoIniziale();
+            
+            // Funzione per generare automaticamente il grafico iniziale
+            function generaGraficoIniziale() {
+                // Mostra l'indicatore di caricamento
+                loadingIndicator.style.display = 'block';
+                errorMessage.style.display = 'none';
+                
+                // Ottieni i valori predefiniti
+                const puntoPartenza = parseFloat(puntoPartenzaInput.value);
+                const dataInizio = document.getElementById('data_inizio').value;
+                const dataFine = document.getElementById('data_fine').value;
+                const ticker = document.getElementById('ticker').value;
+                const levaIniziale = parseFloat(levaInput.value);
+                const scalaLogaritmica = scalaLogaritmicaCheckbox.checked;
+                
+                // Calcola il livello di knockout
+                const knockoutLevel = calcolaKnockout(puntoPartenza, levaIniziale);
+                
+                // Aggiorna il valore del knockout nelle statistiche
+                document.getElementById('knockout_value').textContent = knockoutLevel.toFixed(2);
+                
+                // Ottieni i dati reali da Yahoo Finance
+                fetchYahooFinanceData(ticker, dataInizio, dataFine)
+                    .then(datiYahoo => {
+                        try {
+                            if (datiYahoo && datiYahoo.length > 0) {
+                                // Utilizza i dati reali per creare il dataset
+                                const dati = elaboraDatiReali(datiYahoo, puntoPartenza, knockoutLevel, levaIniziale);
+                                
+                                // Crea o aggiorna il grafico
+                                creaGrafico(dati, scalaLogaritmica);
+                                
+                                // Aggiorna statistiche
+                                aggiornaStatistiche(dati);
+                                
+                                // Mostra il container delle statistiche
+                                statsContainer.style.display = 'block';
+                            } else {
+                                throw new Error("Nessun dato disponibile per il ticker selezionato");
+                            }
+                        } catch (error) {
+                            console.error("Errore nell'elaborazione dei dati:", error);
+                            errorMessage.textContent = 'Errore nel calcolo: ' + error.message;
+                            errorMessage.style.display = 'block';
+                        } finally {
+                            // Nascondi l'indicatore di caricamento
+                            loadingIndicator.style.display = 'none';
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Errore nel recupero dei dati:", error);
+                        errorMessage.textContent = 'Errore nel recupero dei dati: ' + error.message;
+                        errorMessage.style.display = 'block';
+                        loadingIndicator.style.display = 'none';
+                    });
+            }
+            
+            // Funzione per trovare la data minima disponibile per il ticker selezionato
+            async function trovaDataMinima() {
+                try {
+                    // Mostriamo il loader
+                    loadingIndicator.style.display = 'block';
+                    errorMessage.style.display = 'none';
+                    
+                    const ticker = document.getElementById('ticker').value;
+                    
+                    // Data di partenza molto vecchia per assicurarci di ottenere tutti i dati
+                    const dataVecchia = new Date('1950-01-01');
+                    const oggi = new Date();
+                    
+                    // Costruiamo l'URL per l'API di Yahoo Finance usando il formato chart
+                    const period1 = Math.floor(dataVecchia.getTime() / 1000);
+                    const period2 = Math.floor(oggi.getTime() / 1000);
+                    const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/chart/${ticker}?period1=${period1}&period2=${period2}&interval=1d&events=history`;
+                    
+                    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`;
+                    
+                    const response = await fetch(proxyUrl);
+                    const parsedData = await response.json();
+                    
+                    if (!parsedData.chart || !parsedData.chart.result || parsedData.chart.result.length === 0) {
+                        throw new Error('Dati non disponibili');
+                    }
+                    
+                    const result = parsedData.chart.result[0];
+                    const timestamps = result.timestamp;
+                    
+                    if (timestamps && timestamps.length > 0) {
+                        // Il primo timestamp è la data più vecchia disponibile
+                        const dataMinima = new Date(timestamps[0] * 1000);
+                        
+                        // Formatta la data nel formato YYYY-MM-DD per l'input date
+                        const dataFormattata = dataMinima.toISOString().split('T')[0];
+                        document.getElementById('data_inizio').value = dataFormattata;
+                    } else {
+                        throw new Error('Nessun dato disponibile per questo ticker');
+                    }
+                } catch (error) {
+                    console.error('Errore nel recupero della data minima:', error);
+                    errorMessage.textContent = 'Errore nel recupero della data minima: ' + error.message;
+                    errorMessage.style.display = 'block';
+                } finally {
+                    // Nascondi l'indicatore di caricamento
+                    loadingIndicator.style.display = 'none';
+                }
+            }
+            
+            // Funzione per recuperare dati da Yahoo Finance
+            async function fetchYahooFinanceData(ticker, dataInizio, dataFine) {
+                try {
+                    // Converti le date nel formato richiesto da Yahoo Finance (timestamp in secondi)
+                    const startDate = new Date(dataInizio);
+                    const endDate = new Date(dataFine);
+                    const period1 = Math.floor(startDate.getTime() / 1000);
+                    const period2 = Math.floor(endDate.getTime() / 1000);
+                    
+                    // URL per Yahoo Finance (formato chart)
+                    const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/chart/${ticker}?period1=${period1}&period2=${period2}&interval=1d&events=history`;
+                    
+                    // Utilizziamo un proxy CORS per evitare blocchi
+                    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`;
+                    
+                    // Effettua la richiesta
+                    const response = await fetch(proxyUrl);
+                    
+                    if (!response.ok) {
+                        throw new Error(`Errore HTTP: ${response.status}`);
+                    }
+                    
+                    // Ottieni i dati come JSON
+                    const parsedData = await response.json();
+                    
+                    if (!parsedData.chart || !parsedData.chart.result || parsedData.chart.result.length === 0) {
+                        throw new Error(`Dati non disponibili per ${ticker}`);
+                    }
+                    
+                    const result = parsedData.chart.result[0];
+                    const timestamps = result.timestamp;
+                    const quotes = result.indicators.quote[0];
+                    const closePrices = quotes.close;
+                    
+                    // Processa i dati e crea l'array dei dati
+                    const processedData = [];
+                    for (let i = 0; i < timestamps.length; i++) {
+                        if (closePrices[i] !== null) {
+                            processedData.push({
+                                date: new Date(timestamps[i] * 1000),
+                                close: closePrices[i]
+                            });
+                        }
+                    }
+                    
+                    return processedData;
+                } catch (error) {
+                    console.error('Errore durante il recupero dei dati:', error);
+                    throw error; // Rilancia l'errore per gestirlo nel chiamante
+                }
+            }
+            
+            // Funzione per elaborare i dati reali
+            function elaboraDatiReali(datiYahoo, puntoPartenza, knockoutLevel, levaIniziale) {
+                const labels = [];
+                const sottostanteValues = [];
+                const derivatoValues = [];
+                const levaValues = []; // Aggiungo un array per tracciare i valori della leva
+                let knockoutRaggiunto = false;
+                let dataKnockout = null;
+                
+                // Ottieni il valore iniziale
+                const valoreIniziale = datiYahoo[0].close;
+                
+                // Fattore di scala per normalizzare i valori al punto di partenza richiesto
+                const fattoreScala = puntoPartenza / valoreIniziale;
+                
+                let valoreDerivato = puntoPartenza;
+                let prevSottostante = null;
+                
+                // Elabora ogni punto dati
+                for (let i = 0; i < datiYahoo.length; i++) {
+                    const data = datiYahoo[i].date;
+                    const valoreSottostanteReale = datiYahoo[i].close * fattoreScala;
+                    
+                    labels.push(data);
+                    sottostanteValues.push(valoreSottostanteReale);
+                    
+                    // Calcola la leva attuale in base alla distanza dal knockout
+                    // Formula: leva = valoreSottostante / (valoreSottostante - knockoutLevel)
+                    let levaAttuale;
+                    
+                    // Verifica se il knockout è stato raggiunto (sottostante <= livello knockout)
+                    if (valoreSottostanteReale <= knockoutLevel && !knockoutRaggiunto) {
+                        // Knockout raggiunto per la prima volta
+                        knockoutRaggiunto = true;
+                        dataKnockout = new Date(data);
+                        console.log(`Data: ${data.toISOString().split('T')[0]} | Sottostante: ${valoreSottostanteReale.toFixed(2)} | Derivato: KNOCKOUT | Leva: KNOCKOUT | Knockout Raggiunto: SI`);
+                        
+                        // Termina la serie del derivato e della leva
+                        derivatoValues.push(null);
+                        levaValues.push(null);
+                    } else if (knockoutRaggiunto) {
+                        // Knockout già raggiunto in precedenza, continua a tenere la serie derivato e leva come null
+                        derivatoValues.push(null);
+                        levaValues.push(null);
+                        console.log(`Data: ${data.toISOString().split('T')[0]} | Sottostante: ${valoreSottostanteReale.toFixed(2)} | Derivato: KNOCKOUT | Leva: KNOCKOUT | Knockout Raggiunto: SI`);
+                    } else {
+                        // Knockout non ancora raggiunto, calcola il derivato normalmente
+                        // Calcola la leva attuale
+                        levaAttuale = valoreSottostanteReale / (valoreSottostanteReale - knockoutLevel);
+                        levaValues.push(levaAttuale);
+                        
+                        if (prevSottostante !== null) {
+                            const variazioneSottostante = (valoreSottostanteReale / prevSottostante) - 1;
+                            // Usa la leva attuale invece di quella iniziale fissa
+                            const variazioneDerivato = variazioneSottostante * levaAttuale;
+                            valoreDerivato *= (1 + variazioneDerivato);
+                        }
+                        derivatoValues.push(valoreDerivato);
+                        console.log(`Data: ${data.toISOString().split('T')[0]} | Sottostante: ${valoreSottostanteReale.toFixed(2)} | Derivato: ${valoreDerivato.toFixed(2)} | Leva: ${levaAttuale.toFixed(2)} | Knockout Raggiunto: NO`);
+                    }
+                    
+                    prevSottostante = valoreSottostanteReale;
+                }
+                
+                // Aggiungo un log riepilogativo alla fine
+                console.log("=== RIEPILOGO ===");
+                console.log("Knockout raggiunto:", knockoutRaggiunto);
+                console.log("Livello knockout:", knockoutLevel.toFixed(2));
+                console.log("Punto partenza:", puntoPartenza);
+                console.log("Leva iniziale:", levaIniziale);
+                console.log("Leva finale:", levaValues[levaValues.length - 1] ? levaValues[levaValues.length - 1].toFixed(2) : "KNOCKOUT");
+                console.log("Valori minimi sottostante:", Math.min(...sottostanteValues).toFixed(2));
+                console.log("=== FINE RIEPILOGO ===");
+                
+                return {
+                    labels,
+                    sottostanteValues,
+                    derivatoValues,
+                    levaValues,
+                    knockoutRaggiunto,
+                    dataKnockout,
+                    puntoPartenza,
+                    knockoutLevel
+                };
+            }
+            
+            // Funzione per creare o aggiornare il grafico
+            function creaGrafico(dati, scalaLogaritmica) {
+                const ctx = document.getElementById('chart').getContext('2d');
+                
+                // Distruggi il grafico esistente se presente
+                if (chart) {
+                    chart.destroy();
+                }
+                
+                // Utilizziamo i valori assoluti anziché le variazioni percentuali
+                const sottostanteValues = dati.sottostanteValues;
+                const derivatoValues = dati.derivatoValues;
+                const levaValues = dati.levaValues;
+                
+                // Crea nuovo grafico
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: dati.labels,
+                        datasets: [{
+                            label: 'Sottostante',
+                            data: sottostanteValues,
+                            borderColor: '#2c3e50',
+                            backgroundColor: 'rgba(44, 62, 80, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.1,
+                            pointRadius: 0,
+                            pointHoverRadius: 4,
+                            yAxisID: 'y'
+                        }, {
+                            label: 'Derivato (Leva)',
+                            data: derivatoValues,
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.1,
+                            pointRadius: 0,
+                            pointHoverRadius: 4,
+                            yAxisID: 'y'
+                        }, {
+                            label: 'Leva',
+                            data: levaValues,
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.1,
+                            pointRadius: 0,
+                            pointHoverRadius: 4,
+                            yAxisID: 'y1', // Asse Y secondario per la leva
+                            borderDash: [5, 5]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        },
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'day',
+                                    tooltipFormat: 'DD MMM YYYY'
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Data'
+                                }
+                            },
+                            y: {
+                                type: scalaLogaritmica ? 'logarithmic' : 'linear',
+                                title: {
+                                    display: true,
+                                    text: 'Valore'
+                                },
+                                position: 'left'
+                            },
+                            y1: {
+                                type: 'linear',
+                                title: {
+                                    display: true,
+                                    text: 'Leva'
+                                },
+                                position: 'right',
+                                grid: {
+                                    drawOnChartArea: false // Solo assi, non griglia
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += context.parsed.y.toFixed(2);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            },
+                            annotation: {
+                                annotations: {
+                                    // Linea di Knockout nel grafico come linea orizzontale
+                                    knockoutLine: {
+                                        type: 'line',
+                                        yMin: dati.knockoutLevel,
+                                        yMax: dati.knockoutLevel,
+                                        borderColor: 'rgba(255, 0, 0, 0.7)',
+                                        borderWidth: 2,
+                                        borderDash: [5, 5],
+                                        label: {
+                                            content: 'Livello Knockout',
+                                            display: true,
+                                            position: 'end',
+                                            backgroundColor: 'rgba(255, 0, 0, 0.8)',
+                                            color: 'white',
+                                            font: {
+                                                weight: 'bold'
+                                            }
+                                        }
+                                    },
+                                    // Linea verticale nel punto di Knockout se è stato raggiunto
+                                    knockoutEvent: dati.knockoutRaggiunto ? {
+                                        type: 'line',
+                                        xMin: dati.dataKnockout,
+                                        xMax: dati.dataKnockout,
+                                        borderColor: 'rgba(255, 0, 0, 0.7)',
+                                        borderWidth: 2,
+                                        label: {
+                                            content: 'Knockout!',
+                                            display: true,
+                                            position: 'top',
+                                            backgroundColor: 'rgba(255, 0, 0, 0.8)',
+                                            color: 'white',
+                                            font: {
+                                                weight: 'bold'
+                                            }
+                                        }
+                                    } : undefined
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Funzione per aggiornare le statistiche
+            function aggiornaStatistiche(dati) {
+                const sottostanteIniziale = dati.puntoPartenza;
+                const sottostanteFinale = dati.sottostanteValues[dati.sottostanteValues.length - 1];
+                const sottostanteVar = ((sottostanteFinale / sottostanteIniziale) - 1) * 100;
+                
+                let derivatoVar;
+                let knockoutStatus;
+                let levaFinale;
+                
+                if (dati.knockoutRaggiunto) {
+                    // Se knockout raggiunto, il valore derivato è 0 (perdita totale)
+                    derivatoVar = -100;
+                    knockoutStatus = 'Raggiunto';
+                    levaFinale = 'KNOCKOUT';
+                } else {
+                    const derivatoFinale = dati.derivatoValues[dati.derivatoValues.length - 1];
+                    derivatoVar = ((derivatoFinale / dati.puntoPartenza) - 1) * 100;
+                    knockoutStatus = 'Non Raggiunto';
+                    
+                    // Ottieni l'ultimo valore della leva
+                    const ultimaLeva = dati.levaValues[dati.levaValues.length - 1];
+                    levaFinale = ultimaLeva.toFixed(2);
+                }
+                
+                // Aggiorna i valori nel DOM
+                document.getElementById('sottostante_var').textContent = sottostanteVar.toFixed(2) + '%';
+                document.getElementById('derivato_var').textContent = derivatoVar.toFixed(2) + '%';
+                document.getElementById('knockout_status').textContent = knockoutStatus;
+                
+                // Aggiorna i valori della leva
+                document.getElementById('leva_iniziale').textContent = dati.levaValues[0].toFixed(2) + 'x';
+                document.getElementById('leva_finale').textContent = (typeof levaFinale === 'string') ? levaFinale : levaFinale + 'x';
+                
+                // Imposta colori in base al rendimento
+                document.getElementById('sottostante_var').style.color = sottostanteVar >= 0 ? '#27ae60' : '#e74c3c';
+                document.getElementById('derivato_var').style.color = derivatoVar >= 0 ? '#27ae60' : '#e74c3c';
+                document.getElementById('knockout_status').style.color = dati.knockoutRaggiunto ? '#e74c3c' : '#27ae60';
+            }
+        });
+    </script>
+</body>
+
+</html> 
