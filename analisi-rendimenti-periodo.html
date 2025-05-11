@@ -10,6 +10,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1/dist/chartjs-adapter-moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
+    
     <style>
         .calculator-container {
             border-radius: 10px;
@@ -953,9 +955,9 @@
                     rendimentiMaxMinChart.destroy();
                 }
                 
-                // Converti i dati per farli partire da 100 (invece che da 0)
-                const massimoDatiAdjusted = massimoDati.map(valore => 100 + valore);
-                const minimoDatiAdjusted = minimoDati.map(valore => 100 + valore);
+                // Utilizziamo direttamente i dati percentuali
+                const massimoDatiAdjusted = massimoDati;
+                const minimoDatiAdjusted = minimoDati;
                 
                 const aggrega = window.aggregaGlobale || 1;
                 
@@ -1046,9 +1048,13 @@
                                 type: 'linear',
                                 title: {
                                     display: true,
-                                    text: 'Indice (100 = base)'
+                                    text: 'Rendimento (%)'
                                 },
-                                min: Math.min(minimoDatiAdjusted) > 0 ? null : 0
+                                ticks: {
+                                    callback: function(value) {
+                                        return formattaPercentuale(value);
+                                    }
+                                },
                             }
                         }
                     }
@@ -1136,6 +1142,28 @@
                                         ];
                                     }
                                 }
+                            },
+                            annotation: {
+                                annotations: {
+                                    line1: {
+                                        type: 'line',
+                                        yMin: 50,
+                                        yMax: 50,
+                                        borderColor: 'rgba(128, 128, 128, 0.7)',
+                                        borderWidth: 1,
+                                        borderDash: [5, 5],
+                                        label: {
+                                            content: '50%',
+                                            enabled: true,
+                                            position: 'start',
+                                            backgroundColor: 'rgba(128, 128, 128, 0.7)',
+                                            color: 'white',
+                                            font: {
+                                                size: 10
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         },
                         scales: {
@@ -1189,14 +1217,18 @@
                 // Prepariamo i dati per il grafico
                 const labels = datiStorici.map(dato => dato.date);
                 
-                // Dati originali
-                const datiOriginali = datiStorici.map(dato => dato.close);
+                // Valore iniziale per la normalizzazione
+                const valoreInizialeOriginale = datiStorici[0].close;
                 
-                // Dati con leva (se applicabile)
+                // Dati originali normalizzati a 100
+                const datiOriginali = datiStorici.map(dato => (dato.close / valoreInizialeOriginale) * 100);
+                
+                // Dati con leva (se applicabile), normalizzati a 100
                 let datiConLeva = [];
                 if (leva !== 1) {
                     const datiLeva = applicaLeva(datiStorici, leva);
-                    datiConLeva = datiLeva.map(dato => dato.close);
+                    const valoreInizialeLeva = datiLeva[0].close;
+                    datiConLeva = datiLeva.map(dato => (dato.close / valoreInizialeLeva) * 100);
                 }
                 
                 const ctx = document.getElementById('andamento_ticker_chart').getContext('2d');
@@ -1266,7 +1298,11 @@
                                             label += ': ';
                                         }
                                         if (context.parsed.y !== null) {
-                                            label += context.parsed.y.toFixed(2);
+                                            // Mostra il valore normalizzato con un simbolo di percentuale
+                                            const valorePeriodo = context.parsed.y;
+                                            const variazione = valorePeriodo - 100;
+                                            const segno = variazione >= 0 ? '+' : '';
+                                            label += `${valorePeriodo.toFixed(2)} (${segno}${variazione.toFixed(2)}%)`;
                                         }
                                         return label;
                                     }
@@ -1291,8 +1327,9 @@
                                 type: 'linear',
                                 title: {
                                     display: true,
-                                    text: 'Prezzo'
-                                }
+                                    text: 'Indice (100 = valore iniziale)'
+                                },
+                                min: 0
                             }
                         }
                     }
