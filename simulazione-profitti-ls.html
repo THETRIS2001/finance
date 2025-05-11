@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulazione Profitti Cumulati Long vs Short</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- MathJax per il rendering delle formule matematiche -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.35.6/es6-shim.min.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .calculator-container {
+            border-radius: 10px;
+            background-color: #f8f9fa;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+        }
+        
+        .calculator-container:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        .input-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #444;
+        }
+        
+        .input-group input {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .input-group input:focus {
+            border-color: #0080ff;
+            box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.2);
+            outline: none;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            margin-top: 10px;
+            background-color: #0080ff;
+            color: white;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background-color: #0066cc;
+        }
+        
+        .chart-wrapper {
+            height: 600px;
+            margin-top: 30px;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .results-card {
+            background-color: #f0f9ff;
+            border-left: 4px solid #0080ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .info-section {
+            margin-top: 30px;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .info-card {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .info-card h3 {
+            margin-top: 0;
+            color: #333;
+            font-size: 1.2rem;
+        }
+        
+        .chart-container {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .chart-container h2 {
+            margin-top: 0;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Simulazione Profitti Cumulati Long vs Short</h1>
+        </header>
+        <main>
+            <a href="index.html" class="back-link">← Torna alla pagina principale</a>
+
+            <div class="info-card" style="margin-bottom: 20px;">
+                <h3>Leva con Knockout</h3>
+                <p>La leva con knockout viene calcolata come mostrato sotto, non è fissa.</p>
+                <p>In particolare, il livello di knockout è pensato per essere sempre tale che la leva ottenuta corrisponda a una perdita del 100% se raggiunto il knockout.</p>
+                
+                <div style="background-color: #fff; border-radius: 8px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin: 15px 0;">
+                    <h4 style="margin-top: 0; color: #2c3e50;">Calcolatore Leva-Knockout</h4>
+                    
+                    <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 10px;">
+                        <div style="flex: 1; min-width: 200px;">
+                            <label for="leverInput" style="display: block; margin-bottom: 5px; font-weight: 600;">Leva iniziale:</label>
+                            <input type="number" id="leverInput" min="1" step="0.1" value="15" style="width: 50%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        
+                        <div style="flex: 1; min-width: 200px;">
+                            <label for="knockoutInput" style="display: block; margin-bottom: 5px; font-weight: 600;">Livello knockout (% dal prezzo):</label>
+                            <input type="number" id="knockoutInput" min="0.1" max="99" step="0.01" value="6.67" style="width: 50%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 10px; background-color: #f5f5f5; padding: 10px; border-radius: 4px;">
+                        <p style="margin: 0; font-size: 0.9rem; color: #555;">
+                            Con leva <strong id="currentLever">15</strong>× e prezzo del sottostante a 100€, il knockout avviene a <strong id="knockoutPrice">93.33</strong>€ (calo del <strong id="knockoutPercentage">6.67</strong>%).
+                        </p>
+                    </div>
+                </div>
+                
+                <p class="label-value"><strong>Esempio: </strong><span class="time-value"></span></p>
+                <ul>
+                    <li>Leva <strong>x15</strong> significa che se il sottostante sta a <strong>100 €</strong>, il knockout sta a <strong>93,33 €</strong>.</li>
+                    <li>Quindi, se perdo il <strong>6,66%</strong> del sottostante, ciò corrisponde a un <strong>-100%</strong> del derivato.</li>
+                    <li>In questo caso, viene raggiunto il knockout e il sistema vende automaticamente per evitare l'indebitamento.</li>
+                </ul>
+                <p>La leva si ricalcola all'aggiornarsi del sottostante, tendendo ad aumentare esponenzialmente tanto più siamo vicini al knockout.</p>
+                <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <p style="text-align: center;">
+                        \[ \text{Leva} = \frac{\text{Prezzo del sottostante}}{\text{Prezzo del sottostante} - \text{Livello di knockout}} \]
+                    </p>
+                </div>
+            </div>
+
+            <div class="calculator-container">
+                <section class="chart-container">
+                    <h2>Simulazione Profitti Cumulati Long vs Short Standard</h2> 
+                    <div style="background-color: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 20px; border-left: 4px solid #2196F3;">
+                        <h3>Simulazione Long/Short Standard</h3>
+                        <p>Questa simulazione mostra l'andamento dei profitti cumulati di una posizione LONG e di una posizione SHORT aperte simultaneamente sullo stesso asset ipotetico, con lo stesso capitale iniziale.</p>
+                        <p>In assenza di costi di transazione e finanziamento, i profitti e le perdite delle due posizioni si annullano a vicenda. La linea "Somma Profitti (L+S)" mostra la somma dei due profitti.</p>
+                    </div>
+
+                    <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px;">
+                        <div style="flex: 1; min-width: 300px;">
+                            <div style="background-color: #fff; border-radius: 8px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                                <h4 style="margin-top: 0; color: #2c3e50;">Parametri</h4>
+
+                                <div style="margin-bottom: 15px;">
+                                    <label for="percentageChange" style="display: block; margin-bottom: 5px; font-weight: 600;">Variazione giornaliera media: <span id="percentageValue">0.0%</span></label>
+                                    <input type="range" id="percentageChange" min="-5" max="5" step="0.1" value="0" style="width: 100%;">
+                                </div>
+
+                                <div style="margin-bottom: 15px;">
+                                    <label for="volatility" style="display: block; margin-bottom: 5px; font-weight: 600;">Volatilità: <span id="volatilityValue">5.0%</span></label>
+                                    <input type="range" id="volatility" min="0" max="10" step="0.1" value="5" style="width: 100%;">
+                                </div>
+
+                                <div style="margin-bottom: 15px;">
+                                    <label for="days" style="display: block; margin-bottom: 5px; font-weight: 600;">Numero di giorni: <span id="daysValue">100</span></label>
+                                    <input type="range" id="days" min="10" max="365" step="1" value="100" style="width: 100%;">
+                                </div>
+
+                                <div style="margin-top: 20px; text-align: center;">
+                                    <button id="regenerateChart" style="padding: 10px 20px; font-size: 1rem; cursor: pointer; background-color: #2196F3; color: white; border: none; border-radius: 5px;">Rigenera Grafico</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="flex: 1; min-width: 300px;">
+                            <div style="background-color: #fff; border-radius: 8px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                                <h4 style="margin-top: 0; color: #2c3e50;">Risultati Finali</h4>
+
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <div style="text-align: center; padding: 10px; background-color: rgba(76, 175, 80, 0.1); border-radius: 5px;">
+                                        <div style="font-weight: 600; color: #4CAF50;">Profitto LONG</div>
+                                        <div style="font-size: 1.2rem;" id="finalLong">0.00</div>
+                                    </div>
+
+                                    <div style="text-align: center; padding: 10px; background-color: rgba(244, 67, 54, 0.1); border-radius: 5px;">
+                                        <div style="font-weight: 600; color: #F44336;">Profitto SHORT</div>
+                                        <div style="font-size: 1.2rem;" id="finalShort">0.00</div>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 10px; text-align: center; padding: 10px; background-color: rgba(33, 150, 243, 0.1); border-radius: 5px;">
+                                    <div style="font-weight: 600; color: #2196F3;">Somma Finale (L+S)</div>
+                                    <div style="font-size: 1.2rem;" id="finalSum">0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="height: 650px; margin-bottom: 30px;">
+                        <canvas id="interestCompoundChart"></canvas>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Configurazione del grafico per l'interesse composto
+            const ctx = document.getElementById('interestCompoundChart').getContext('2d');
+
+            // Funzione per calcolare i profitti Long/Short STANDARD con variazione randomica
+            function calculateStandardLongShort(initialValue, mediaVariabilita, days, volatilita) {
+                let assetValue = initialValue; // Traccia il valore dell'asset
+                let longProfits = [0];         // Profitto Long (assetValue - initialValue)
+                let shortProfits = [0];        // Profitto Short (initialValue - assetValue)
+                let sumProfits = [0];          // Somma Long + Short (teoricamente zero)
+
+                for (let i = 1; i <= days; i++) {
+                    // Genera una variazione randomica attorno al valore medio
+                    const variazionePercentuale = mediaVariabilita / 100 + (Math.random() * 2 - 1) * (volatilita / 100);
+
+                    // Aggiorna il valore dell'asset
+                    assetValue = assetValue * (1 + variazionePercentuale);
+
+                    // Calcola profitto Long standard
+                    const longProfit = assetValue - initialValue;
+                    longProfits.push(longProfit);
+
+                    // Calcola profitto Short standard
+                    const shortProfit = initialValue - assetValue; // Venduto a initial, ricomprato a assetValue
+                    shortProfits.push(shortProfit);
+
+                    // Somma dei profitti Long + Short (dovrebbe essere sempre ~0)
+                    sumProfits.push(longProfit + shortProfit);
+                }
+
+                // Ritorna i dati mantenendo i nomi delle chiavi per compatibilità
+                return {
+                    longValues: longProfits,   // Array dei profitti Long
+                    shortValues: shortProfits,  // Array dei profitti Short
+                    sumValues: sumProfits      // Array della somma L+S (~0)
+                };
+            }
+
+            // Valori iniziali
+            const initialValue = 100;
+
+            // Riferimenti agli elementi di input e span (per efficienza)
+            const percentageChangeInput = document.getElementById('percentageChange');
+            const volatilityInput = document.getElementById('volatility');
+            const daysInput = document.getElementById('days');
+            const percentageValueSpan = document.getElementById('percentageValue');
+            const volatilityValueSpan = document.getElementById('volatilityValue');
+            const daysValueSpan = document.getElementById('daysValue');
+            const finalLongSpan = document.getElementById('finalLong');
+            const finalShortSpan = document.getElementById('finalShort');
+            const finalSumSpan = document.getElementById('finalSum');
+            const regenerateButton = document.getElementById('regenerateChart');
+
+            // Crea il grafico (inizializzato vuoto, riempito da updateChart)
+            const interestCompoundChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [], // Inizializzato vuoto
+                    datasets: [
+                        {
+                            label: 'PROFITTO LONG', // Etichetta aggiornata
+                            data: [],           // Inizializzato vuoto
+                            borderColor: '#4CAF50',
+                            backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.1,
+                            fill: false
+                        },
+                        {
+                            label: 'PROFITTO SHORT', // Etichetta aggiornata
+                            data: [],           // Inizializzato vuoto
+                            borderColor: '#F44336',
+                            backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.1,
+                            fill: false
+                        },
+                        {
+                            label: 'Somma Profitti (L+S)', // Etichetta aggiornata
+                            data: [],               // Inizializzato vuoto
+                            borderColor: '#2196F3',
+                            backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                            borderWidth: 1, // Più sottile, dato che è ~0
+                            tension: 0.1,
+                            fill: false,
+                            borderDash: [5, 5] // Tratteggiata per distinguerla
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Simulazione Profitti Cumulati Long vs Short Standard', // Titolo aggiornato
+                            font: {
+                                size: 16
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                title: function (context) {
+                                    return 'Giorno ' + context[0].label;
+                                },
+                                label: function (context) {
+                                    const rawValue = context.parsed.y;
+                                    const formatted = rawValue.toFixed(2) + ' €';
+                                    // Usa l'etichetta del dataset corretta
+                                    return context.dataset.label + ': ' + formatted;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Giorni'
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Profitto Cumulato (€)' // Asse Y aggiornato
+                            },
+                            grid: {
+                                color: function (context) {
+                                    if (context.tick.value === 0) {
+                                        return 'rgba(0, 0, 0, 0.8)'; // Linea dello zero più scura
+                                    }
+                                    return 'rgba(0, 0, 0, 0.1)';
+                                },
+                                lineWidth: function (context) {
+                                     return 1; // Tutte le linee della griglia uguali
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Funzione per aggiornare il grafico e i risultati
+            function updateChart() {
+                const mediaVariabilita = parseFloat(percentageChangeInput.value);
+                const volatilita = parseFloat(volatilityInput.value);
+                const newDays = parseInt(daysInput.value);
+
+                // Aggiorna i valori visualizzati nei parametri
+                percentageValueSpan.textContent = mediaVariabilita.toFixed(1) + '%';
+                volatilityValueSpan.textContent = volatilita.toFixed(1) + '%';
+                daysValueSpan.textContent = newDays;
+
+                // Ricalcola i dati usando la funzione STANDARD
+                const newData = calculateStandardLongShort(initialValue, mediaVariabilita, newDays, volatilita);
+                const newLabels = Array.from({ length: newDays + 1 }, (_, i) => i);
+
+                // Aggiorna i dati del grafico
+                interestCompoundChart.data.labels = newLabels;
+                interestCompoundChart.data.datasets[0].data = newData.longValues;  // Profitti Long
+                interestCompoundChart.data.datasets[1].data = newData.shortValues; // Profitti Short
+                interestCompoundChart.data.datasets[2].data = newData.sumValues;   // Somma L+S (~0)
+                interestCompoundChart.update();
+
+                // Calcola e aggiorna i valori finali mostrati
+                const finalLong = newData.longValues[newDays];
+                const finalShort = newData.shortValues[newDays];
+                const finalSum = newData.sumValues[newDays]; // Sarà vicino a zero
+
+                finalLongSpan.textContent = finalLong.toFixed(2);
+                finalShortSpan.textContent = finalShort.toFixed(2);
+                finalSumSpan.textContent = finalSum.toFixed(2); // Mostra la somma L+S
+            }
+
+            // Aggiorna il grafico quando cambiano i parametri
+            percentageChangeInput.addEventListener('input', updateChart);
+            volatilityInput.addEventListener('input', updateChart);
+            daysInput.addEventListener('input', updateChart);
+
+            // Aggiungi event listener per il pulsante di rigenerazione
+            regenerateButton.addEventListener('click', updateChart); // Chiama direttamente updateChart
+
+            // Inizializza il grafico e i valori al caricamento della pagina
+            updateChart();
+
+            // Inizializzazione del calcolatore Leva-Knockout
+            const leverInput = document.getElementById('leverInput');
+            const knockoutInput = document.getElementById('knockoutInput');
+            const currentLever = document.getElementById('currentLever');
+            const knockoutPrice = document.getElementById('knockoutPrice');
+            const knockoutPercentage = document.getElementById('knockoutPercentage');
+            
+            // Funzione per calcolare la percentuale di knockout dalla leva
+            function calculateKnockoutFromLever(lever) {
+                // Se la leva è L, la distanza percentuale dal knockout è 100/L
+                return (100 / lever).toFixed(2);
+            }
+            
+            // Funzione per calcolare la leva dal livello di knockout (espresso come percentuale)
+            function calculateLeverFromKnockout(knockoutPercent) {
+                // Se la distanza percentuale dal knockout è K, la leva è 100/K
+                return (100 / knockoutPercent).toFixed(2);
+            }
+            
+            // Aggiorna tutti i valori basati sul valore della leva
+            function updateFromLever() {
+                const lever = parseFloat(leverInput.value);
+                if (isNaN(lever) || lever <= 0) return;
+                
+                const knockoutPercent = calculateKnockoutFromLever(lever);
+                knockoutInput.value = knockoutPercent;
+                
+                // Aggiorna anche il testo esplicativo
+                currentLever.textContent = lever.toFixed(2);
+                knockoutPercentage.textContent = knockoutPercent;
+                knockoutPrice.textContent = (100 - knockoutPercent).toFixed(2);
+            }
+            
+            // Aggiorna tutti i valori basati sul livello di knockout
+            function updateFromKnockout() {
+                const knockoutPercent = parseFloat(knockoutInput.value);
+                if (isNaN(knockoutPercent) || knockoutPercent <= 0 || knockoutPercent >= 100) return;
+                
+                const lever = calculateLeverFromKnockout(knockoutPercent);
+                leverInput.value = lever;
+                
+                // Aggiorna anche il testo esplicativo
+                currentLever.textContent = lever;
+                knockoutPercentage.textContent = knockoutPercent;
+                knockoutPrice.textContent = (100 - knockoutPercent).toFixed(2);
+            }
+            
+            // Aggiungi eventi per gli input
+            leverInput.addEventListener('input', updateFromLever);
+            knockoutInput.addEventListener('input', updateFromKnockout);
+            
+            // Inizializza con i valori predefiniti
+            updateFromLever();
+        });
+    </script>
+</body>
+</html> 

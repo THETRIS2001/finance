@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisi Rendimenti per Periodo</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1/dist/chartjs-adapter-moment.min.js"></script>
+    <style>
+        .calculator-container {
+            border-radius: 10px;
+            background-color: #f8f9fa;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            margin-top: 30px;
+            transition: all 0.3s;
+        }
+        
+        .calculator-container:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        .input-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #444;
+        }
+        
+        .input-group input, .input-group select {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .input-group input:focus, .input-group select:focus {
+            border-color: #0080ff;
+            box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.2);
+            outline: none;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            margin-top: 10px;
+            background-color: #0080ff;
+            color: white;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background-color: #0066cc;
+        }
+        
+        .loading-indicator {
+            text-align: center;
+            margin: 20px;
+            display: none;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #0080ff;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        .error-message {
+            color: red;
+            margin: 20px;
+            padding: 15px;
+            background-color: #ffeeee;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .chart-wrapper {
+            height: 500px;
+            margin-top: 30px;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .stats-container {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f0f9ff;
+            border-radius: 8px;
+            border-left: 4px solid #0080ff;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+        
+        .stat-card {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-title {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #0080ff;
+        }
+        
+        .info-section {
+            margin-top: 30px;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .info-card {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .info-card h3 {
+            margin-top: 0;
+            color: #333;
+            font-size: 1.2rem;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        
+        .stats-table th, .stats-table td {
+            border: 1px solid #dee2e6;
+            padding: 8px 12px;
+            text-align: center;
+        }
+        
+        .stats-table th {
+            background-color: #e9ecef;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stats-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .stats-table tr:hover {
+            background-color: #e9f5ff;
+        }
+        
+        .highlight-row {
+            background-color: #e6f7ff !important;
+            font-weight: 600;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Analisi Rendimenti per Periodo</h1>
+        </header>
+        <main>
+            <a href="index.html" class="back-link">← Torna alla pagina principale</a>
+
+            <div class="calculator-container">
+                <h2>Analisi dei Rendimenti Medi per Ogni Periodo</h2>
+                <p>Questo strumento analizza i rendimenti medi, massimi e minimi per ogni possibile periodo di investimento, da 1 giorno fino al massimo periodo disponibile nei dati.</p>
+                
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="data_inizio">Data inizio dati:</label>
+                        <div style="display: flex; width: 100%;">
+                            <input type="date" id="data_inizio" value="2000-01-01" style="flex-grow: 1; border-top-right-radius: 0; border-bottom-right-radius: 0;">
+                            <button id="data_minima_btn" style="border: 2px solid #e0e0e0; background-color: #f8f9fa; padding: 0 10px; border-left: none; border-top-right-radius: 8px; border-bottom-right-radius: 8px; cursor: pointer;" title="Imposta alla data minima disponibile">
+                                Min
+                            </button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="data_fine">Data fine dati:</label>
+                        <input type="date" id="data_fine">
+                    </div>
+                    <div class="input-group">
+                        <label for="ticker">Ticker:</label>
+                        <select id="ticker">
+                            <option value="^GSPC">S&P 500</option>
+                            <option value="AAPL">Apple Inc.</option>
+                            <option value="MSFT">Microsoft Corporation</option>
+                            <option value="AMZN">Amazon.com, Inc.</option>
+                            <option value="GOOGL">Alphabet Inc. (Google)</option>
+                            <option value="TSLA">Tesla, Inc.</option>
+                            <option value="NVDA">Nvidia Corporation</option>
+                            <option value="V">Visa Inc.</option>
+                            <option value="JPM">JPMorgan Chase & Co.</option>
+                            <option value="JNJ">Johnson & Johnson</option>
+                            <option value="BRK-B">Berkshire Hathaway</option>
+                            <option value="BTC-USD">Bitcoin</option>
+                            <option value="GLD">Gold</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="leva">Leva:</label>
+                        <input type="number" id="leva" value="1" min="0.1" max="100" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label for="aggrega">Aggrega ogni (giorni):</label>
+                        <input type="number" id="aggrega" value="1" min="1" max="100" step="1">
+                    </div>
+                </div>
+                
+                <button id="analizza_btn" class="btn">Analizza Rendimenti</button>
+                
+                <div id="loading_indicator" class="loading-indicator">
+                    <div class="spinner"></div>
+                    <p>Calcolo in corso. Per periodi molto lunghi potrebbe richiedere alcuni minuti...</p>
+                </div>
+                
+                <div id="error_message" class="error-message"></div>
+            </div>
+            
+            <div id="stats_container" class="stats-container" style="display: none;">
+                <h2>Statistiche Principali</h2>
+                <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr); gap: 30px;">
+                    <!-- Miglior Periodo -->
+                    <div style="background-color: #e6f7ff; border-radius: 10px; padding: 15px; border: 1px solid #91d5ff;">
+                        <h3 style="text-align: center; margin-top: 0; color: #0080ff; margin-bottom: 15px; border-bottom: 1px solid #91d5ff; padding-bottom: 10px;">
+                            Miglior Periodo di Investimento
+                        </h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div class="stat-card" style="background-color: transparent; box-shadow: none;">
+                                <div class="stat-title">Durata del Periodo</div>
+                                <div class="stat-value" id="miglior_periodo_medio">-</div>
+                            </div>
+                            <div class="stat-card" style="background-color: transparent; box-shadow: none;">
+                                <div class="stat-title">Rendimento Medio</div>
+                                <div class="stat-value" id="rendimento_miglior_periodo">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Peggior Periodo -->
+                    <div style="background-color: #fff7e6; border-radius: 10px; padding: 15px; border: 1px solid #ffd591;">
+                        <h3 style="text-align: center; margin-top: 0; color: #fa8c16; margin-bottom: 15px; border-bottom: 1px solid #ffd591; padding-bottom: 10px;">
+                            Peggior Periodo di Investimento
+                        </h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div class="stat-card" style="background-color: transparent; box-shadow: none;">
+                                <div class="stat-title">Durata del Periodo</div>
+                                <div class="stat-value" id="peggior_periodo_medio">-</div>
+                            </div>
+                            <div class="stat-card" style="background-color: transparent; box-shadow: none;">
+                                <div class="stat-title">Rendimento Medio</div>
+                                <div class="stat-value" id="rendimento_peggior_periodo">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Massimo Rendimento Possibile -->
+                    <div style="background-color: #f6ffed; border-radius: 10px; padding: 15px; border: 1px solid #b7eb8f; grid-column: 1 / -1;">
+                        <h3 style="text-align: center; margin-top: 0; color: #52c41a; margin-bottom: 15px; border-bottom: 1px solid #b7eb8f; padding-bottom: 10px;">
+                            Massimo Rendimento Storico
+                        </h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div class="stat-card" style="background-color: transparent; box-shadow: none;">
+                                <div class="stat-title">Massimo Rendimento</div>
+                                <div class="stat-value" id="massimo_rendimento">-</div>
+                            </div>
+                            <div class="stat-card" style="background-color: transparent; box-shadow: none;">
+                                <div class="stat-title">Durata di quel Periodo</div>
+                                <div class="stat-value" id="durata_massimo_rendimento">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="charts_container" style="display: none;">
+                <div class="calculator-container">
+                    <h3>Andamento Storico del Ticker</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="andamento_ticker_chart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="calculator-container">
+                    <h3>Rendimenti Medi per Durata del Periodo</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="rendimenti_medi_chart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="calculator-container">
+                    <h3>Rendimenti Massimi e Minimi per Durata del Periodo</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="rendimenti_max_min_chart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="calculator-container">
+                    <h3>Percentuale di Periodi con Rendimento Positivo</h3>
+                    <div style="display: flex; align-items: center; justify-content: flex-end; margin-bottom: 10px;">
+                        <input type="checkbox" id="auto_scale_positivi" style="width: 18px; height: 18px; margin-right: 8px;">
+                        <label for="auto_scale_positivi" style="font-weight: 500; cursor: pointer;">Scala automatica asse Y</label>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="percentuale_positivi_chart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="calculator-container">
+                    <h2>Rendimenti Dettagliati</h2>
+                    <div class="table-wrapper">
+                        <table class="stats-table" id="rendimenti_table">
+                            <thead>
+                                <tr>
+                                    <th>Giorni</th>
+                                    <th>Minimo</th>
+                                    <th>Massimo</th>
+                                    <th>Media</th>
+                                    <th>Mediana</th>
+                                    <th>Rendimento Medio Annualizzato</th>
+                                    <th>% Positivi</th>
+                                    <th>N° Periodi Analizzati</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rendimenti_tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h2>Informazioni</h2>
+                <div class="info-card">
+                    <h3>Come funziona l'analisi</h3>
+                    <p>Questo strumento calcola il rendimento per ogni possibile periodo di investimento all'interno dell'intervallo di date selezionato. Per ogni durata di periodo possibile:</p>
+                    <ul>
+                        <li>Analizza tutti gli intervalli di quella durata nei dati storici</li>
+                        <li>Calcola il rendimento medio, massimo e minimo per quella durata</li>
+                        <li>Identifica la percentuale di periodi con rendimento positivo</li>
+                        <li>Calcola il rendimento annualizzato equivalente</li>
+                        <li>Evidenzia la riga nella colonna con maggior rendimento medio</li>
+                    </ul>
+                    <p>L'analisi è utile per identificare quali durate tendono a produrre i rendimenti migliori per un determinato asset.</p>
+                </div>
+                
+                <div class="info-card">
+                    <h3>Aggregazione dei dati</h3>
+                    <p>Tramite il parametro "Aggrega ogni (giorni)" è possibile raggruppare i dati in blocchi di K giorni, per ottenere grafici più leggibili quando si analizzano molti dati:</p>
+                    <ul>
+                        <li><strong>Rendimenti Medi per Durata del Periodo</strong>: il valore mostrato è la media dei rendimenti medi per ciascun giorno nella fascia di aggregazione. I periodi analizzati rappresentano la somma di tutti i periodi nella fascia.</li>
+                        <li><strong>Rendimenti Massimi e Minimi per Durata del Periodo</strong>: vengono mostrati il massimo tra i massimi e il minimo tra i minimi di ciascun giorno nella fascia. I periodi analizzati rappresentano la somma.</li>
+                        <li><strong>Percentuale di Periodi con Rendimento Positivo</strong>: viene mostrata la media delle percentuali per ciascun giorno nella fascia. I periodi analizzati rappresentano la somma.</li>
+                    </ul>
+                    <p>Con il valore di default 1, non viene eseguita alcuna aggregazione e i dati vengono mostrati giorno per giorno.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Imposta le date di default
+            const oggi = new Date();
+            const unAnnoFa = new Date();
+            unAnnoFa.setFullYear(oggi.getFullYear() - 10);
+            
+            document.getElementById('data_inizio').valueAsDate = unAnnoFa;
+            document.getElementById('data_fine').valueAsDate = oggi;
+            
+            // Avvia automaticamente l'analisi all'apertura della pagina
+            setTimeout(() => {
+                document.getElementById('analizza_btn').click();
+            }, 500);
+            
+            // Riferimenti agli elementi del DOM
+            const analizzaBtn = document.getElementById('analizza_btn');
+            const loadingIndicator = document.getElementById('loading_indicator');
+            const errorMessage = document.getElementById('error_message');
+            const statsContainer = document.getElementById('stats_container');
+            const chartsContainer = document.getElementById('charts_container');
+            const dataMinimaBtn = document.getElementById('data_minima_btn');
+            
+            // Chart.js instances
+            let andamentoTickerChart = null;
+            let rendimentiMediChart = null;
+            let rendimentiMaxMinChart = null;
+            let percentualePositiviChart = null;
+            
+            // Variabili globali per memorizzare i dati del ticker
+            window.datiStoriciGlobali = [];
+            window.levaGlobale = 1;
+            window.tickerGlobale = '';
+            window.aggregaGlobale = 1;
+            
+            // Event listener per il pulsante di analisi
+            analizzaBtn.addEventListener('click', analizzaRendimenti);
+            
+            // Event listener per il pulsante data minima
+            dataMinimaBtn.addEventListener('click', trovaDataMinima);
+            
+            // Funzione per trovare la data minima disponibile per il ticker selezionato
+            async function trovaDataMinima() {
+                try {
+                    // Mostriamo il loader
+                    loadingIndicator.style.display = 'block';
+                    errorMessage.style.display = 'none';
+                    
+                    const ticker = document.getElementById('ticker').value;
+                    
+                    // Data di partenza molto vecchia per assicurarci di ottenere tutti i dati
+                    const dataVecchia = new Date('1950-01-01');
+                    const oggi = new Date();
+                    
+                    // Costruiamo l'URL per l'API di Yahoo Finance usando il formato chart
+                    const period1 = Math.floor(dataVecchia.getTime() / 1000);
+                    const period2 = Math.floor(oggi.getTime() / 1000);
+                    const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/chart/${ticker}?period1=${period1}&period2=${period2}&interval=1d&events=history`;
+                    
+                    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`;
+                    
+                    const response = await fetch(proxyUrl);
+                    const parsedData = await response.json();
+                    
+                    if (!parsedData.chart || !parsedData.chart.result || parsedData.chart.result.length === 0) {
+                        throw new Error('Dati non disponibili');
+                    }
+                    
+                    const result = parsedData.chart.result[0];
+                    const timestamps = result.timestamp;
+                    
+                    if (timestamps && timestamps.length > 0) {
+                        // Il primo timestamp è la data più vecchia disponibile
+                        const dataMinima = new Date(timestamps[0] * 1000);
+                        
+                        // Formatta la data nel formato YYYY-MM-DD per l'input date
+                        const dataFormattata = dataMinima.toISOString().split('T')[0];
+                        document.getElementById('data_inizio').value = dataFormattata;
+                    } else {
+                        throw new Error('Nessun dato disponibile per questo ticker');
+                    }
+                } catch (error) {
+                    console.error('Errore nel recupero della data minima:', error);
+                    errorMessage.textContent = 'Errore nel recupero della data minima: ' + error.message;
+                    errorMessage.style.display = 'block';
+                } finally {
+                    // Nascondi l'indicatore di caricamento
+                    loadingIndicator.style.display = 'none';
+                }
+            }
+            
+            // Funzione principale per analizzare i rendimenti
+            async function analizzaRendimenti() {
+                try {
+                    // Mostriamo il loader e nascondiamo eventuali messaggi di errore
+                    loadingIndicator.style.display = 'block';
+                    errorMessage.style.display = 'none';
+                    statsContainer.style.display = 'none';
+                    chartsContainer.style.display = 'none';
+                    
+                    // Otteniamo i valori di input
+                    const dataInizio = document.getElementById('data_inizio').value;
+                    const dataFine = document.getElementById('data_fine').value;
+                    const ticker = document.getElementById('ticker').value;
+                    const leva = parseFloat(document.getElementById('leva').value);
+                    const aggrega = parseInt(document.getElementById('aggrega').value);
+                    
+                    // Otteniamo i dati storici da Yahoo Finance
+                    const datiStorici = await fetchYahooFinanceData(ticker, dataInizio, dataFine);
+                    
+                    // Verifichiamo che abbiamo abbastanza dati
+                    if (datiStorici.length < 10) {
+                        throw new Error('Non ci sono abbastanza dati per l\'analisi. Seleziona un intervallo di date più ampio.');
+                    }
+                    
+                    // Salviamo i dati storici in variabili globali per poterli usare nei grafici
+                    window.datiStoriciGlobali = datiStorici;
+                    window.levaGlobale = leva;
+                    window.tickerGlobale = ticker;
+                    window.aggregaGlobale = aggrega;
+                    
+                    // Applichiamo la leva ai rendimenti giornalieri
+                    const datiConLeva = applicaLeva(datiStorici, leva);
+                    
+                    // Utilizziamo l'intero intervallo di date disponibile
+                    const periodoMaxEffettivo = datiConLeva.length - 1;
+                    
+                    // Inizializziamo l'array per contenere le statistiche dei rendimenti per ogni durata
+                    const statistichePeriodi = [];
+                    
+                    // Per ogni possibile durata del periodo (da 1 giorno al periodo massimo)
+                    for (let durata = 1; durata <= periodoMaxEffettivo; durata++) {
+                        // Calcoliamo tutti i rendimenti possibili per questa durata
+                        // (per ogni possibile data di inizio entro il range)
+                        const rendimentiPerDurata = [];
+                        
+                        for (let i = 0; i < datiConLeva.length - durata; i++) {
+                            const valoreIniziale = datiConLeva[i].close;
+                            const valoreFinale = datiConLeva[i + durata].close;
+                            const rendimento = ((valoreFinale / valoreIniziale) - 1) * 100;
+                            rendimentiPerDurata.push(rendimento);
+                        }
+                        
+                        // Se non ci sono rendimenti per questa durata, passiamo alla prossima
+                        if (rendimentiPerDurata.length === 0) continue;
+                        
+                        // Calcoliamo le statistiche per questa durata
+                        const minimo = Math.min(...rendimentiPerDurata);
+                        const massimo = Math.max(...rendimentiPerDurata);
+                        const media = rendimentiPerDurata.reduce((sum, r) => sum + r, 0) / rendimentiPerDurata.length;
+                        
+                        // Calcoliamo la mediana
+                        const rendimentiOrdinati = [...rendimentiPerDurata].sort((a, b) => a - b);
+                        const mediana = rendimentiOrdinati[Math.floor(rendimentiOrdinati.length / 2)];
+                        
+                        // Calcoliamo il rendimento annualizzato medio
+                        const anniDurata = durata / 365;
+                        const rendimentoAnnualizzato = (Math.pow(1 + (media / 100), 1 / anniDurata) - 1) * 100;
+                        
+                        // Calcoliamo la percentuale di rendimenti positivi
+                        const positivi = rendimentiPerDurata.filter(r => r > 0).length;
+                        const percentualePositivi = (positivi / rendimentiPerDurata.length) * 100;
+                        
+                        // Memorizziamo tutte le statistiche
+                        statistichePeriodi.push({
+                            durata: durata,
+                            minimo: minimo,
+                            massimo: massimo,
+                            media: media,
+                            mediana: mediana,
+                            rendimentoAnnualizzato: rendimentoAnnualizzato,
+                            percentualePositivi: percentualePositivi,
+                            conteggioPeriodi: rendimentiPerDurata.length
+                        });
+                    }
+                    
+                    // Aggreghiamo i dati se necessario
+                    let statisticheAggregata = statistichePeriodi;
+                    if (aggrega > 1) {
+                        statisticheAggregata = aggregaStatistiche(statistichePeriodi, aggrega);
+                    }
+                    
+                    // Aggiorniamo l'interfaccia con i risultati
+                    aggiornaTabellaRendimenti(statisticheAggregata);
+                    aggiornaStatistichePrincipali(statisticheAggregata);
+                    creaGrafici(statisticheAggregata);
+                    
+                    // Mostriamo i container dei risultati
+                    statsContainer.style.display = 'block';
+                    chartsContainer.style.display = 'block';
+                } catch (error) {
+                    console.error('Errore nell\'analisi dei rendimenti:', error);
+                    errorMessage.textContent = 'Errore: ' + error.message;
+                    errorMessage.style.display = 'block';
+                } finally {
+                    // Nascondiamo il loader
+                    loadingIndicator.style.display = 'none';
+                }
+            }
+            
+            // Funzione per aggregare le statistiche in base al parametro "aggrega"
+            function aggregaStatistiche(statistiche, aggrega) {
+                // Se aggrega è 1, restituisci le statistiche originali
+                if (aggrega <= 1) return statistiche;
+                
+                const risultato = [];
+                
+                // Raggruppa le statistiche in blocchi di dimensione "aggrega"
+                for (let i = 0; i < statistiche.length; i += aggrega) {
+                    // Prendi fino a "aggrega" elementi
+                    const gruppo = statistiche.slice(i, i + aggrega).filter(item => item !== undefined);
+                    
+                    // Se il gruppo è vuoto, salta
+                    if (gruppo.length === 0) continue;
+                    
+                    // Calcola il range di durate nel gruppo
+                    const durataDa = gruppo[0].durata;
+                    const durataA = gruppo[gruppo.length - 1].durata;
+                    
+                    // Calcola il minimo dei minimi e il massimo dei massimi
+                    const minimo = Math.min(...gruppo.map(s => s.minimo));
+                    const massimo = Math.max(...gruppo.map(s => s.massimo));
+                    
+                    // Calcola la media delle medie
+                    const media = gruppo.reduce((sum, s) => sum + s.media, 0) / gruppo.length;
+                    
+                    // Calcola la media delle mediane
+                    const mediana = gruppo.reduce((sum, s) => sum + s.mediana, 0) / gruppo.length;
+                    
+                    // Calcola la media dei rendimenti annualizzati
+                    const rendimentoAnnualizzato = gruppo.reduce((sum, s) => sum + s.rendimentoAnnualizzato, 0) / gruppo.length;
+                    
+                    // Calcola la media delle percentuali di positivi
+                    const percentualePositivi = gruppo.reduce((sum, s) => sum + s.percentualePositivi, 0) / gruppo.length;
+                    
+                    // Calcola la somma dei conteggi dei periodi
+                    const conteggioPeriodi = gruppo.reduce((sum, s) => sum + s.conteggioPeriodi, 0);
+                    
+                    // Aggiungi il risultato
+                    risultato.push({
+                        durata: durataDa,
+                        durataDa: durataDa,
+                        durataA: durataA,
+                        minimo: minimo,
+                        massimo: massimo,
+                        media: media,
+                        mediana: mediana,
+                        rendimentoAnnualizzato: rendimentoAnnualizzato,
+                        percentualePositivi: percentualePositivi,
+                        conteggioPeriodi: conteggioPeriodi
+                    });
+                }
+                
+                return risultato;
+            }
+            
+            // Funzione per recuperare dati da Yahoo Finance
+            async function fetchYahooFinanceData(ticker, dataInizio, dataFine) {
+                try {
+                    // Converti le date nel formato richiesto da Yahoo Finance (timestamp in secondi)
+                    const startDate = new Date(dataInizio);
+                    const endDate = new Date(dataFine);
+                    const period1 = Math.floor(startDate.getTime() / 1000);
+                    const period2 = Math.floor(endDate.getTime() / 1000);
+                    
+                    // URL per Yahoo Finance (formato chart)
+                    const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/chart/${ticker}?period1=${period1}&period2=${period2}&interval=1d&events=history`;
+                    
+                    // Utilizziamo un proxy CORS per evitare blocchi
+                    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`;
+                    
+                    // Effettua la richiesta
+                    const response = await fetch(proxyUrl);
+                    
+                    if (!response.ok) {
+                        throw new Error(`Errore HTTP: ${response.status}`);
+                    }
+                    
+                    // Ottieni i dati come JSON
+                    const parsedData = await response.json();
+                    
+                    if (!parsedData.chart || !parsedData.chart.result || parsedData.chart.result.length === 0) {
+                        throw new Error(`Dati non disponibili per ${ticker}`);
+                    }
+                    
+                    const result = parsedData.chart.result[0];
+                    const timestamps = result.timestamp;
+                    const quotes = result.indicators.quote[0];
+                    const closePrices = quotes.close;
+                    
+                    // Processa i dati e crea l'array dei dati
+                    const processedData = [];
+                    for (let i = 0; i < timestamps.length; i++) {
+                        if (closePrices[i] !== null) {
+                            processedData.push({
+                                date: new Date(timestamps[i] * 1000),
+                                close: closePrices[i]
+                            });
+                        }
+                    }
+                    
+                    return processedData;
+                } catch (error) {
+                    console.error('Errore durante il recupero dei dati:', error);
+                    throw error;
+                }
+            }
+            
+            // Funzione per applicare la leva ai dati
+            function applicaLeva(dati, leva) {
+                if (leva === 1) return dati;
+                
+                const datiConLeva = [{ ...dati[0] }]; // Copiamo il primo elemento
+                
+                for (let i = 1; i < dati.length; i++) {
+                    const rendimentoGiornaliero = (dati[i].close / dati[i-1].close) - 1;
+                    const rendimentoConLeva = rendimentoGiornaliero * leva;
+                    const nuovoClose = datiConLeva[i-1].close * (1 + rendimentoConLeva);
+                    
+                    datiConLeva.push({
+                        date: dati[i].date,
+                        close: nuovoClose
+                    });
+                }
+                
+                return datiConLeva;
+            }
+            
+            // Funzione per aggiornare la tabella dei rendimenti
+            function aggiornaTabellaRendimenti(statistiche) {
+                const tbody = document.getElementById('rendimenti_tbody');
+                tbody.innerHTML = '';
+                
+                // Verifica se l'aggregazione è attiva
+                const aggrega = window.aggregaGlobale || 1;
+                
+                // Chiave per evidenziare la riga del miglior periodo medio
+                let chiaveMigliorMedia = -1;
+                let valoreMigliorMedia = -Infinity;
+                
+                // Troviamo il periodo con la media più alta
+                for (let i = 0; i < statistiche.length; i++) {
+                    if (statistiche[i].media > valoreMigliorMedia) {
+                        valoreMigliorMedia = statistiche[i].media;
+                        chiaveMigliorMedia = i;
+                    }
+                }
+                
+                // Popoliamo la tabella
+                for (let i = 0; i < statistiche.length; i++) {
+                    const stat = statistiche[i];
+                    const tr = document.createElement('tr');
+                    
+                    // Evidenziamo la riga del miglior periodo medio
+                    if (i === chiaveMigliorMedia) {
+                        tr.classList.add('highlight-row');
+                    }
+                    
+                    // Formato della colonna giorni in base all'aggregazione
+                    let giorniText = '';
+                    if (aggrega > 1 && stat.durataDa !== undefined && stat.durataA !== undefined && stat.durataDa !== stat.durataA) {
+                        giorniText = `${stat.durataDa} - ${stat.durataA}`;
+                    } else {
+                        giorniText = stat.durata;
+                    }
+                    
+                    // Creiamo le celle
+                    tr.innerHTML = `
+                        <td>${giorniText}</td>
+                        <td>${formattaPercentuale(stat.minimo)}</td>
+                        <td>${formattaPercentuale(stat.massimo)}</td>
+                        <td>${formattaPercentuale(stat.media)}</td>
+                        <td>${formattaPercentuale(stat.mediana)}</td>
+                        <td>${formattaPercentuale(stat.rendimentoAnnualizzato)}</td>
+                        <td>${formattaPercentuale(stat.percentualePositivi)}</td>
+                        <td>${stat.conteggioPeriodi}</td>
+                    `;
+                    
+                    tbody.appendChild(tr);
+                }
+            }
+            
+            // Funzione per aggiornare le statistiche principali
+            function aggiornaStatistichePrincipali(statistiche) {
+                // Troviamo il periodo con la media più alta
+                let migliorPeriodoMedio = 0;
+                let migliorMedia = -Infinity;
+                
+                // Troviamo il periodo con la media più bassa
+                let peggiorPeriodoMedio = 0;
+                let peggiorMedia = Infinity;
+                
+                // Troviamo il massimo rendimento possibile
+                let massimoRendimento = -Infinity;
+                let durataMassimoRendimento = 0;
+                
+                for (let i = 0; i < statistiche.length; i++) {
+                    const stat = statistiche[i];
+                    
+                    // Verifichiamo il miglior periodo medio
+                    if (stat.media > migliorMedia) {
+                        migliorMedia = stat.media;
+                        migliorPeriodoMedio = stat.durata;
+                    }
+                    
+                    // Verifichiamo il peggior periodo medio
+                    if (stat.media < peggiorMedia) {
+                        peggiorMedia = stat.media;
+                        peggiorPeriodoMedio = stat.durata;
+                    }
+                    
+                    // Verifichiamo il massimo rendimento
+                    if (stat.massimo > massimoRendimento) {
+                        massimoRendimento = stat.massimo;
+                        durataMassimoRendimento = stat.durata;
+                    }
+                }
+                
+                // Aggiorniamo i valori nell'interfaccia
+                document.getElementById('miglior_periodo_medio').textContent = `${migliorPeriodoMedio} giorni`;
+                document.getElementById('rendimento_miglior_periodo').textContent = formattaPercentuale(migliorMedia);
+                document.getElementById('peggior_periodo_medio').textContent = `${peggiorPeriodoMedio} giorni`;
+                document.getElementById('rendimento_peggior_periodo').textContent = formattaPercentuale(peggiorMedia);
+                document.getElementById('massimo_rendimento').textContent = formattaPercentuale(massimoRendimento);
+                document.getElementById('durata_massimo_rendimento').textContent = `${durataMassimoRendimento} giorni`;
+            }
+            
+            // Funzione per creare i grafici
+            function creaGrafici(statistiche) {
+                // Prepariamo i dati per i grafici
+                const labels = statistiche.map(stat => stat.durata);
+                const medieDati = statistiche.map(stat => stat.media);
+                const massimoDati = statistiche.map(stat => stat.massimo);
+                const minimoDati = statistiche.map(stat => stat.minimo);
+                const percentualePositiviDati = statistiche.map(stat => stat.percentualePositivi);
+                const conteggioPeriodi = statistiche.map(stat => stat.conteggioPeriodi);
+                
+                // Salviamo le statistiche complete per riferimento nei tooltip
+                window.statisticheAggregata = statistiche;
+                
+                // Grafico dell'andamento del ticker
+                creaGraficoAndamentoTicker();
+                
+                // Grafico dei rendimenti medi
+                creaGraficoRendimentiMedi(labels, medieDati, conteggioPeriodi);
+                
+                // Grafico dei rendimenti massimi e minimi
+                creaGraficoRendimentiMaxMin(labels, massimoDati, minimoDati, conteggioPeriodi);
+                
+                // Grafico della percentuale di periodi positivi
+                creaGraficoPercentualePositivi(labels, percentualePositiviDati, conteggioPeriodi);
+            }
+            
+            // Funzione per creare il grafico dei rendimenti medi
+            function creaGraficoRendimentiMedi(labels, dati, conteggioPeriodi) {
+                // Distruggi il grafico precedente se esiste
+                if (rendimentiMediChart) {
+                    rendimentiMediChart.destroy();
+                }
+                
+                const aggrega = window.aggregaGlobale || 1;
+                
+                const ctx = document.getElementById('rendimenti_medi_chart').getContext('2d');
+                rendimentiMediChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Rendimento Medio (%)',
+                            data: dati,
+                            backgroundColor: 'rgba(0, 123, 255, 0.7)',
+                            borderColor: 'rgba(0, 123, 255, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        elements: {
+                            point: {
+                                radius: 1,
+                                hoverRadius: 5
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Rendimento Medio per Durata del Periodo',
+                                font: { size: 16 }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    title: function(tooltipItems) {
+                                        if (tooltipItems.length > 0) {
+                                            const index = tooltipItems[0].dataIndex;
+                                            const statistica = window.rendimentiMaxMinData.originale[index];
+                                            if (aggrega > 1 && statistica && statistica.durataDa !== undefined && statistica.durataA !== undefined) {
+                                                return `Durata: ${statistica.durataDa} - ${statistica.durataA} giorni`;
+                                            } else {
+                                                return `Durata: ${tooltipItems[0].label} giorni`;
+                                            }
+                                        }
+                                        return '';
+                                    },
+                                    label: (context) => {
+                                        const index = context.dataIndex;
+                                        return [
+                                            `Rendimento: ${formattaPercentuale(context.raw)}`,
+                                            `Periodi analizzati: ${conteggioPeriodi[index]}`
+                                        ];
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Durata del Periodo (giorni)'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Rendimento Medio (%)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Funzione per creare il grafico dei rendimenti massimi e minimi
+            function creaGraficoRendimentiMaxMin(labels, massimoDati, minimoDati, conteggioPeriodi) {
+                // Distruggi il grafico precedente se esiste
+                if (rendimentiMaxMinChart) {
+                    rendimentiMaxMinChart.destroy();
+                }
+                
+                // Converti i dati per farli partire da 100 (invece che da 0)
+                const massimoDatiAdjusted = massimoDati.map(valore => 100 + valore);
+                const minimoDatiAdjusted = minimoDati.map(valore => 100 + valore);
+                
+                const aggrega = window.aggregaGlobale || 1;
+                
+                const ctx = document.getElementById('rendimenti_max_min_chart').getContext('2d');
+                rendimentiMaxMinChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Rendimento Massimo (%)',
+                                data: massimoDatiAdjusted,
+                                borderColor: 'rgba(40, 167, 69, 1)',
+                                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                                borderWidth: 2,
+                                fill: false,
+                                tension: 0.1,
+                                pointRadius: 1,
+                                pointHoverRadius: 5,
+                                // Salviamo i dati originali per il tooltip
+                                rendimentiOriginali: massimoDati
+                            },
+                            {
+                                label: 'Rendimento Minimo (%)',
+                                data: minimoDatiAdjusted,
+                                borderColor: 'rgba(220, 53, 69, 1)',
+                                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                                borderWidth: 2,
+                                fill: false,
+                                tension: 0.1,
+                                pointRadius: 1,
+                                pointHoverRadius: 5,
+                                // Salviamo i dati originali per il tooltip
+                                rendimentiOriginali: minimoDati
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        elements: {
+                            point: {
+                                radius: 1,
+                                hoverRadius: 5
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Rendimenti Massimi e Minimi per Durata del Periodo',
+                                font: { size: 16 }
+                            },
+                            tooltip: {
+                                mode: 'index',  // Questo fa sì che il tooltip mostri tutti i punti con lo stesso indice
+                                intersect: false, // Questo fa sì che il tooltip appaia anche senza intersecare direttamente il punto
+                                callbacks: {
+                                    title: function(tooltipItems) {
+                                        if (tooltipItems.length > 0) {
+                                            const index = tooltipItems[0].dataIndex;
+                                            const statistica = window.rendimentiMaxMinData.originale[index];
+                                            if (aggrega > 1 && statistica && statistica.durataDa !== undefined && statistica.durataA !== undefined) {
+                                                return `Durata: ${statistica.durataDa} - ${statistica.durataA} giorni`;
+                                            } else {
+                                                return `Durata: ${tooltipItems[0].label} giorni`;
+                                            }
+                                        }
+                                        return '';
+                                    },
+                                    label: (context) => {
+                                        const index = context.dataIndex;
+                                        const rendimentoOriginale = context.dataset.rendimentiOriginali[index];
+                                        return [
+                                            `${context.dataset.label}: ${formattaPercentuale(rendimentoOriginale)}`,
+                                            `Periodi analizzati: ${conteggioPeriodi[index]}`
+                                        ];
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Durata del Periodo (giorni)'
+                                }
+                            },
+                            y: {
+                                type: 'linear',
+                                title: {
+                                    display: true,
+                                    text: 'Indice (100 = base)'
+                                },
+                                min: Math.min(minimoDatiAdjusted) > 0 ? null : 0
+                            }
+                        }
+                    }
+                });
+                
+                // Salviamo i dati per poterli riutilizzare quando si cambia scala
+                window.rendimentiMaxMinData = {
+                    labels: labels,
+                    massimoDati: massimoDati,
+                    minimoDati: minimoDati,
+                    conteggioPeriodi: conteggioPeriodi,
+                    originale: statisticheAggregata // Salviamo le statistiche complete per accedere alle proprietà durataDa e durataA
+                };
+            }
+            
+            // Funzione per creare il grafico della percentuale di periodi positivi
+            function creaGraficoPercentualePositivi(labels, dati, conteggioPeriodi) {
+                // Distruggi il grafico precedente se esiste
+                if (percentualePositiviChart) {
+                    percentualePositiviChart.destroy();
+                }
+                
+                // Verifica se è attiva la scala automatica
+                const usaScalaAutomatica = document.getElementById('auto_scale_positivi').checked;
+                
+                // Calcola i valori minimi e massimi dei dati per la scala automatica
+                const minValue = Math.min(...dati);
+                const maxValue = Math.max(...dati);
+                // Aggiungi un po' di margine sopra e sotto
+                const padding = (maxValue - minValue) * 0.1;
+
+                const aggrega = window.aggregaGlobale || 1;
+                
+                const ctx = document.getElementById('percentuale_positivi_chart').getContext('2d');
+                percentualePositiviChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Periodi con Rendimento Positivo (%)',
+                            data: dati,
+                            borderColor: 'rgba(255, 153, 0, 1)',
+                            backgroundColor: 'rgba(255, 153, 0, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.1,
+                            pointRadius: 1,
+                            pointHoverRadius: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        elements: {
+                            point: {
+                                radius: 1,
+                                hoverRadius: 5
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Percentuale di Periodi con Rendimento Positivo',
+                                font: { size: 16 }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    title: function(tooltipItems) {
+                                        if (tooltipItems.length > 0) {
+                                            const index = tooltipItems[0].dataIndex;
+                                            const statistica = window.percentualePositiviData.originale[index];
+                                            if (aggrega > 1 && statistica && statistica.durataDa !== undefined && statistica.durataA !== undefined) {
+                                                return `Durata: ${statistica.durataDa} - ${statistica.durataA} giorni`;
+                                            } else {
+                                                return `Durata: ${tooltipItems[0].label} giorni`;
+                                            }
+                                        }
+                                        return '';
+                                    },
+                                    label: (context) => {
+                                        const index = context.dataIndex;
+                                        return [
+                                            `Positivi: ${formattaPercentuale(context.raw)}`,
+                                            `Periodi analizzati: ${conteggioPeriodi[index]}`
+                                        ];
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Durata del Periodo (giorni)'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Percentuale Positivi (%)'
+                                },
+                                min: usaScalaAutomatica ? Math.max(0, minValue - padding) : 0,
+                                max: usaScalaAutomatica ? maxValue + padding : 100
+                            }
+                        }
+                    }
+                });
+                
+                // Salviamo i dati per poterli riutilizzare quando si cambia la scala
+                window.percentualePositiviData = {
+                    labels: labels,
+                    dati: dati,
+                    conteggioPeriodi: conteggioPeriodi,
+                    originale: statisticheAggregata // Salviamo le statistiche complete per accedere alle proprietà durataDa e durataA
+                };
+            }
+            
+            // Funzione di utilità per formattare i valori percentuali
+            function formattaPercentuale(valore) {
+                const segno = valore >= 0 ? '+' : '';
+                return `${segno}${valore.toFixed(2)}%`;
+            }
+            
+            // Funzione per creare il grafico dell'andamento del ticker
+            function creaGraficoAndamentoTicker() {
+                // Distruggi il grafico precedente se esiste
+                if (andamentoTickerChart) {
+                    andamentoTickerChart.destroy();
+                }
+                
+                // Otteniamo i dati storici salvati
+                const datiStorici = window.datiStoriciGlobali;
+                const leva = window.levaGlobale;
+                const ticker = window.tickerGlobale;
+                
+                if (!datiStorici || datiStorici.length === 0) return;
+                
+                // Prepariamo i dati per il grafico
+                const labels = datiStorici.map(dato => dato.date);
+                
+                // Dati originali
+                const datiOriginali = datiStorici.map(dato => dato.close);
+                
+                // Dati con leva (se applicabile)
+                let datiConLeva = [];
+                if (leva !== 1) {
+                    const datiLeva = applicaLeva(datiStorici, leva);
+                    datiConLeva = datiLeva.map(dato => dato.close);
+                }
+                
+                const ctx = document.getElementById('andamento_ticker_chart').getContext('2d');
+                
+                // Creiamo i dataset
+                const datasets = [
+                    {
+                        label: ticker,
+                        data: datiOriginali,
+                        borderColor: 'rgba(0, 123, 255, 1)',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.1
+                    }
+                ];
+                
+                // Aggiungiamo il dataset con leva se applicabile
+                if (leva !== 1) {
+                    datasets.push({
+                        label: `${ticker} (Leva ${leva}x)`,
+                        data: datiConLeva,
+                        borderColor: 'rgba(220, 53, 69, 1)',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.1
+                    });
+                }
+                
+                andamentoTickerChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        elements: {
+                            point: {
+                                radius: 1,
+                                hoverRadius: 5
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: leva !== 1 ? `Andamento di ${ticker} (con leva ${leva}x)` : `Andamento di ${ticker}`,
+                                font: { size: 16 }
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    title: function(context) {
+                                        // Formatta la data mostrando solo il giorno senza l'orario
+                                        if (context[0] && context[0].label) {
+                                            const date = new Date(context[0].label);
+                                            return date.toLocaleDateString('it-IT');
+                                        }
+                                        return '';
+                                    },
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += context.parsed.y.toFixed(2);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'month',
+                                    displayFormats: {
+                                        month: 'MMM YYYY'
+                                    }
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Data'
+                                }
+                            },
+                            y: {
+                                type: 'linear',
+                                title: {
+                                    display: true,
+                                    text: 'Prezzo'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Rendiamo disponibili le funzioni e chart nel namespace globale
+            window.creaGraficoRendimentiMaxMin = creaGraficoRendimentiMaxMin;
+            window.creaGraficoAndamentoTicker = creaGraficoAndamentoTicker;
+            window.creaGraficoPercentualePositivi = creaGraficoPercentualePositivi;
+            window.andamentoTickerChart = null;
+            window.rendimentiMaxMinChart = null;
+            window.rendimentiMediChart = null;
+            window.percentualePositiviChart = null;
+        });
+    </script>
+    
+    <script>
+        // Aggiungo questi event listener in uno script separato per garantire che vengano collegati dopo il caricamento della pagina
+        document.addEventListener('DOMContentLoaded', function() {
+            // Event listener per la scala automatica del grafico percentuale positivi
+            document.getElementById('auto_scale_positivi').addEventListener('change', function() {
+                if (window.percentualePositiviData) {
+                    // Ricrea il grafico con la nuova impostazione di scala
+                    window.creaGraficoPercentualePositivi(
+                        window.percentualePositiviData.labels,
+                        window.percentualePositiviData.dati,
+                        window.percentualePositiviData.conteggioPeriodi
+                    );
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

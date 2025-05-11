@@ -1122,7 +1122,8 @@
                     borderColor: colors[colorIndex].border,
                     borderWidth: 1,
                     pointRadius: 0,
-                    pointHoverRadius: 5
+                    pointHoverRadius: 5,
+                    periodoValue: periodo // Aggiungiamo il valore del periodo per riferimento
                 });
             }
             
@@ -1138,7 +1139,8 @@
                         periodo: migliorGiorno.periodo,
                         giorno: migliorGiorno.giorno,
                         rendimento: migliorGiorno.rendimento,
-                        rendimentoAnnuo: migliorGiorno.rendimentoAnnuo
+                        rendimentoAnnuo: migliorGiorno.rendimentoAnnuo,
+                        datasetIndex: tuttiRendimenti.findIndex(r => r.periodo === migliorGiorno.periodo) // Salviamo l'indice del dataset corrispondente
                     };
                 }
             }
@@ -1155,7 +1157,8 @@
                         periodo: migliorGiornoAnnuo.periodo,
                         giorno: migliorGiornoAnnuo.giorno,
                         rendimento: migliorGiornoAnnuo.rendimento,
-                        rendimentoAnnuo: migliorGiornoAnnuo.rendimentoAnnuo
+                        rendimentoAnnuo: migliorGiornoAnnuo.rendimentoAnnuo,
+                        datasetIndex: tuttiRendimenti.findIndex(r => r.periodo === migliorGiornoAnnuo.periodo) // Salviamo l'indice del dataset corrispondente
                     };
                 }
             }
@@ -1163,20 +1166,28 @@
             // Aggiungiamo il punto per il miglior rendimento complessivo
             if (migliorRendimentoCompletoInfo) {
                 const periodoFormattato = formattaPeriodo(migliorRendimentoCompletoInfo.periodo);
+                const periodoIndex = migliorRendimentoCompletoInfo.datasetIndex;
+                // Utilizziamo lo stesso colore della serie di rendimenti corrispondente
+                const colorIndex = periodoIndex % colors.length;
+                const coloreBordo = colors[colorIndex].border;
+                const coloreSfondo = colors[colorIndex].bg;
+                
                 datasets.push({
                     label: `_hidden_miglior_rendimento`, // Nome speciale per identificarlo
                     data: [{ x: migliorRendimentoCompletoInfo.giorno, y: migliorRendimentoCompletoInfo.rendimento }],
-                    backgroundColor: 'rgba(255, 0, 0, 1)',
-                    borderColor: 'rgba(255, 0, 0, 1)',
+                    backgroundColor: coloreBordo, // Usa lo stesso colore della serie
+                    borderColor: coloreBordo, // Usa lo stesso colore della serie
                     borderWidth: 1,
                     pointRadius: 4,
                     pointHoverRadius: 6,
                     order: -1, // Valore più basso per essere disegnato sopra (in primo piano)
                     z: 10, // Valore più alto per essere in primo piano
-                    hidden: false,
                     showLine: false,
                     fill: false,
-                    pointStyle: 'circle'
+                    pointStyle: 'circle',
+                    periodoValue: migliorRendimentoCompletoInfo.periodo, // Aggiungiamo il valore del periodo per riferimento
+                    periodoIndex: migliorRendimentoCompletoInfo.datasetIndex, // Indice del dataset principale
+                    hidden: false // Inizialmente il punto è visibile
                 });
             }
             
@@ -1193,12 +1204,18 @@
                     pointHoverRadius: 6,
                     order: -2, // Valore più basso per essere disegnato sopra (in primo piano)
                     z: 10, // Valore più alto per essere in primo piano
-                    hidden: false,
                     showLine: false,
                     fill: false,
-                    pointStyle: 'circle'
+                    pointStyle: 'circle',
+                    periodoValue: migliorRendimentoAnnuoInfo.periodo, // Aggiungiamo il valore del periodo per riferimento
+                    periodoIndex: migliorRendimentoAnnuoInfo.datasetIndex, // Indice del dataset principale
+                    hidden: false // Inizialmente il punto è visibile
                 });
             }
+            
+            // Memorizziamo gli indici dei dataset speciali per riferimento
+            const pallinoRossoIndex = datasets.findIndex(d => d.label === '_hidden_miglior_rendimento');
+            const pallinoBluIndex = datasets.findIndex(d => d.label === '_hidden_miglior_rendimento_annuo');
             
             returnsChartInstance = new Chart(ctx, {
                 type: 'line',
@@ -1242,6 +1259,31 @@
                                     // Nascondi elementi speciali dalla legenda
                                     return !legendItem.text.startsWith('_hidden_');
                                 }
+                            },
+                            onClick: function(e, legendItem, legend) {
+                                // Implementazione personalizzata dell'evento click sulla legenda
+                                const index = legendItem.datasetIndex;
+                                const chart = legend.chart;
+                                const meta = chart.getDatasetMeta(index);
+                                
+                                // Alterna la visibilità del dataset principale
+                                meta.hidden = meta.hidden === null ? !chart.data.datasets[index].hidden : null;
+                                
+                                // Gestione dei punti speciali (pallini rosso e blu)
+                                if (pallinoRossoIndex >= 0 && datasets[pallinoRossoIndex].periodoIndex === index) {
+                                    // Se questo è il dataset associato al pallino rosso
+                                    const metaPallinoRosso = chart.getDatasetMeta(pallinoRossoIndex);
+                                    metaPallinoRosso.hidden = meta.hidden;
+                                }
+                                
+                                if (pallinoBluIndex >= 0 && datasets[pallinoBluIndex].periodoIndex === index) {
+                                    // Se questo è il dataset associato al pallino blu
+                                    const metaPallinoBlu = chart.getDatasetMeta(pallinoBluIndex);
+                                    metaPallinoBlu.hidden = meta.hidden;
+                                }
+                                
+                                // Aggiorna il grafico
+                                chart.update();
                             }
                         },
                         tooltip: {
@@ -1258,9 +1300,10 @@
                                     // Se è un punto normale (non un punto speciale come miglior rendimento)
                                     if (datasetLabel.includes('Rendimenti (')) {
                                         // Troviamo il periodo corrispondente dal label (es. "Rendimenti (5 anni)")
-                                        const periodoMatch = datasetLabel.match(/\((\d+) anni\)/);
+                                        const periodoMatch = datasetLabel.match(/\((.*?)\)/);
                                         if (periodoMatch && periodoMatch[1]) {
-                                            const periodo = parseFloat(periodoMatch[1]);
+                                            const periodoFormattato = periodoMatch[1];
+                                            const periodo = context.dataset.periodoValue;
                                             
                                             // Troviamo i dati originali per questo periodo
                                             const periodoData = tuttiRendimenti.find(r => r.periodo === periodo);

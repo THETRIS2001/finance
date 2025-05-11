@@ -50,12 +50,29 @@
             padding: 12px 15px;
             font-size: 1rem;
             transition: all 0.2s;
+            width: 100%;
+            box-sizing: border-box;
+            height: 48px; /* Altezza uniforme per tutti i controlli */
         }
         
         .input-group input:focus, .input-group select:focus {
             border-color: #0080ff;
             box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.2);
             outline: none;
+        }
+        
+        .input-with-icon {
+            position: relative;
+            width: 100%;
+        }
+        
+        .input-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+            pointer-events: none;
         }
         
         .checkbox-group {
@@ -227,24 +244,34 @@
                             <option value="GLD">Gold</option>
                         </select>
                     </div>
+                    
                     <div class="input-group">
                         <label for="leva">Leva iniziale:</label>
-                        <input type="number" id="leva" value="3" min="1" max="100" step="0.1">
+                        <div class="input-with-icon">
+                            <input type="number" id="leva" value="10" step="0.1" min="1">
+                            <span id="leva_disabled_icon" class="input-icon" style="display: none;">⛔</span>
+                        </div>
                     </div>
+                    
                     <div class="input-group">
-                        <label for="knockout_manuale">Livello knockout (opzionale):</label>
-                        <input type="number" id="knockout_manuale" placeholder="Lascia vuoto per calcolo automatico" step="0.01">
+                        <label for="knockout_manuale">Livello knockout:</label>
+                        <div class="input-with-icon">
+                            <input type="number" id="knockout_manuale" value="" step="0.01">
+                            <span id="knockout_disabled_icon" class="input-icon" style="display: none;">⛔</span>
+                        </div>
                     </div>
                 </div>
                 
-                <button id="calcola_btn" class="btn">Calcola</button>
-                
-                <div id="loading_indicator" class="loading-indicator">
+                <div class="loading-indicator" id="loading_indicator">
                     <div class="spinner"></div>
                     <p>Caricamento dati in corso...</p>
                 </div>
                 
-                <div id="error_message" class="error-message"></div>
+                <div class="error-message" id="error_message">
+                    Errore nel caricamento dei dati.
+                </div>
+                
+                <button id="calcola_btn" class="btn">Calcola</button>
             </div>
             
             <div class="calculator-container">
@@ -256,6 +283,10 @@
                 </div>
                 <div class="chart-wrapper">
                     <canvas id="chart"></canvas>
+                </div>
+                <h3 style="margin-top: 20px; margin-bottom: 10px;">Andamento della Leva</h3>
+                <div class="chart-wrapper" style="height: 300px;">
+                    <canvas id="leva_chart"></canvas>
                 </div>
             </div>
             
@@ -304,9 +335,48 @@
                 </div>
                 <div class="info-card">
                     <h3>Note</h3>
-                    <p>Questo calcolo è una semplificazione e non tiene conto di tutti i fattori presenti nei derivati reali, come i costi di finanziamento, gli spread bid-ask, o eventuali commissioni.</p>
-                    <p>La formula predefinita per il calcolo del knockout è: <code>Knockout = Valore Iniziale × (1 - (1 / leva))</code></p>
-                </div>
+                    <p>
+                      Questo calcolo è una semplificazione e non tiene conto di tutti i fattori presenti nei derivati reali, come i costi di finanziamento, gli spread bid-ask o eventuali commissioni.
+                    </p>
+                    <p style="text-align: center;">
+                      <img src="https://latex.codecogs.com/svg.latex?\displaystyle%20\mathrm{Knockout}%20=%20V_0%20\times%20\left(1%20-%20\frac{1}{L}\right)" 
+                           alt="Knockout = V_0 × (1 - 1/L)">
+                    </p>
+                  </div>
+                  
+                  <div class="info-card">
+                    <h3>Valore finale del derivato</h3>
+                    <p>
+                      Il rendimento percentuale finale del derivato è sempre pari al rendimento percentuale del sottostante moltiplicato per la leva iniziale <em>L<sub>0</sub></em>, a condizione che il sottostante non tocchi mai il livello di knockout.
+                    </p>
+                  
+                    <p style="text-align: center;">
+                      <img src="https://latex.codecogs.com/svg.latex?\displaystyle%20r_D%20=%20L_0%20\cdot%20r_S" 
+                           alt="r_D = L_0 × r_S">
+                    </p>
+                  
+                    <p>Dove:</p>
+                    <ul>
+                      <li><img src="https://latex.codecogs.com/svg.latex?r_D" alt="r_D"> = rendimento percentuale del derivato</li>
+                      <li><img src="https://latex.codecogs.com/svg.latex?L_0" alt="L_0"> = leva iniziale fissata alla creazione del prodotto</li>
+                      <li><img src="https://latex.codecogs.com/svg.latex?r_S" alt="r_S"> = rendimento percentuale del sottostante</li>
+                    </ul>
+                  
+                    <h4>Come funziona nella pratica:</h4>
+                    <ul>
+                      <li><strong>Esempio:</strong> Con una leva iniziale <img src="https://latex.codecogs.com/svg.latex?L_0=3" alt="L0=3"> e un rendimento del sottostante del +5%, il derivato avrà un rendimento di +15%.</li>
+                      <li><strong>Leva dinamica:</strong> Anche se il valore della leva effettiva <img src="https://latex.codecogs.com/svg.latex?L(t)" alt="L(t)"> cambia nel tempo, il rendimento finale rispetta sempre la relazione 
+                        <img src="https://latex.codecogs.com/svg.latex?r_D=L_0\cdot%20r_S" alt="r_D = L_0 × r_S">.
+                      </li>
+                      <li><strong>Meccanismo di adeguamento:</strong> Quando il sottostante si avvicina al knockout, la leva effettiva aumenta. Se poi il sottostante risale, il derivato recupera più velocemente, mantenendo la proporzione di amplificazione <img src="https://latex.codecogs.com/svg.latex?L_0" alt="L_0"> sul rendimento totale.</li>
+                    </ul>
+                  <p> Quindi se in una data simulazione che iniziava con leva 10 finisco con leva 2, non significa che il valore finale corrisponde a 2 volte quello del sottostante. Il valore finale come detto sarà la variazione % del sottostante amplificata di 10, indipendentemente dalla leva finale. Perciò anche i profitti saranno semplicemente moltiplicati per 10.
+                  </p>
+                    <p style="font-style: italic; color: #606060;">
+                      Questa relazione è fondamentale per comprendere i prodotti a leva con knockout: anche se nel breve termine il derivato può mostrare comportamenti non lineari, nel lungo termine (in assenza di knockout) il suo rendimento sarà esattamente <img src="https://latex.codecogs.com/svg.latex?L_0" alt="L_0"> volte quello del sottostante.
+                    </p>
+                  </div>
+                  
             </div>
         </main>
     </div>
@@ -331,41 +401,141 @@
             const puntoPartenzaInput = document.getElementById('punto_partenza');
             const dataMinimaBtn = document.getElementById('data_minima_btn');
             const scalaLogaritmicaCheckbox = document.getElementById('scala_logaritmica');
+            const levaDisabledIcon = document.getElementById('leva_disabled_icon');
+            const knockoutDisabledIcon = document.getElementById('knockout_disabled_icon');
             
-            // Chart.js instance
+            // Flag per tenere traccia dello stato attivo
+            let campoAttivo = null; // 'leva', 'knockout' o null
+            
+            // Chart.js instances
             let chart = null;
+            let levaChart = null;
             
             // Funzione per calcolare il knockout basato sulla leva
             function calcolaKnockout(puntoPartenza, leva) {
-                const protectiveBuffer = 0.00; // 5% di buffer di protezione aggiuntivo
-                return puntoPartenza * (1 - ((1 - protectiveBuffer) / leva));
+                return puntoPartenza * (1 - (1 / leva));
             }
             
-            // Aggiorna il placeholder del knockout quando la leva cambia
+            // Funzione per calcolare la leva basata sul knockout
+            function calcolaLeva(puntoPartenza, knockout) {
+                if (knockout >= puntoPartenza) {
+                    return 999; // Valore molto alto se il knockout è maggiore del punto di partenza
+                }
+                return puntoPartenza / (puntoPartenza - knockout);
+            }
+            
+            // Funzione per aggiornare l'interfaccia e i valori dei campi
+            function aggiornaInterfaccia() {
+                const puntoPartenza = parseFloat(puntoPartenzaInput.value) || 100;
+                const levaValue = levaInput.value.trim();
+                const knockoutValue = knockoutInput.value.trim();
+                
+                // Caso 1: Nessun valore inserito - entrambi i campi sono disponibili
+                if (levaValue === '' && knockoutValue === '') {
+                    levaInput.disabled = false;
+                    knockoutInput.disabled = false;
+                    levaDisabledIcon.style.display = 'none';
+                    knockoutDisabledIcon.style.display = 'none';
+                    campoAttivo = null;
+                    return;
+                }
+                
+                // Caso 2: Leva inserita - calcola e mostra il knockout
+                if (levaValue !== '' && (campoAttivo === 'leva' || campoAttivo === null)) {
+                    const leva = parseFloat(levaValue);
+                    if (!isNaN(leva) && leva > 0) {
+                        // Imposta la leva come campo attivo
+                        campoAttivo = 'leva';
+                        
+                        // Disabilita il campo knockout e mostra l'icona di divieto
+                        knockoutInput.disabled = true;
+                        knockoutDisabledIcon.style.display = 'inline';
+                        
+                        // Abilita il campo leva e nascondi l'icona di divieto
+                        levaInput.disabled = false;
+                        levaDisabledIcon.style.display = 'none';
+                        
+                        // Calcola e aggiorna il valore del knockout
+                        const knockout = calcolaKnockout(puntoPartenza, leva);
+                        knockoutInput.value = knockout.toFixed(2);
+                    }
+                }
+                
+                // Caso 3: Knockout inserito - calcola e mostra la leva
+                if (knockoutValue !== '' && (campoAttivo === 'knockout' || campoAttivo === null)) {
+                    const knockout = parseFloat(knockoutValue);
+                    if (!isNaN(knockout) && knockout >= 0) {
+                        // Imposta il knockout come campo attivo
+                        campoAttivo = 'knockout';
+                        
+                        // Disabilita il campo leva e mostra l'icona di divieto
+                        levaInput.disabled = true;
+                        levaDisabledIcon.style.display = 'inline';
+                        
+                        // Abilita il campo knockout e nascondi l'icona di divieto
+                        knockoutInput.disabled = false;
+                        knockoutDisabledIcon.style.display = 'none';
+                        
+                        // Calcola e aggiorna il valore della leva
+                        const leva = calcolaLeva(puntoPartenza, knockout);
+                        levaInput.value = leva.toFixed(2);
+                    }
+                }
+            }
+            
+            // Event listener per la leva
             levaInput.addEventListener('input', function() {
-                const puntoPartenza = parseFloat(puntoPartenzaInput.value) || 100;
-                const leva = parseFloat(levaInput.value) || 3;
-                const knockoutSuggerito = calcolaKnockout(puntoPartenza, leva);
-                knockoutInput.placeholder = `Suggerito: ${knockoutSuggerito.toFixed(2)}`;
+                const value = this.value.trim();
+                
+                if (value === '') {
+                    // Se il campo è stato svuotato, reimposta tutto
+                    levaInput.value = '';
+                    knockoutInput.value = '';
+                    campoAttivo = null;
+                } else {
+                    // Altrimenti, imposta la leva come campo attivo
+                    campoAttivo = 'leva';
+                }
+                
+                aggiornaInterfaccia();
             });
             
-            // Aggiorna il placeholder del knockout quando il punto di partenza cambia
+            // Event listener per il knockout
+            knockoutInput.addEventListener('input', function() {
+                const value = this.value.trim();
+                
+                if (value === '') {
+                    // Se il campo è stato svuotato, reimposta tutto
+                    levaInput.value = '';
+                    knockoutInput.value = '';
+                    campoAttivo = null;
+                } else {
+                    // Altrimenti, imposta il knockout come campo attivo
+                    campoAttivo = 'knockout';
+                }
+                
+                aggiornaInterfaccia();
+            });
+            
+            // Event listener per il punto di partenza
             puntoPartenzaInput.addEventListener('input', function() {
-                const puntoPartenza = parseFloat(puntoPartenzaInput.value) || 100;
-                const leva = parseFloat(levaInput.value) || 3;
-                const knockoutSuggerito = calcolaKnockout(puntoPartenza, leva);
-                knockoutInput.placeholder = `Suggerito: ${knockoutSuggerito.toFixed(2)}`;
+                aggiornaInterfaccia();
             });
             
-            // Imposta il placeholder iniziale
-            const knockoutSuggerito = calcolaKnockout(
-                parseFloat(puntoPartenzaInput.value) || 100, 
-                parseFloat(levaInput.value) || 3
-            );
-            knockoutInput.placeholder = `Suggerito: ${knockoutSuggerito.toFixed(2)}`;
+            // Inizializza l'interfaccia all'avvio con valore predefinito della leva
+            // Imposta la leva come campo attivo con valore 10
+            levaInput.value = "10";
+            campoAttivo = 'leva';
+            aggiornaInterfaccia();
             
             // Event listener per il pulsante di calcolo
             calcolaBtn.addEventListener('click', function() {
+                // Assicuriamoci che ci sia almeno un valore inserito
+                if (!levaInput.value && !knockoutInput.value) {
+                    alert("Inserisci la leva o il livello di knockout per continuare.");
+                    return;
+                }
+                
                 // Mostra l'indicatore di caricamento
                 loadingIndicator.style.display = 'block';
                 errorMessage.style.display = 'none';
@@ -376,17 +546,8 @@
                 const dataFine = document.getElementById('data_fine').value;
                 const ticker = document.getElementById('ticker').value;
                 const levaIniziale = parseFloat(document.getElementById('leva').value);
-                const knockoutManuale = document.getElementById('knockout_manuale').value;
+                const knockoutLevel = parseFloat(document.getElementById('knockout_manuale').value);
                 const scalaLogaritmica = document.getElementById('scala_logaritmica').checked;
-                
-                // Determina il livello di knockout (da input o calcolato automaticamente)
-                let knockoutLevel;
-                if (knockoutManuale && !isNaN(parseFloat(knockoutManuale))) {
-                    knockoutLevel = parseFloat(knockoutManuale);
-                } else {
-                    // Usa la funzione calcolaKnockout
-                    knockoutLevel = calcolaKnockout(puntoPartenza, levaIniziale);
-                }
                 
                 // Aggiorna il valore del knockout nelle statistiche
                 document.getElementById('knockout_value').textContent = knockoutLevel.toFixed(2);
@@ -621,7 +782,10 @@
                 // Fattore di scala per normalizzare i valori al punto di partenza richiesto
                 const fattoreScala = puntoPartenza / valoreIniziale;
                 
-                let valoreDerivato = puntoPartenza;
+                // Prezzo iniziale del derivato, calcolato come S0 - K (dove K è il livello di knockout)
+                const derivatoIniziale = puntoPartenza - knockoutLevel; 
+                
+                // Traccia i valori
                 let prevSottostante = null;
                 
                 // Elabora ogni punto dati
@@ -631,10 +795,6 @@
                     
                     labels.push(data);
                     sottostanteValues.push(valoreSottostanteReale);
-                    
-                    // Calcola la leva attuale in base alla distanza dal knockout
-                    // Formula: leva = valoreSottostante / (valoreSottostante - knockoutLevel)
-                    let levaAttuale;
                     
                     // Verifica se il knockout è stato raggiunto (sottostante <= livello knockout)
                     if (valoreSottostanteReale <= knockoutLevel && !knockoutRaggiunto) {
@@ -652,18 +812,18 @@
                         levaValues.push(null);
                         console.log(`Data: ${data.toISOString().split('T')[0]} | Sottostante: ${valoreSottostanteReale.toFixed(2)} | Derivato: KNOCKOUT | Leva: KNOCKOUT | Knockout Raggiunto: SI`);
                     } else {
-                        // Knockout non ancora raggiunto, calcola il derivato normalmente
-                        // Calcola la leva attuale
-                        levaAttuale = valoreSottostanteReale / (valoreSottostanteReale - knockoutLevel);
+                        // Knockout non ancora raggiunto
+
+                        // NUOVA LOGICA:
+                        // 1. Calcolare la leva attuale: L = S / (S - K)
+                        const levaAttuale = valoreSottostanteReale / (valoreSottostanteReale - knockoutLevel);
                         levaValues.push(levaAttuale);
                         
-                        if (prevSottostante !== null) {
-                            const variazioneSottostante = (valoreSottostanteReale / prevSottostante) - 1;
-                            // Usa la leva attuale invece di quella iniziale fissa
-                            const variazioneDerivato = variazioneSottostante * levaAttuale;
-                            valoreDerivato *= (1 + variazioneDerivato);
-                        }
+                        // 2. Calcolare il valore del derivato direttamente: V = S - K
+                        // Normalizzato rispetto al valore iniziale del derivato per mostrare correttamente le variazioni
+                        const valoreDerivato = (valoreSottostanteReale - knockoutLevel) / derivatoIniziale * puntoPartenza;
                         derivatoValues.push(valoreDerivato);
+                        
                         console.log(`Data: ${data.toISOString().split('T')[0]} | Sottostante: ${valoreSottostanteReale.toFixed(2)} | Derivato: ${valoreDerivato.toFixed(2)} | Leva: ${levaAttuale.toFixed(2)} | Knockout Raggiunto: NO`);
                     }
                     
@@ -695,10 +855,14 @@
             // Funzione per creare o aggiornare il grafico
             function creaGrafico(dati, scalaLogaritmica) {
                 const ctx = document.getElementById('chart').getContext('2d');
+                const ctxLeva = document.getElementById('leva_chart').getContext('2d');
                 
-                // Distruggi il grafico esistente se presente
+                // Distruggi i grafici esistenti se presenti
                 if (chart) {
                     chart.destroy();
+                }
+                if (levaChart) {
+                    levaChart.destroy();
                 }
                 
                 // Utilizziamo i valori assoluti anziché le variazioni percentuali
@@ -706,7 +870,7 @@
                 const derivatoValues = dati.derivatoValues;
                 const levaValues = dati.levaValues;
                 
-                // Crea nuovo grafico
+                // Crea nuovo grafico per sottostante e derivato
                 chart = new Chart(ctx, {
                     type: 'line',
                     data: {
@@ -720,7 +884,6 @@
                             tension: 0.1,
                             pointRadius: 0,
                             pointHoverRadius: 4,
-                            yAxisID: 'y'
                         }, {
                             label: 'Derivato (Leva)',
                             data: derivatoValues,
@@ -730,18 +893,6 @@
                             tension: 0.1,
                             pointRadius: 0,
                             pointHoverRadius: 4,
-                            yAxisID: 'y'
-                        }, {
-                            label: 'Leva',
-                            data: levaValues,
-                            borderColor: '#3498db',
-                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                            borderWidth: 2,
-                            tension: 0.1,
-                            pointRadius: 0,
-                            pointHoverRadius: 4,
-                            yAxisID: 'y1', // Asse Y secondario per la leva
-                            borderDash: [5, 5]
                         }]
                     },
                     options: {
@@ -768,18 +919,6 @@
                                 title: {
                                     display: true,
                                     text: 'Valore'
-                                },
-                                position: 'left'
-                            },
-                            y1: {
-                                type: 'linear',
-                                title: {
-                                    display: true,
-                                    text: 'Leva'
-                                },
-                                position: 'right',
-                                grid: {
-                                    drawOnChartArea: false // Solo assi, non griglia
                                 }
                             }
                         },
@@ -819,6 +958,91 @@
                                             }
                                         }
                                     },
+                                    // Linea verticale nel punto di Knockout se è stato raggiunto
+                                    knockoutEvent: dati.knockoutRaggiunto ? {
+                                        type: 'line',
+                                        xMin: dati.dataKnockout,
+                                        xMax: dati.dataKnockout,
+                                        borderColor: 'rgba(255, 0, 0, 0.7)',
+                                        borderWidth: 2,
+                                        label: {
+                                            content: 'Knockout!',
+                                            display: true,
+                                            position: 'top',
+                                            backgroundColor: 'rgba(255, 0, 0, 0.8)',
+                                            color: 'white',
+                                            font: {
+                                                weight: 'bold'
+                                            }
+                                        }
+                                    } : undefined
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Crea grafico separato per la leva
+                levaChart = new Chart(ctxLeva, {
+                    type: 'line',
+                    data: {
+                        labels: dati.labels,
+                        datasets: [{
+                            label: 'Leva',
+                            data: levaValues,
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.1,
+                            pointRadius: 0,
+                            pointHoverRadius: 4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        },
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'day',
+                                    tooltipFormat: 'DD MMM YYYY'
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Data'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Fattore di Leva'
+                                },
+                                beginAtZero: false
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += context.parsed.y.toFixed(2) + 'x';
+                                        }
+                                        return label;
+                                    }
+                                }
+                            },
+                            annotation: {
+                                annotations: {
                                     // Linea verticale nel punto di Knockout se è stato raggiunto
                                     knockoutEvent: dati.knockoutRaggiunto ? {
                                         type: 'line',

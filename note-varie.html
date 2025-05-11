@@ -7,36 +7,38 @@
     <title>Note Varie</title>
     <link rel="stylesheet" href="styles.css">
     <!-- MathJax per il rendering delle formule matematiche -->
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.35.6/es6-shim.min.js"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- Chart.js per i grafici -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Stili per la sezione orari di trading */
         .trading-hours {
             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
             margin-bottom: 30px;
         }
-        
+
         .trading-hours h3 {
             border-bottom: 2px solid #007bff;
             padding-bottom: 8px;
             margin-bottom: 15px;
             color: #2c3e50;
         }
-        
+
         .trading-hours ul {
             list-style-type: none;
             padding-left: 0;
         }
-        
+
         .trading-hours li {
             padding: 8px 0;
             display: flex;
             align-items: center;
         }
-        
+
         .trading-hours li::before {
             content: "•";
             color: #007bff;
@@ -44,12 +46,12 @@
             margin-right: 10px;
             font-size: 18px;
         }
-        
+
         /* Aggiungo stile per la spaziatura dopo i due punti */
         .label-value strong {
             margin-right: 8px;
         }
-        
+
         .time-value {
             display: inline-block;
             margin-left: 8px;
@@ -59,7 +61,7 @@
         .calendar-container {
             margin-top: 20px;
         }
-        
+
         .calendar-toggle {
             background: linear-gradient(135deg, #1a2a6c, #2c3e50);
             color: white;
@@ -74,41 +76,41 @@
             width: 100%;
             transition: all 0.3s ease;
         }
-        
+
         .calendar-toggle:hover {
             background: linear-gradient(135deg, #2c3e50, #1a2a6c);
         }
-        
+
         .calendar-toggle svg {
             width: 18px;
             height: 18px;
             margin-left: 10px;
             transition: transform 0.3s ease;
         }
-        
+
         .calendar-toggle.active svg {
             transform: rotate(180deg);
         }
-        
+
         .calendar-content {
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.4s ease;
             background-color: white;
             border-radius: 0 0 12px 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
         }
-        
+
         .calendar-content.show {
             max-height: 1000px;
         }
-        
+
         .calendar-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 0;
         }
-        
+
         .calendar-table th {
             background-color: #f1f5fb;
             padding: 10px;
@@ -116,66 +118,88 @@
             border-bottom: 2px solid #e0e0e0;
             color: #2c3e50;
         }
-        
+
         .calendar-table td {
             padding: 10px;
             border-bottom: 1px solid #f0f0f0;
         }
-        
+
         .calendar-table tr:last-child td {
             border-bottom: none;
         }
-        
+
         .calendar-table tr:nth-child(even) {
             background-color: #f9f9f9;
         }
-        
+
         .calendar-table tr:hover {
             background-color: #f1f5fb;
         }
-        
+
         .date-col {
             font-weight: 600;
             color: #2c3e50;
         }
-        
+
         .holiday-col {
             color: #505050;
         }
-        
+
         .status-col {
             font-weight: 500;
         }
-        
+
         .no-trading {
             color: #e74c3c;
         }
-        
+
         .limited-trading {
             color: #f39c12;
         }
-        
+
         .market-info {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
             margin-bottom: 15px;
         }
-        
+
         .market-card {
             flex: 1;
             min-width: 250px;
             background-color: #fff;
             border-radius: 8px;
             padding: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
-        
+
         .market-card h4 {
             color: #2c3e50;
             margin-top: 0;
             border-bottom: 1px solid #eaeaea;
             padding-bottom: 8px;
+        }
+
+        /* Stili per le info-card */
+        .info-card {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .info-card h2 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        /* Giustifica il testo nei paragrafi e liste delle info-card */
+        .info-card p, .info-card li {
+            text-align: justify;
         }
     </style>
 </head>
@@ -189,38 +213,52 @@
             <a href="index.html" class="back-link">← Torna alla pagina principale</a>
 
             <div class="chart-container">
-                <section>
+                <section class="info-card">
                     <h2>Orari di Trading</h2>
                     <div class="trading-hours">
                         <div class="market-info">
                             <div class="market-card">
                                 <h4>Borsa Lang & Schwarz / Borsa di Amburgo</h4>
                                 <ul class="label-value">
-                                    <li><strong>Orari di apertura: </strong><span class="time-value">7:30 - 23:00</span></li>
-                                    <li><strong>Orari Derivati: </strong><span class="time-value">08:00 - 22:00</span></li>
+                                    <li><strong>Orari di apertura: </strong><span class="time-value">7:30 - 23:00</span>
+                                    </li>
+                                    <li><strong>Orari Derivati: </strong><span class="time-value">08:00 - 22:00</span>
+                                    </li>
                                 </ul>
                             </div>
-                            
+
                             <div class="market-card">
                                 <h4>Trade Republic - Fasi di Trading</h4>
                                 <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                                     <thead>
                                         <tr>
-                                            <th style="text-align: left; border-bottom: 1px solid #eaeaea; padding: 8px 4px;">Fase</th>
-                                            <th style="text-align: left; border-bottom: 1px solid #eaeaea; padding: 8px 4px;">Orario (italiano)</th>
-                                            <th style="text-align: left; border-bottom: 1px solid #eaeaea; padding: 8px 4px;">Dove operi</th>
+                                            <th
+                                                style="text-align: left; border-bottom: 1px solid #eaeaea; padding: 8px 4px;">
+                                                Fase</th>
+                                            <th
+                                                style="text-align: left; border-bottom: 1px solid #eaeaea; padding: 8px 4px;">
+                                                Orario (italiano)</th>
+                                            <th
+                                                style="text-align: left; border-bottom: 1px solid #eaeaea; padding: 8px 4px;">
+                                                Dove operi</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td style="padding: 8px 4px; border-bottom: 1px solid #ffffff;">Pre-market</td>
-                                            <td style="padding: 8px 4px; border-bottom: 1px solid #ffffff;">7:30 – 15:30</td>
-                                            <td style="padding: 8px 4px; border-bottom: 1px solid #ffffff;">LS Exchange (non NYSE/NASDAQ)</td>
+                                            <td style="padding: 8px 4px; border-bottom: 1px solid #ffffff;">Pre-market
+                                            </td>
+                                            <td style="padding: 8px 4px; border-bottom: 1px solid #ffffff;">7:30 – 15:30
+                                            </td>
+                                            <td style="padding: 8px 4px; border-bottom: 1px solid #ffffff;">LS Exchange
+                                                (non NYSE/NASDAQ)</td>
                                         </tr>
                                         <tr>
-                                            <td style="padding: 8px 4px; border-bottom: 1px solid #ffffff;">Regolare</td>
-                                            <td style="padding: 8px 4px; border-bottom: 1px solid #ffffff;">15:30 – 22:00</td>
-                                            <td style="padding: 8px 4px; border-bottom: 1px solid #ffffff;">Coincide con NYSE/NASDAQ aperti</td>
+                                            <td style="padding: 8px 4px; border-bottom: 1px solid #ffffff;">Regolare
+                                            </td>
+                                            <td style="padding: 8px 4px; border-bottom: 1px solid #ffffff;">15:30 –
+                                                22:00</td>
+                                            <td style="padding: 8px 4px; border-bottom: 1px solid #ffffff;">Coincide con
+                                                NYSE/NASDAQ aperti</td>
                                         </tr>
                                         <tr>
                                             <td style="padding: 8px 4px;">Post-market</td>
@@ -231,11 +269,13 @@
                                 </table>
                             </div>
                         </div>
-                        
+
                         <div class="calendar-container">
                             <button class="calendar-toggle" id="calendarToggle">
                                 Calendario Trading 2025
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
                                     <polyline points="6 9 12 15 18 9"></polyline>
                                 </svg>
                             </button>
@@ -341,14 +381,16 @@
                     </div>
                 </section>
 
-                <section>
+                <section class="info-card">
                     <h2>Oscillazioni e Perdita Percentuale</h2>
                     <p>
-                        Scendere e salire del 10% o salire e poi scendere non cambia nulla perché corrisponde a 
-                        <strong>1.1 × 0.9</strong> o a <strong>0.9 × 1.1</strong> e l'ordine con cui moltiplico non cambia.
+                        Scendere e salire del 10% o salire e poi scendere non cambia nulla perché corrisponde a
+                        <strong>1.1 × 0.9</strong> o a <strong>0.9 × 1.1</strong> e l'ordine con cui moltiplico non
+                        cambia.
                     </p>
                     <p>
-                        La perdita percentuale dovuta all'oscillazione su e giù della stessa percentuale con <strong>L</strong> leva e 
+                        La perdita percentuale dovuta all'oscillazione su e giù della stessa percentuale con
+                        <strong>L</strong> leva e
                         <strong>x</strong> percentuale di salita e discesa è data da:
                     </p>
                     <p style="text-align: center;">
@@ -363,64 +405,103 @@
                         \[ \frac{3^2 \times 15^2}{100} = 20.25% \]
                     </p>
                     <p>
-                        Cioè, a leva <strong>3</strong>, scendere e risalire il giorno dopo del <strong>15%</strong> comporta una perdita del <strong>20.25%</strong>.
+                        Cioè, a leva <strong>3</strong>, scendere e risalire il giorno dopo del <strong>15%</strong>
+                        comporta una perdita del <strong>20.25%</strong>.
                     </p>
                     <p>
                         Per più oscillazioni consecutive, il calcolo diventa più complesso.
                     </p>
                 </section>
 
-                <section>
+                <section class="info-card">
                     <h2>Selezione delle Azioni negli ETF</h2>
-                    
+
                     <h3>1. Per Settore</h3>
-                    
+
                     <h3>2. Per Paesi</h3>
-                    
+
                     <h3>3. Per Fattori</h3>
                     <ul>
-                        <li><strong>ETF Large Cap / Small Cap / Mid Cap</strong>: Classificano le aziende in base alla capitalizzazione di mercato.</li>
-                        <li><strong>ETF Value</strong>: Investono in società sottovalutate in base a indicatori come P/E, P/B e dividend yield.</li>
-                        <li><strong>ETF Growth</strong>: Puntano su aziende con alto potenziale di crescita di ricavi ed utili.</li>
-                        <li><strong>ETF Momentum</strong>: Sfruttano il fenomeno dell'inerzia del mercato selezionando titoli con trend positivi recenti.</li>
-                        <li><strong>ETF Low Volatility</strong>: Focalizzati su azioni con minori oscillazioni di prezzo.</li>
-                        <li><strong>ETF Quality</strong>: Selezionano aziende con bilanci solidi e alta redditività.</li>
+                        <li><strong>ETF Large Cap / Small Cap / Mid Cap</strong>: Classificano le aziende in base alla
+                            capitalizzazione di mercato.</li>
+                        <li><strong>ETF Value</strong>: Investono in società sottovalutate in base a indicatori come
+                            P/E, P/B e dividend yield.</li>
+                        <li><strong>ETF Growth</strong>: Puntano su aziende con alto potenziale di crescita di ricavi ed
+                            utili.</li>
+                        <li><strong>ETF Momentum</strong>: Sfruttano il fenomeno dell'inerzia del mercato selezionando
+                            titoli con trend positivi recenti.</li>
+                        <li><strong>ETF Low Volatility</strong>: Focalizzati su azioni con minori oscillazioni di
+                            prezzo.</li>
+                        <li><strong>ETF Quality</strong>: Selezionano aziende con bilanci solidi e alta redditività.
+                        </li>
                         <li><strong>ETF Dividend</strong>: Investono in società con alti dividendi o in crescita.</li>
-                        <li><strong>ETF Multi-Factor</strong>: Combinano più fattori per migliorare il rapporto rischio/rendimento.</li>
+                        <li><strong>ETF Multi-Factor</strong>: Combinano più fattori per migliorare il rapporto
+                            rischio/rendimento.</li>
                     </ul>
                 </section>
 
-                <section>
+                <section class="info-card">
                     <h2>Ponderazione delle Azioni</h2>
                     <ul>
-                        <li><strong>Market Cap Weighted</strong>: Ponderazione basata sulla capitalizzazione di mercato.</li>
+                        <li><strong>Market Cap Weighted</strong>: Ponderazione basata sulla capitalizzazione di mercato.
+                        </li>
                         <li><strong>Equal Weighted</strong>: Ogni azione ha lo stesso peso nell'indice.</li>
                         <li><strong>Country Weighted</strong>: Ponderazione basata sulla nazione di appartenenza.</li>
                     </ul>
                 </section>
 
-                <section>
-                    <h2>Leva con Knockout</h2>
+                <section class="info-card">
+                    <h2>Funzionamento mercato ed Avvertenze per il Trading</h2>
+                    
+                    <h3>Attenzione al Prezzo di Acquisto Visualizzato</h3>
                     <p>
-                        La leva con knockout viene calcolata come mostrato sotto, non è fissa.
+                        Quando visualizzi il prezzo di acquisto di un'azione o derivato, verifica che si tratti del prezzo effettivamente visualizzato.
+                    </p>
+
+                    <h3>Strategia di Vendita e Riacquisto in Caso di Ribasso</h3>
+                    <p>
+                        Vendere un titolo con l'intento di riacquistarlo a un prezzo più basso può avere senso se si è certi che il prezzo effettivamente riscenderà. In tal caso, reinvestendo anche i profitti ottenuti, si riesce a "duplicare" parte della salita successiva, ottenendo un rendimento superiore rispetto al semplice buy & hold.
                     </p>
                     <p>
-                        In particolare, il livello di knockout è pensato per essere sempre tale che la leva ottenuta corrisponda a una perdita del 100% se raggiunto il knockout.
+                        Questa strategia ha senso solo con un elevato grado di certezza sul ritracciamento. Un'applicazione automatica in ottica swing può sovraperformare nel lungo periodo solo se i livelli inferiori vengono raggiunti. Infatti anche se raggiunti dopo anni, implica comunque una over-performance del buy & hold.
                     </p>
-                    <p class="label-value"><strong>Esempio: </strong><span class="time-value"></span></p>
+                    <p>
+                        Infine, è importante ricordare che vendere e ricomprare immediatamente (salvo le commissioni) dà risultati identici al mantenere la posizione, purchè si reinvestano anche i profitti realizzati (lordi), altrimenti col reinvestimento del solo capitale iniziale, si ha per definizione un profitto dato dall'interesse semplice invece che composto, con differenze immense.
+                    </p>
+
+                    <h3>Gestione dei Dividendi</h3>
+                    <p>
+                        Quando un'azienda paga un dividendo, il prezzo dell'azione scende in misura corrispondente, ma non si tratta di una perdita reale: il valore che si perde sull'azione viene compensato dal dividendo incassato. È semplicemente uno spostamento di valore, non posso andarci in short per trarne profitto.
+                    </p>
+                    <p>
+                        Per quanto riguarda i derivati su Trade Republic infatti, questi sono strutturati in modo da non risentire affatto del pagamento del dividendo: il loro prezzo resta invariato, evitando qualsiasi impatto diretto legato allo stacco.
+                    </p>
+
+                    <h3>Funzionamento del Mercato Azionario e Spread</h3>
+                    <p>
+                        Il mercato azionario si basa sul principio che quando qualcuno vende un titolo, c'è sempre un'altra persona che lo sta acquistando contemporaneamente, e viceversa.
+                    </p>
+                    <p>
+                        La differenza tra il prezzo massimo che un compratore è disposto a pagare e il prezzo minimo al quale un venditore è disposto a cedere il titolo prende il nome di <strong>spread</strong>.
+                    </p>
+                    <p>
+                        Quando il volume degli scambi è basso, può capitare che gli ordini restino temporaneamente ineseguiti finché non arriva qualcuno disposto a comprare o vendere al prezzo richiesto. In questi casi, broker o società specializzate intervengono fornendo liquidità, effettuando acquisti e vendite per facilitare gli scambi.
+                    </p>
+                    <p>
+                        Infine, operatori e algoritmi specializzati nell'arbitraggio contribuiscono a garantire che i prezzi delle stesse azioni rimangano allineati tra borse differenti (ad esempio tra Francoforte e New York), assicurando coerenza e bilanciamento nelle variazioni di prezzo tra i mercati.
+                    </p>
+
+                    <h3>Impatto delle Dichiarazioni sui Tassi di Interesse</h3>
+                    <p>
+                        Le dichiarazioni delle banche centrali (come la Fed) sui tassi di interesse possono avere un impatto significativo sui mercati:
+                    </p>
                     <ul>
-                        <li>Leva <strong>x15</strong> significa che se il sottostante sta a <strong>100 €</strong>, il knockout sta a <strong>93,33 €</strong>.</li>
-                        <li>Quindi, se perdo il <strong>6,66%</strong> del sottostante, ciò corrisponde a un <strong>-100%</strong> del derivato.</li>
-                        <li>In questo caso, viene raggiunto il knockout e il sistema vende automaticamente per evitare l'indebitamento.</li>
+                        <li>Se i tassi si alzano, l'azionario scende</li>
+                        <li>Se i tassi si abbassano, l'azionario sale</li>
                     </ul>
                     <p>
-                        La leva si ricalcola all'aggiornarsi del sottostante, tendendo ad aumentare esponenzialmente tanto più siamo vicini al knockout.
+                        È importante seguire il calendario degli annunci delle banche centrali e interpretare correttamente le implicazioni delle loro comunicazioni.
                     </p>
-                    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-                        <p style="text-align: center;">
-                          \[ \text{Leva} = \frac{\text{Prezzo del sottostante}}{\text{Prezzo del sottostante} - \text{Livello di knockout}} \]
-                        </p>
-                      </div>
                 </section>
             </div>
         </main>
@@ -428,24 +509,24 @@
 
     <script>
         // Script per il menu a espansione del calendario
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const calendarToggle = document.getElementById('calendarToggle');
             const calendarContent = document.getElementById('calendarContent');
-            
-            calendarToggle.addEventListener('click', function() {
+
+            calendarToggle.addEventListener('click', function () {
                 calendarContent.classList.toggle('active');
                 calendarContent.classList.toggle('show');
             });
-            
+
             // Filtraggio dinamico per nascondere le date passate
             filterPastDates();
         });
-        
+
         function filterPastDates() {
             const today = new Date();
             const rows = document.querySelectorAll('.calendar-table tbody tr');
             let visibleDatesCount = 0;
-            
+
             // Prima nascondiamo tutte le date passate
             rows.forEach(row => {
                 const dateCell = row.querySelector('.date-col');
@@ -456,9 +537,9 @@
                         const day = parseInt(dateParts[0], 10);
                         const month = parseInt(dateParts[1], 10) - 1; // I mesi in JavaScript sono 0-based
                         const year = parseInt(dateParts[2], 10);
-                        
+
                         const rowDate = new Date(year, month, day);
-                        
+
                         // Se la data è passata, nascondi la riga
                         if (rowDate < today) {
                             row.style.display = 'none';
@@ -468,16 +549,16 @@
                     }
                 }
             });
-            
+
             // Aggiorna il titolo del calendario con il numero di date future
             const calendarToggle = document.getElementById('calendarToggle');
-            
+
             // Conserviamo il contenuto dell'elemento SVG originale
             const originalSvg = calendarToggle.querySelector('svg');
-            
+
             // Aggiorna il testo del pulsante con il conteggio delle date
             calendarToggle.innerHTML = `Calendario Trading (${visibleDatesCount} date)`;
-            
+
             // Ricrea l'icona SVG
             if (originalSvg) {
                 const newSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -487,14 +568,14 @@
                 newSvg.setAttribute("stroke-width", "2");
                 newSvg.setAttribute("stroke-linecap", "round");
                 newSvg.setAttribute("stroke-linejoin", "round");
-                
+
                 const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
                 polyline.setAttribute("points", "6 9 12 15 18 9");
-                
+
                 newSvg.appendChild(polyline);
                 calendarToggle.appendChild(newSvg);
             }
-            
+
             // Se non ci sono date future, aggiungi un messaggio
             if (visibleDatesCount === 0) {
                 // Rimuovi la tabella esistente
@@ -502,7 +583,7 @@
                 if (calendarTable) {
                     calendarTable.style.display = 'none';
                 }
-                
+
                 // Verifica se il messaggio esiste già prima di aggiungerlo
                 const existingMessage = document.querySelector('.no-events-message');
                 if (!existingMessage) {
@@ -512,7 +593,7 @@
                     noEventsMessage.style.textAlign = 'center';
                     noEventsMessage.style.padding = '20px';
                     noEventsMessage.style.color = '#666';
-                    
+
                     const calendarContentDiv = document.getElementById('calendarContent');
                     if (calendarContentDiv) {
                         calendarContentDiv.appendChild(noEventsMessage);
@@ -522,5 +603,4 @@
         }
     </script>
 </body>
-
 </html>

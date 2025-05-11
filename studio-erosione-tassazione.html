@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Studio Erosione Tassazione</title>
+    <title>Studio Tassazione</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -74,6 +74,9 @@
         .chart-wrapper {
             height: 600px;
             margin-top: 30px;
+            width: 65%;
+            margin-left: auto;
+            margin-right: auto;
         }
         
         .results-card {
@@ -110,7 +113,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>Studio Erosione Tassazione</h1>
+            <h1>Studio Tassazione</h1>
         </header>
         <main>
             <a href="index.html" class="back-link">← Torna alla pagina principale</a>
@@ -159,17 +162,39 @@
                     
                     <div class="info-card">
                         <h3>Impatto della Tassazione sul Rendimento</h3>
-                        <p>La tassazione annuale degli interessi riduce significativamente il rendimento composto nel lungo periodo. Questo effetto è particolarmente evidente con tassi di interesse più elevati e periodi di investimento più lunghi.</p>
+                        <p>La tassazione annuale sulle vendite riduce significativamente il rendimento composto nel lungo periodo, ma solo perchè ogni volta reinvesto la cifra post tasse. Se ho la possibilità di reinvestire la cifra pre-tasse, ogni anno pagherò alla fine le stesse tasse totali e avrò ottenuto lo stesso rendimento. </p>
+
+                        <p><strong>Spezzare l'investimento</strong> quindi non influisce sull'<strong>interesse composto</strong>, a meno che non si debbano <strong>pagare le tasse</strong>. Ma a livello puramente matematico, disinvestire e reinvestire la stessa cifrà non cambia niente.</p>
                     </div>
-                    
+
                     <div class="info-card">
-                        <h3>Strategie di Investimento</h3>
-                        <p>Considerare strumenti finanziari con tassazione differita (come alcuni fondi di investimento o piani pensionistici) può aiutare a mitigare l'erosione fiscale sul lungo termine.</p>
+                        <h3>Pagamento tasse</h3>
+                        <p>Il calcolo del pagamento delle tasse sugli investimenti finanziari è spesso fonte di confusione. In Italia, per la maggior parte degli strumenti finanziari, si applica una tassazione del 26% sulle plusvalenze realizzate.</p>
+                        
+                        <p>In termini pratici, pagare le tasse corrisponde semplicemente a sottrarre il 26% dalla differenza tra la somma delle entrate (vendite) e la somma delle uscite (acquisti). In formula:</p>
+                        
+                        <div style="background-color: #f8f9fa; padding: 10px; border-left: 4px solid #0080ff; margin: 15px 0; border-radius: 4px;">
+                            <p style="font-weight: 500; margin: 0;"><strong>Tasse da pagare</strong> = 26% × (Somma entrate - Somma uscite)</p>
+                        </div>
+                        
+                        <p>Questo calcolo viene applicato al momento della dichiarazione dei redditi o direttamente dall'intermediario finanziario che gestisce l'investimento (tramite regime amministrato). È importante ricordare che si pagano tasse solo sulle plusvalenze realizzate, ovvero quando si vendono effettivamente gli strumenti finanziari con un profitto.</p>
                     </div>
-                    
+
                     <div class="info-card">
-                        <h3>Effetto della Suddivisione dell'Investimento</h3>
-                        <p><strong>Spezzare l'investimento</strong> non influisce sull'<strong>interesse composto</strong>, a meno che non si debbano <strong>pagare le tasse</strong>. In presenza di tassazione, la suddivisione può avere effetti significativi sul rendimento finale.</p>
+                        <h3>Reinvestimento: Prima o Dopo le Tasse?</h3>
+                        <p>È importante comprendere la differenza tra reinvestire la cifra pre-tasse o post-tasse:</p>
+                        
+                        <ul>
+                            <li><strong>Reinvestimento post-tasse:</strong> Se reinvesti solo la cifra netta dopo aver pagato le tasse, subirai l'erosione dell'interesse composto come mostrato nel grafico "Tassato Ogni Anno". In questo caso, ogni anno stai effettivamente riducendo il capitale che può generare rendimenti futuri.</li>
+                            
+                            <li><strong>Reinvestimento pre-tasse:</strong> Se invece reinvesti l'intera cifra lorda (pre-tasse), otterrai lo stesso identico risultato che avresti calcolando semplicemente il 26% sulla differenza tra ricavi totali e costi totali (plusvalenza netta).</li>
+                        </ul>
+                        
+                        <p><strong>Nota importante:</strong> Questo vale solo quando è possibile reinvestire l'intera cifra pre-tasse.</p>
+
+                        <p>In altre parole, se possiamo continuare a investire l'intera somma pre-tasse (perchè magari ho altri soldi da parte), alla fine avremo pagato esattamente le stesse tasse totali e avremo ottenuto lo stesso rendimento. Infatti corrisponde esattamente nel grafico di sopra alla linea blu con pagamento finale verde.</p>
+
+                        <p><strong>Nota importante:</strong> Non è scontato che possa reinvestire anche la cifra che comprende delle tasse che ho già pagato. Quindi anche se è vero che i risultati finali sono uguali in termini di tasse pagate e capitale finale, sto comunque attingendo alle mie risorse nel caso in cui vendo frequentemente, per coprire quella parte di tasse, che invece nel caso di pagamento unico finale verrebbe pagata in una soluzione sola alla fine</p>
                     </div>
                 </div>
             </div>
@@ -307,7 +332,7 @@
                 <li>Tassato Solo a Fine Periodo: ${perditaTaxFinale.toFixed(2)}%</li>
                 <li>Interruzione a ${annoInterruzione} anni: ${perditaInterrotto.toFixed(2)}%</li>
             </ul>
-            <p><em>Spezzare l'investimento non influisce sull'interesse composto, a meno che non si debbano pagare le tasse.</em></p>
+            <p><em>Spezzare l'investimento non influisce sull'interesse composto, a meno che non si debbano pagare le tasse e reinvestire la cifra netta. Infatti le curve nel grafico sono relative al caso in cui si reinveste la cifra netta ogni volta, riducendo così ogni volta il capitale su cui generare interessi.</em></p>
             <p><em>Il caso "Tassato Solo a Fine Periodo" non avrà sempre perdita % rispetto al caso non tassato del 26% perchè la perdita tiene conto del valore iniziale. Se ho 100 €, arrivo a 110 €, pago il 26% di 10 € quindi non ho perso il 26% rispetto al caso non tassato, ho semplicemente perso il 26% delle plusvalenze (10 €)<p><em>
             `;
 
