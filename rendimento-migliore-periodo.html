@@ -21,11 +21,11 @@
             margin-bottom: 30px;
             transition: all 0.3s;
         }
-        
+
         .calculator-container:hover {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
         }
-        
+
         .input-grid {
             display: flex;
             flex-wrap: wrap;
@@ -33,7 +33,7 @@
             margin-bottom: 25px;
             align-items: flex-start;
         }
-        
+
         .input-group {
             display: flex;
             flex-direction: column;
@@ -41,31 +41,33 @@
             min-width: 200px;
             flex: 1;
         }
-        
+
         .input-group:last-child {
             max-width: 150px;
         }
-        
+
         .input-group label {
             font-weight: 600;
             margin-bottom: 8px;
             color: #444;
         }
-        
-        .input-group input, .input-group select {
+
+        .input-group input,
+        .input-group select {
             border: 2px solid #e0e0e0;
             border-radius: 8px;
             padding: 12px 15px;
             font-size: 1rem;
             transition: all 0.2s;
         }
-        
-        .input-group input:focus, .input-group select:focus {
+
+        .input-group input:focus,
+        .input-group select:focus {
             border-color: #0080ff;
             box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.2);
             outline: none;
         }
-        
+
         .btn {
             padding: 12px 20px;
             border-radius: 8px;
@@ -78,17 +80,17 @@
             color: white;
             width: 100%;
         }
-        
+
         .btn:hover {
             background-color: #0066cc;
         }
-        
+
         .loading-indicator {
             text-align: center;
             margin: 20px;
             display: none;
         }
-        
+
         .spinner {
             border: 4px solid rgba(0, 0, 0, 0.1);
             width: 36px;
@@ -98,7 +100,7 @@
             animation: spin 1s linear infinite;
             margin: 0 auto;
         }
-        
+
         .error-message {
             color: red;
             margin: 20px;
@@ -107,12 +109,12 @@
             border-radius: 8px;
             display: none;
         }
-        
+
         .chart-wrapper {
             height: 700px;
             margin-bottom: 30px;
         }
-        
+
         .stats-container {
             margin-top: 30px;
             padding: 20px;
@@ -120,7 +122,7 @@
             border-radius: 8px;
             border-left: 4px solid #0080ff;
         }
-        
+
         .info-section {
             margin-top: 30px;
             background-color: white;
@@ -128,22 +130,24 @@
             padding: 20px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
-        
+
         .info-card {
             background-color: #f8f9fa;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 15px;
         }
-        
+
         .info-card h3 {
             margin-top: 0;
             color: #333;
             font-size: 1.2rem;
         }
-        
+
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         #periodi-container {
@@ -167,7 +171,7 @@
             margin-top: 5px;
         }
 
-        .periodo-row.aggiunto > div {
+        .periodo-row.aggiunto>div {
             flex: 1;
             display: flex;
             gap: 5px;
@@ -176,6 +180,28 @@
 
         .periodo-row.aggiunto .periodo-value {
             display: none;
+        }
+
+        .ticker-selection {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .ticker-selection select,
+        .ticker-selection input {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .ticker-selection select:focus,
+        .ticker-selection input:focus {
+            border-color: #0080ff;
+            box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.2);
+            outline: none;
         }
     </style>
 </head>
@@ -190,14 +216,18 @@
 
             <div class="calculator-container">
                 <h2>Analisi dei Rendimenti per Periodo</h2>
-                <p>Questo strumento ti permette di analizzare i rendimenti ottenibili entrando nel mercato in diversi momenti per specifici periodi di tempo.</p>
-                
+                <p>Questo strumento ti permette di analizzare i rendimenti ottenibili entrando nel mercato in diversi
+                    momenti per specifici periodi di tempo.</p>
+
                 <div class="input-grid">
                     <div class="input-group">
                         <label for="data_inizio">Data inizio dati:</label>
                         <div style="display: flex; width: 100%;">
-                            <input type="date" id="data_inizio" value="2000-01-01" style="flex-grow: 1; border-top-right-radius: 0; border-bottom-right-radius: 0;">
-                            <button id="data_minima_btn" style="border: 2px solid #e0e0e0; background-color: #f8f9fa; padding: 0 10px; border-left: none; border-top-right-radius: 8px; border-bottom-right-radius: 8px; cursor: pointer;" title="Imposta alla data minima disponibile">
+                            <input type="date" id="data_inizio" value="2000-01-01"
+                                style="flex-grow: 1; border-top-right-radius: 0; border-bottom-right-radius: 0;">
+                            <button id="data_minima_btn"
+                                style="border: 2px solid #e0e0e0; background-color: #f8f9fa; padding: 0 10px; border-left: none; border-top-right-radius: 8px; border-bottom-right-radius: 8px; cursor: pointer;"
+                                title="Imposta alla data minima disponibile">
                                 Min
                             </button>
                         </div>
@@ -211,41 +241,52 @@
                         <div id="periodi_container">
                             <div class="periodo-row">
                                 <div style="display: flex; flex: 1; gap: 5px; min-width: 0;">
-                                    <input type="number" class="periodo-input" data-unit="anni" placeholder="Anni" min="0" style="flex: 1; min-width: 100px; border: 2px solid #e0e0e0; border-radius: 8px; padding: 14px 15px; font-size: 1rem; height: 48px; box-sizing: border-box;">
-                                    <input type="number" class="periodo-input" data-unit="mesi" placeholder="Mesi" min="0" style="flex: 1; min-width: 100px; border: 2px solid #e0e0e0; border-radius: 8px; padding: 14px 15px; font-size: 1rem; height: 48px; box-sizing: border-box;">
-                                    <input type="number" class="periodo-input" data-unit="giorni" placeholder="Giorni" min="0" style="flex: 1; min-width: 100px; border: 2px solid #e0e0e0; border-radius: 8px; padding: 14px 15px; font-size: 1rem; height: 48px; box-sizing: border-box;">
+                                    <input type="number" class="periodo-input" data-unit="anni" placeholder="Anni"
+                                        min="0"
+                                        style="flex: 1; min-width: 100px; border: 2px solid #e0e0e0; border-radius: 8px; padding: 14px 15px; font-size: 1rem; height: 48px; box-sizing: border-box;">
+                                    <input type="number" class="periodo-input" data-unit="mesi" placeholder="Mesi"
+                                        min="0"
+                                        style="flex: 1; min-width: 100px; border: 2px solid #e0e0e0; border-radius: 8px; padding: 14px 15px; font-size: 1rem; height: 48px; box-sizing: border-box;">
+                                    <input type="number" class="periodo-input" data-unit="giorni" placeholder="Giorni"
+                                        min="0"
+                                        style="flex: 1; min-width: 100px; border: 2px solid #e0e0e0; border-radius: 8px; padding: 14px 15px; font-size: 1rem; height: 48px; box-sizing: border-box;">
                                 </div>
-                                <button class="add-periodo-btn" style="flex-shrink: 0; background-color: #0080ff; color: white; border: none; border-radius: 8px; padding: 14px; cursor: pointer; font-size: 1rem; height: 48px; box-sizing: border-box;">+</button>
+                                <button class="add-periodo-btn"
+                                    style="flex-shrink: 0; background-color: #0080ff; color: white; border: none; border-radius: 8px; padding: 14px; cursor: pointer; font-size: 1rem; height: 48px; box-sizing: border-box;">+</button>
                             </div>
                         </div>
                         <input type="hidden" id="periodi_investimento" value="">
                     </div>
                     <div class="input-group">
                         <label for="ticker">Ticker:</label>
-                        <select id="ticker">
-                            <option value="^GSPC">S&P 500</option>
-                            <option value="AAPL">Apple Inc.</option>
-                            <option value="MSFT">Microsoft Corporation</option>
-                            <option value="AMZN">Amazon.com, Inc.</option>
-                            <option value="GOOGL">Alphabet Inc. (Google)</option>
-                            <option value="TSLA">Tesla, Inc.</option>
-                            <option value="NVDA">Nvidia Corporation</option>
-                            <option value="V">Visa Inc.</option>
-                            <option value="JPM">JPMorgan Chase & Co.</option>
-                            <option value="JNJ">Johnson & Johnson</option>
-                            <option value="BRK-B">Berkshire Hathaway</option>
-                            <option value="BTC-USD">Bitcoin</option>
-                            <option value="GLD">Gold</option>
-                        </select>
+                        <div class="ticker-selection">
+                            <select id="ticker">
+                                <option value="^GSPC">S&P 500</option>
+                                <option value="AAPL">Apple Inc.</option>
+                                <option value="MSFT">Microsoft Corporation</option>
+                                <option value="AMZN">Amazon.com, Inc.</option>
+                                <option value="GOOGL">Alphabet Inc. (Google)</option>
+                                <option value="TSLA">Tesla, Inc.</option>
+                                <option value="NVDA">Nvidia Corporation</option>
+                                <option value="V">Visa Inc.</option>
+                                <option value="JPM">JPMorgan Chase & Co.</option>
+                                <option value="JNJ">Johnson & Johnson</option>
+                                <option value="BRK-B">Berkshire Hathaway</option>
+                                <option value="BTC-USD">Bitcoin</option>
+                                <option value="GLD">Gold</option>
+                                <option value="custom">Personalizzato</option>
+                            </select>
+                            <input type="text" id="ticker_custom" placeholder="Inserisci ticker" style="display: none;">
+                        </div>
                     </div>
                     <div class="input-group">
                         <label for="leva">Leva:</label>
                         <input type="number" id="leva" value="1" min="0.1" max="100" step="0.1">
                     </div>
                 </div>
-                
+
                 <button id="analizza" class="btn">Analizza Rendimenti</button>
-                
+
                 <div id="loading" class="loading-indicator" style="margin-top: 20px;">
                     <div class="spinner"></div>
                     <p>Caricamento dati in corso... Questo potrebbe richiedere alcuni secondi.</p>
@@ -255,24 +296,31 @@
 
                 <div id="charts-container" style="display: none; margin-top: 20px;">
                     <div id="chart-wrapper-returns" class="chart-wrapper">
-                        <div style="display: flex; align-items: center; margin-bottom: 10px; justify-content: flex-end;">
-                            <input type="checkbox" id="scala_logaritmica_rendimenti" style="width: 18px; height: 18px; margin-right: 8px;">
-                            <label for="scala_logaritmica_rendimenti" style="font-weight: 500; cursor: pointer;">Scala logaritmica</label>
+                        <div
+                            style="display: flex; align-items: center; margin-bottom: 10px; justify-content: flex-end;">
+                            <input type="checkbox" id="scala_logaritmica_rendimenti"
+                                style="width: 18px; height: 18px; margin-right: 8px;">
+                            <label for="scala_logaritmica_rendimenti" style="font-weight: 500; cursor: pointer;">Scala
+                                logaritmica</label>
                         </div>
                         <canvas id="returnsChart"></canvas>
                     </div>
 
                     <div id="chart-wrapper-price" class="chart-wrapper">
-                        <div style="display: flex; align-items: center; margin-bottom: 10px; justify-content: flex-end;">
-                            <input type="checkbox" id="scala_logaritmica_prezzo" style="width: 18px; height: 18px; margin-right: 8px;">
-                            <label for="scala_logaritmica_prezzo" style="font-weight: 500; cursor: pointer;">Scala logaritmica</label>
+                        <div
+                            style="display: flex; align-items: center; margin-bottom: 10px; justify-content: flex-end;">
+                            <input type="checkbox" id="scala_logaritmica_prezzo"
+                                style="width: 18px; height: 18px; margin-right: 8px;">
+                            <label for="scala_logaritmica_prezzo" style="font-weight: 500; cursor: pointer;">Scala
+                                logaritmica</label>
                         </div>
                         <canvas id="priceChart"></canvas>
                     </div>
 
                     <div id="stats-container" class="stats-container">
                         <h2>Statistiche dei Rendimenti</h2>
-                        <div style="overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; max-height: 600px; overflow-y: auto;">
+                        <div
+                            style="overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; max-height: 600px; overflow-y: auto;">
                             <table id="stats-table" style="width: 100%; border-collapse: collapse; margin-top: 15px;">
                                 <tbody id="stats-body">
                                 </tbody>
@@ -288,7 +336,8 @@
                         <h3>Interpretazione del Grafico dei Rendimenti</h3>
                         <p>Il primo grafico <strong>non mostra l'andamento dell'azione scelta</strong>, ma mostra il
                             <strong>risultato in percentuale</strong> di entrare nel mercato in quel momento specifico
-                            per il periodo di tempo selezionato.</p>
+                            per il periodo di tempo selezionato.
+                        </p>
                     </div>
 
                     <div class="info-card">
@@ -320,16 +369,16 @@
             const meseDecimale = (periodoAnni - anniInteri) * 12;
             const mesiInteri = Math.floor(meseDecimale);
             const giorni = Math.round((meseDecimale - mesiInteri) * 30.4375); // Media giorni per mese
-            
+
             // Formattiamo il testo
             let periodoTesto = '';
             if (anniInteri > 0) periodoTesto += anniInteri + (anniInteri === 1 ? ' anno ' : ' anni ');
             if (mesiInteri > 0) periodoTesto += mesiInteri + (mesiInteri === 1 ? ' mese ' : ' mesi ');
             if (giorni > 0) periodoTesto += giorni + (giorni === 1 ? ' giorno' : ' giorni');
-            
+
             // Se periodo è molto breve (meno di un giorno)
             if (periodoTesto === '') periodoTesto = 'meno di 1 giorno';
-            
+
             return periodoTesto.trim();
         }
 
@@ -338,79 +387,99 @@
             // Impostiamo la data di fine al giorno corrente
             const oggi = new Date();
             document.getElementById('data_fine').valueAsDate = oggi;
-            
+
             // Aggiungiamo l'event listener per il pulsante di analisi
             document.getElementById('analizza').addEventListener('click', analizza);
-            
+
             // Aggiungiamo l'event listener per il pulsante data minima
             document.getElementById('data_minima_btn').addEventListener('click', trovaDataMinima);
-            
+
+            // Gestione ticker personalizzato
+            const tickerSelect = document.getElementById('ticker');
+            const tickerCustomInput = document.getElementById('ticker_custom');
+
+            tickerSelect.addEventListener('change', function () {
+                if (this.value === 'custom') {
+                    tickerCustomInput.style.display = 'block';
+                } else {
+                    tickerCustomInput.style.display = 'none';
+                }
+            });
+
             // Aggiungiamo l'event listener per il checkbox della scala logaritmica del prezzo
-            document.getElementById('scala_logaritmica_prezzo').addEventListener('change', function() {
+            document.getElementById('scala_logaritmica_prezzo').addEventListener('change', function () {
                 if (priceChartInstance) {
                     // Modifichiamo la scala dell'asse Y
                     priceChartInstance.options.scales.y.type = this.checked ? 'logarithmic' : 'linear';
                     priceChartInstance.update();
                 }
             });
-            
+
             // Aggiungiamo l'event listener per il checkbox della scala logaritmica dei rendimenti
-            document.getElementById('scala_logaritmica_rendimenti').addEventListener('change', function() {
+            document.getElementById('scala_logaritmica_rendimenti').addEventListener('change', function () {
                 if (returnsChartInstance) {
                     // Modifichiamo la scala dell'asse Y
                     returnsChartInstance.options.scales.y.type = this.checked ? 'logarithmic' : 'linear';
                     returnsChartInstance.update();
                 }
             });
-            
+
             // Inizializzazione gestione periodi
             initPeriodi();
-            
+
             // Eseguiamo l'analisi all'avvio della pagina
-            setTimeout(analizza, 500);
+            setTimeout(analizza, 0);
         });
 
         // Funzione per trovare la data minima disponibile per il ticker selezionato
         async function trovaDataMinima() {
             try {
+
                 // Mostriamo il loader
                 document.getElementById('loading').style.display = 'block';
                 document.getElementById('error').style.display = 'none';
-                
-                const ticker = document.getElementById('ticker').value;
-                
+
+                let ticker = document.getElementById('ticker').value;
+                // Se il ticker è personalizzato, usa il valore dell'input
+                if (ticker === 'custom') {
+                    ticker = document.getElementById('ticker_custom').value.trim();
+                    if (!ticker) {
+                        throw new Error('Inserisci un ticker valido nel campo personalizzato');
+                    }
+                }
+
                 // Data di partenza molto vecchia per assicurarci di ottenere tutti i dati
                 const dataVecchia = new Date('1950-01-01');
                 const oggi = new Date();
-                
+
                 // Costruiamo l'URL per l'API di Yahoo Finance usando il formato chart
                 const period1 = Math.floor(dataVecchia.getTime() / 1000);
                 const period2 = Math.floor(oggi.getTime() / 1000);
                 const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/chart/${ticker}?period1=${period1}&period2=${period2}&interval=1d&events=history`;
-                
+
                 const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`;
-                
+
                 const response = await fetch(proxyUrl);
                 const parsedData = await response.json();
-                
+
                 if (!parsedData.chart || !parsedData.chart.result || parsedData.chart.result.length === 0) {
                     throw new Error('Dati non disponibili');
                 }
-                
+
                 const result = parsedData.chart.result[0];
                 const timestamps = result.timestamp;
-                
+
                 if (timestamps && timestamps.length > 0) {
                     // Il primo timestamp è la data più vecchia disponibile
                     const dataMinima = new Date(timestamps[0] * 1000);
-                    
+
                     // Formatta la data nel formato YYYY-MM-DD per l'input date
                     const dataFormattata = dataMinima.toISOString().split('T')[0];
                     document.getElementById('data_inizio').value = dataFormattata;
-                    
+
                     // Nascondiamo il loader
                     document.getElementById('loading').style.display = 'none';
-                    
+
                     // Eseguiamo l'analisi con la nuova data
                     analizza();
                 } else {
@@ -439,11 +508,18 @@
 
                 // Otteniamo i parametri dall'interfaccia
                 const dataInizio = document.getElementById('data_inizio').value;
-                const ticker = document.getElementById('ticker').value;
+                let ticker = document.getElementById('ticker').value;
+                // Se il ticker è personalizzato, usa il valore dell'input
+                if (ticker === 'custom') {
+                    ticker = document.getElementById('ticker_custom').value.trim();
+                    if (!ticker) {
+                        throw new Error('Inserisci un ticker valido nel campo personalizzato');
+                    }
+                }
 
                 // Recuperiamo i dati storici (questo già include il trovaMigliorPeriodoGlobale)
                 const datiStorici = await fetchStockData(ticker, dataInizio);
-                
+
                 // Non serve chiamare esplicitamente trovaMigliorPeriodoGlobale qui
                 // perché viene già chiamato all'interno di fetchStockData
             } catch (error) {
@@ -504,7 +580,7 @@
 
                 // Prima troviamo il miglior periodo globale
                 const migliorPeriodoGlobale = await trovaMigliorPeriodoGlobale(data);
-                
+
                 // Poi processiamo i dati (incluso il miglior periodo globale)
                 processStockData(data);
                 return data;
@@ -586,34 +662,34 @@
                 const tuttiRendimenti = [];
                 const tuttiMiglioriGiorni = [];
                 const tuttiMiglioriGiorniAnnui = [];
-                
+
                 // Per ogni periodo di investimento specificato
                 for (let p = 0; p < periodiAnni.length; p++) {
                     const periodoAnni = periodiAnni[p];
-                    
+
                     // Calcoliamo il numero di giorni di calendario
                     const dataInizioObj = new Date(data[0].Date);
                     let dataFineObj = new Date(dataInizioObj);
-                    
+
                     // Scomponiamo il periodo in anni, mesi e giorni
                     const anniInteri = Math.floor(periodoAnni);
                     const meseDecimale = (periodoAnni - anniInteri) * 12;
                     const mesiInteri = Math.floor(meseDecimale);
                     const giorni = Math.round((meseDecimale - mesiInteri) * 30.4375); // Media giorni per mese
-                    
+
                     // Applichiamo il periodo alla data di inizio
                     dataFineObj.setFullYear(dataFineObj.getFullYear() + anniInteri);
                     dataFineObj.setMonth(dataFineObj.getMonth() + mesiInteri);
                     dataFineObj.setDate(dataFineObj.getDate() + giorni);
-                    
+
                     // Per la visualizzazione
                     const periodoMesi = anniInteri * 12 + mesiInteri;
-                    
+
                     // Calcoliamo quanti giorni di trading ci sono tra le due date
                     // Troviamo gli indici delle date più vicine nel nostro dataset
                     let indiceFine = -1;
                     let distanzaMinima = Infinity;
-                    
+
                     for (let i = 0; i < dates.length; i++) {
                         const diffMs = Math.abs(dates[i].getTime() - dataFineObj.getTime());
                         if (diffMs < distanzaMinima) {
@@ -621,10 +697,10 @@
                             indiceFine = i;
                         }
                     }
-                    
+
                     // Se non abbiamo trovato una data fine valida, saltiamo questo periodo
                     if (indiceFine < 0) continue;
-                    
+
                     // Calcoliamo il numero di giorni di trading
                     const giorni_investimento = indiceFine;
                     const rendimenti = {};
@@ -691,7 +767,7 @@
                     const migliorGiornoAnnuo = rendimentiAnnui[migliorGiornoAnnuoIndex]?.data_ingresso;
                     const migliorDataUscitaAnnuo = rendimentiAnnui[migliorGiornoAnnuoIndex]?.data_uscita;
                     const migliorRendimentoAnnuo = rendimentiAnnui[migliorGiornoAnnuoIndex]?.rendimento;
-                    
+
                     // Aggiungiamo i risultati di questo periodo all'array di tutti i rendimenti
                     tuttiRendimenti.push({
                         periodo: periodoAnni,
@@ -708,7 +784,7 @@
                             rendimento_annuo_medio_realistico: rendimento_annuo_medio_realistico.toFixed(2) + '% / annuo'
                         }
                     });
-                    
+
                     // Aggiungiamo i migliori giorni per questo periodo
                     if (migliorGiorno && migliorDataUscita) {
                         tuttiMiglioriGiorni.push({
@@ -719,7 +795,7 @@
                             rendimentoAnnuo: rendimentoAnnuo
                         });
                     }
-                    
+
                     if (migliorGiornoAnnuo && migliorDataUscitaAnnuo) {
                         tuttiMiglioriGiorniAnnui.push({
                             periodo: periodoAnni,
@@ -730,16 +806,16 @@
                         });
                     }
                 } // Fine del ciclo per ogni periodo
-                
+
                 // Mostriamo i grafici con tutti i periodi
                 createReturnsChart(tuttiRendimenti, tuttiMiglioriGiorni, tuttiMiglioriGiorniAnnui);
                 createPriceChart(dates, leveragedData, tuttiMiglioriGiorni, tuttiMiglioriGiorniAnnui);
-                
+
                 // Aggiorniamo la tabella delle statistiche con tutti i periodi in formato tabellare
                 if (tuttiRendimenti.length > 0) {
                     // Creiamo un array di oggetti con le statistiche per ogni periodo
                     const statsArray = [];
-                    
+
                     for (let i = 0; i < tuttiRendimenti.length; i++) {
                         const periodoStats = tuttiRendimenti[i].stats;
                         const periodo = tuttiRendimenti[i].periodo;
@@ -750,19 +826,19 @@
                             'periodoRaw': periodo, // Valore numerico per ordinamento
                             'isPeriodoGlobale': false, // Flag per il periodo massimo globale
                             'Giorni negativi': periodoStats.negative_pct,
-                            'Rendimento Massimo': periodo === 1 ? 
-                                `${formatRendimento(parseFloat(periodoStats.max_ret))}` : 
+                            'Rendimento Massimo': periodo === 1 ?
+                                `${formatRendimento(parseFloat(periodoStats.max_ret))}` :
                                 `${formatRendimento(parseFloat(periodoStats.max_ret))} (${formatRendimento(migliorGiorno ? migliorGiorno.rendimentoAnnuo : 0, true)})`,
-                            'Rendimento Minimo': periodo === 1 ? 
-                                `${formatRendimento(parseFloat(periodoStats.min_ret))}` : 
+                            'Rendimento Minimo': periodo === 1 ?
+                                `${formatRendimento(parseFloat(periodoStats.min_ret))}` :
                                 `${formatRendimento(parseFloat(periodoStats.min_ret))} (${formatRendimento(parseFloat(periodoStats.rendimento_minimo_annuo), true)})`,
-                            'Rendimento Medio': periodo === 1 ? 
-                                `${formatRendimento(parseFloat(periodoStats.mean_ret))} (${formatRendimento(parseFloat(periodoStats.rendimento_annuo_medio_realistico), true)} realistico)` : 
+                            'Rendimento Medio': periodo === 1 ?
+                                `${formatRendimento(parseFloat(periodoStats.mean_ret))} (${formatRendimento(parseFloat(periodoStats.rendimento_annuo_medio_realistico), true)} realistico)` :
                                 `${formatRendimento(parseFloat(periodoStats.mean_ret))} (${formatRendimento(parseFloat(periodoStats.rendimento_annuo_medio), true)} ◾ ${formatRendimento(parseFloat(periodoStats.rendimento_annuo_medio_realistico), true)} realistico)`,
                             'Miglior data ingresso': migliorGiorno ? migliorGiorno.giorno.toLocaleDateString() : '-',
                             'Miglior data uscita': migliorGiorno ? migliorGiorno.dataUscita.toLocaleDateString() : '-'
                         };
-                        
+
                         // Verifichiamo se questo periodo è il periodo massimo globale
                         const periodoRowGlobale = document.querySelector('.periodo-row.miglior-periodo-globale .periodo-value');
                         if (periodoRowGlobale) {
@@ -770,13 +846,13 @@
                             const mesiGlobale = parseFloat(periodoRowGlobale.getAttribute('data-mesi') || 0);
                             const giorniGlobale = parseFloat(periodoRowGlobale.getAttribute('data-giorni') || 0);
                             const periodoGlobale = anniGlobale + (mesiGlobale / 12) + (giorniGlobale / 365.25);
-                            
+
                             // Se questo periodo corrisponde al periodo massimo globale, lo flagghiamo
                             if (Math.abs(periodo - periodoGlobale) < 0.001) { // Tolleranza per errori di arrotondamento
                                 periodoObj.isPeriodoGlobale = true;
                             }
                         }
-                        
+
                         // Funzione per formattare il rendimento con segno + se positivo
                         function formatRendimento(valore, isAnnuo = false) {
                             if (isNaN(valore)) return '-';
@@ -785,23 +861,23 @@
                             const valoreArrotondato = parseFloat(valore).toFixed(2);
                             return isAnnuo ? `${segno}${valoreArrotondato}% / anno` : `${segno}${valoreArrotondato}%`;
                         }
-                        
+
                         // Aggiungiamo informazioni sui migliori giorni per questo periodo
-                        
+
                         if (migliorGiorno) {
                             periodoObj['Miglior data ingresso'] = migliorGiorno.giorno.toLocaleDateString();
                             periodoObj['Miglior data uscita'] = migliorGiorno.dataUscita.toLocaleDateString();
                         }
-                        
+
                         // Aggiungiamo informazioni sui migliori giorni per rendimento annuo
                         const migliorGiornoAnnuo = tuttiMiglioriGiorniAnnui.find(mg => mg.periodo === periodo);
-                        
+
                         statsArray.push(periodoObj);
                     }
-                    
+
                     updateStatsTable(statsArray);
                 }
-                
+
                 // Mostriamo il container dei grafici
                 document.getElementById('charts-container').style.display = 'block';
             } catch (error) {
@@ -816,16 +892,16 @@
             try {
                 // Prima rimuoviamo eventuali periodi ottimali preesistenti
                 document.querySelectorAll('.periodo-row.miglior-periodo-globale').forEach(el => el.remove());
-                
+
                 // Assicuriamoci che i dati siano ordinati per data
                 data.sort((a, b) => new Date(a.Date) - new Date(b.Date));
-                
+
                 const dates = data.map(row => new Date(row.Date));
                 const closePrices = data.map(row => row.Close || row['Adj Close']);
-                
+
                 // Otteniamo il valore della leva
                 const leva = parseFloat(document.getElementById('leva').value);
-                
+
                 // Troviamo il minimo e massimo globale per riferimento
                 const prezzoMinimo = Math.min(...closePrices);
                 const prezzoMassimo = Math.max(...closePrices);
@@ -833,10 +909,10 @@
                 const indicePrezzoMassimo = closePrices.indexOf(prezzoMassimo);
                 const dataPrezzoMinimo = dates[indicePrezzoMinimo];
                 const dataPrezzoMassimo = dates[indicePrezzoMassimo];
-                
+
                 // Approccio corretto: vogliamo trovare il miglior rendimento possibile comprando al minimo e vendendo al massimo
                 // ma dobbiamo rispettare l'ordine temporale (compriamo prima, vendiamo dopo)
-                
+
                 let migliorRendimento = -Infinity;
                 let migliorDataInizio = null;
                 let migliorDataFine = null;
@@ -845,47 +921,47 @@
                 let migliorIndiceFine = -1;
                 let migliorPrezzoAcquisto = 0;
                 let migliorPrezzoVendita = 0;
-                
+
                 // Attraversiamo tutte le coppie di date (i,j) dove i < j (compriamo prima di vendere)
                 for (let i = 0; i < closePrices.length - 1; i++) {
                     const prezzoAcquisto = closePrices[i];
-                    
+
                     // Per ogni data di acquisto, verifichiamo se è il minimo da quella data in poi
                     let minimoLocale = prezzoAcquisto;
                     let indiceMinimoLocale = i;
-                    
+
                     for (let k = i + 1; k < closePrices.length; k++) {
                         if (closePrices[k] < minimoLocale) {
                             minimoLocale = closePrices[k];
                             indiceMinimoLocale = k;
                         }
                     }
-                    
+
                     // Se esiste un prezzo più basso dopo l'attuale, non ha senso comprare ora
                     if (indiceMinimoLocale > i) {
                         continue;
                     }
-                    
+
                     // Cerchiamo il prezzo massimo dopo la data di acquisto
                     let massimoLocale = prezzoAcquisto;
                     let indiceMassimoLocale = i;
-                    
+
                     for (let j = i + 1; j < closePrices.length; j++) {
                         const prezzoVendita = closePrices[j];
-                        
+
                         // Teniamo traccia del massimo locale
                         if (prezzoVendita > massimoLocale) {
                             massimoLocale = prezzoVendita;
                             indiceMassimoLocale = j;
                         }
-                        
+
                         // Calcoliamo il rendimento base (no leva)
                         let rendimentoBase = (prezzoVendita / prezzoAcquisto) - 1;
-                        
+
                         // Se la leva è maggiore di 1, dobbiamo calcolare il rendimento con leva correttamente
                         // Non possiamo semplicemente moltiplicare il rendimento finale per la leva
                         // Dobbiamo simulare l'effetto composto della leva sui rendimenti giornalieri
-                        
+
                         // Se la leva è diversa da 1, calcoliamo il rendimento con leva correttamente
                         let rendimentoFinale;
                         if (leva !== 1) {
@@ -897,22 +973,22 @@
                                     rendimentiGiornalieri.push(rendimentoGiornaliero);
                                 }
                             }
-                            
+
                             // Applica la leva ai rendimenti giornalieri
                             const rendimentiConLeva = rendimentiGiornalieri.map(r => r * leva);
-                            
+
                             // Calcola il rendimento composto
                             let valoreConLeva = 1;
                             for (const r of rendimentiConLeva) {
                                 valoreConLeva *= (1 + r);
                             }
-                            
+
                             rendimentoFinale = (valoreConLeva - 1) * 100;
                         } else {
                             // Se la leva è 1, usiamo direttamente il rendimento base
                             rendimentoFinale = rendimentoBase * 100;
                         }
-                        
+
                         // Verifichiamo se è il miglior rendimento finora
                         if (rendimentoFinale > migliorRendimento) {
                             migliorRendimento = rendimentoFinale;
@@ -926,17 +1002,17 @@
                         }
                     }
                 }
-                
+
                 // Se non abbiamo trovato un buon rendimento, potrebbe essere un problema con i dati
                 if (migliorRendimento === -Infinity) {
                     console.error("Non è stato possibile trovare un rendimento positivo");
                     return null;
                 }
-                
+
                 // Verifica se abbiamo acquistato al minimo locale e venduto al massimo locale
                 let èMinimo = true;
                 let èMassimo = true;
-                
+
                 // Verifichiamo se il prezzo di acquisto è il minimo nel periodo da inizio a fine
                 for (let i = 0; i < migliorIndiceInizio; i++) {
                     if (closePrices[i] < migliorPrezzoAcquisto) {
@@ -944,7 +1020,7 @@
                         break;
                     }
                 }
-                
+
                 // Verifichiamo se il prezzo di vendita è il massimo nel periodo considerato
                 for (let i = migliorIndiceInizio; i <= migliorIndiceFine; i++) {
                     if (closePrices[i] > migliorPrezzoVendita) {
@@ -952,24 +1028,24 @@
                         break;
                     }
                 }
-                
+
                 // Calcoliamo la durata in anni
                 const durataAnni = migliorDurataGiorni / 365.25;
-                
+
                 // Convertiamo in anni, mesi e giorni
                 const anni = Math.floor(durataAnni);
                 const meseDecimale = (durataAnni - anni) * 12;
                 const mesi = Math.floor(meseDecimale);
                 const giorni = Math.round((meseDecimale - mesi) * 30.4375);
-                
+
                 // Calcoliamo la durata in modo più preciso usando le date effettive
                 const diffTime = Math.abs(migliorDataFine - migliorDataInizio);
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                
+
                 // Calcolo più preciso degli anni, mesi, giorni
                 let dataTemp = new Date(migliorDataInizio);
                 let anniEsatti = 0;
-                
+
                 // Contiamo gli anni interi
                 while (true) {
                     dataTemp.setFullYear(dataTemp.getFullYear() + 1);
@@ -980,7 +1056,7 @@
                         break;
                     }
                 }
-                
+
                 // Contiamo i mesi interi
                 let mesiEsatti = 0;
                 while (true) {
@@ -992,7 +1068,7 @@
                         break;
                     }
                 }
-                
+
                 // Contiamo i giorni rimanenti
                 let giorniEsatti = 0;
                 while (true) {
@@ -1003,12 +1079,12 @@
                         break;
                     }
                 }
-                
+
                 // Usiamo il calcolo esatto
                 const anniFinali = anniEsatti;
                 const mesiFinali = mesiEsatti;
                 const giorniFinali = giorniEsatti;
-                
+
                 // Aggiungiamo il periodo ottimale all'input hidden
                 const durataAnniPrecisa = durataAnni.toFixed(4);
                 let periodiAttuali = document.getElementById('periodi_investimento').value;
@@ -1021,7 +1097,7 @@
                     periodiAttuali += durataAnniPrecisa;
                     document.getElementById('periodi_investimento').value = periodiAttuali;
                 }
-                
+
                 // Aggiungiamo visualmente il periodo all'interfaccia
                 const periodoOttimale = document.createElement('div');
                 periodoOttimale.className = 'periodo-row aggiunto miglior-periodo-globale';
@@ -1029,33 +1105,33 @@
                 periodoOttimale.style.alignItems = 'center';
                 periodoOttimale.style.backgroundColor = '#e6f2ff'; // Blu chiaro
                 periodoOttimale.style.border = '1px solid #99ccff'; // Bordo blu
-                
+
                 let periodoTesto = 'Miglior Periodo Globale';
                 periodoTesto += ': ';
-                
+
                 if (anniFinali > 0) periodoTesto += anniFinali + (anniFinali === 1 ? ' anno ' : ' anni ');
                 if (mesiFinali > 0) periodoTesto += mesiFinali + (mesiFinali === 1 ? ' mese ' : ' mesi ');
                 if (giorniFinali > 0) periodoTesto += giorniFinali + (giorniFinali === 1 ? ' giorno' : ' giorni');
-                
+
                 periodoOttimale.innerHTML = `
                     <div style="flex: 1; font-weight: 600; color: #0066cc;">${periodoTesto}</div>
                     <input type="hidden" class="periodo-value" data-anni="${anniFinali}" data-mesi="${mesiFinali}" data-giorni="${giorniFinali}">
                     <button class="remove-periodo-btn" style="background-color: #dc3545; color: white; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; margin-left: 10px;">×</button>
                 `;
-                
+
                 // Aggiungiamo dopo tutti gli altri periodi
                 const periodiContainer = document.getElementById('periodi_container');
                 periodiContainer.appendChild(periodoOttimale);
-                
+
                 // Aggiungiamo l'event listener per il pulsante di rimozione
-                periodoOttimale.querySelector('.remove-periodo-btn').addEventListener('click', function() {
+                periodoOttimale.querySelector('.remove-periodo-btn').addEventListener('click', function () {
                     periodoOttimale.remove();
                     aggiornaCampoPeriodi();
                 });
-                
+
                 // Aggiorniamo il campo nascosto con i periodi
                 aggiornaCampoPeriodi();
-                
+
                 return {
                     durataAnni: durataAnni,
                     rendimento: migliorRendimento,
@@ -1082,13 +1158,13 @@
 
             // Assicuriamoci che il container dei grafici sia visibile
             document.getElementById('charts-container').style.display = 'block';
-            
+
             // Verifichiamo se la scala logaritmica è attiva
             const usaScalaLogaritmica = document.getElementById('scala_logaritmica_rendimenti').checked;
-            
+
             // Creiamo il nuovo grafico
             const ctx = document.getElementById('returnsChart').getContext('2d');
-            
+
             // Colori predefiniti per i diversi periodi
             const colors = [
                 { bg: 'rgba(0, 123, 255, 0.5)', border: 'rgba(0, 123, 255, 1)' },  // Blu
@@ -1098,19 +1174,19 @@
                 { bg: 'rgba(111, 66, 193, 0.5)', border: 'rgba(111, 66, 193, 1)' },   // Viola
                 { bg: 'rgba(23, 162, 184, 0.5)', border: 'rgba(23, 162, 184, 1)' }     // Ciano
             ];
-            
+
             // Prepariamo i dataset per ogni periodo
             const datasets = [];
-            
+
             // Aggiungiamo un dataset per ogni periodo (solo le linee di rendimento)
             for (let i = 0; i < tuttiRendimenti.length; i++) {
                 const periodo = tuttiRendimenti[i].periodo;
                 const rendimentiArray = tuttiRendimenti[i].rendimentiArray;
                 const colorIndex = i % colors.length;
-                
+
                 // Formattiamo il periodo in anni, mesi e giorni
                 const periodoFormattato = formattaPeriodo(periodo);
-                
+
                 // Dataset per i rendimenti di questo periodo
                 datasets.push({
                     label: `Rendimenti (${periodoFormattato})`,
@@ -1126,11 +1202,11 @@
                     periodoValue: periodo // Aggiungiamo il valore del periodo per riferimento
                 });
             }
-            
+
             // Troviamo il miglior rendimento complessivo (il più alto tra tutti i periodi)
             let migliorRendimentoComplessivo = null;
             let migliorRendimentoCompletoInfo = null;
-            
+
             for (let i = 0; i < tuttiMiglioriGiorni.length; i++) {
                 const migliorGiorno = tuttiMiglioriGiorni[i];
                 if (migliorRendimentoComplessivo === null || migliorGiorno.rendimento > migliorRendimentoComplessivo) {
@@ -1144,11 +1220,11 @@
                     };
                 }
             }
-            
+
             // Troviamo il miglior rendimento annuo (il più alto tra tutti i periodi)
             let migliorRendimentoAnnuoComplessivo = null;
             let migliorRendimentoAnnuoInfo = null;
-            
+
             for (let i = 0; i < tuttiMiglioriGiorniAnnui.length; i++) {
                 const migliorGiornoAnnuo = tuttiMiglioriGiorniAnnui[i];
                 if (migliorRendimentoAnnuoComplessivo === null || migliorGiornoAnnuo.rendimentoAnnuo > migliorRendimentoAnnuoComplessivo) {
@@ -1162,7 +1238,7 @@
                     };
                 }
             }
-            
+
             // Aggiungiamo il punto per il miglior rendimento complessivo
             if (migliorRendimentoCompletoInfo) {
                 const periodoFormattato = formattaPeriodo(migliorRendimentoCompletoInfo.periodo);
@@ -1171,7 +1247,7 @@
                 const colorIndex = periodoIndex % colors.length;
                 const coloreBordo = colors[colorIndex].border;
                 const coloreSfondo = colors[colorIndex].bg;
-                
+
                 datasets.push({
                     label: `_hidden_miglior_rendimento`, // Nome speciale per identificarlo
                     data: [{ x: migliorRendimentoCompletoInfo.giorno, y: migliorRendimentoCompletoInfo.rendimento }],
@@ -1190,7 +1266,7 @@
                     hidden: false // Inizialmente il punto è visibile
                 });
             }
-            
+
             // Aggiungiamo il punto per il miglior rendimento annuo
             if (migliorRendimentoAnnuoInfo) {
                 const periodoFormattato = formattaPeriodo(migliorRendimentoAnnuoInfo.periodo);
@@ -1212,11 +1288,11 @@
                     hidden: false // Inizialmente il punto è visibile
                 });
             }
-            
+
             // Memorizziamo gli indici dei dataset speciali per riferimento
             const pallinoRossoIndex = datasets.findIndex(d => d.label === '_hidden_miglior_rendimento');
             const pallinoBluIndex = datasets.findIndex(d => d.label === '_hidden_miglior_rendimento_annuo');
-            
+
             returnsChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -1255,33 +1331,33 @@
                         },
                         legend: {
                             labels: {
-                                filter: function(legendItem, chartData) {
+                                filter: function (legendItem, chartData) {
                                     // Nascondi elementi speciali dalla legenda
                                     return !legendItem.text.startsWith('_hidden_');
                                 }
                             },
-                            onClick: function(e, legendItem, legend) {
+                            onClick: function (e, legendItem, legend) {
                                 // Implementazione personalizzata dell'evento click sulla legenda
                                 const index = legendItem.datasetIndex;
                                 const chart = legend.chart;
                                 const meta = chart.getDatasetMeta(index);
-                                
+
                                 // Alterna la visibilità del dataset principale
                                 meta.hidden = meta.hidden === null ? !chart.data.datasets[index].hidden : null;
-                                
+
                                 // Gestione dei punti speciali (pallini rosso e blu)
                                 if (pallinoRossoIndex >= 0 && datasets[pallinoRossoIndex].periodoIndex === index) {
                                     // Se questo è il dataset associato al pallino rosso
                                     const metaPallinoRosso = chart.getDatasetMeta(pallinoRossoIndex);
                                     metaPallinoRosso.hidden = meta.hidden;
                                 }
-                                
+
                                 if (pallinoBluIndex >= 0 && datasets[pallinoBluIndex].periodoIndex === index) {
                                     // Se questo è il dataset associato al pallino blu
                                     const metaPallinoBlu = chart.getDatasetMeta(pallinoBluIndex);
                                     metaPallinoBlu.hidden = meta.hidden;
                                 }
-                                
+
                                 // Aggiorna il grafico
                                 chart.update();
                             }
@@ -1291,12 +1367,12 @@
                                 label: function (context) {
                                     const point = context.raw;
                                     const date = new Date(point.x);
-                                    
+
                                     // Cerchiamo la data di uscita corrispondente nei dati originali
                                     let dataUscita = null;
                                     const datasetIndex = context.datasetIndex;
                                     const datasetLabel = context.dataset.label;
-                                    
+
                                     // Se è un punto normale (non un punto speciale come miglior rendimento)
                                     if (datasetLabel.includes('Rendimenti (')) {
                                         // Troviamo il periodo corrispondente dal label (es. "Rendimenti (5 anni)")
@@ -1304,12 +1380,12 @@
                                         if (periodoMatch && periodoMatch[1]) {
                                             const periodoFormattato = periodoMatch[1];
                                             const periodo = context.dataset.periodoValue;
-                                            
+
                                             // Troviamo i dati originali per questo periodo
                                             const periodoData = tuttiRendimenti.find(r => r.periodo === periodo);
                                             if (periodoData) {
                                                 // Troviamo il rendimento specifico per questa data di ingresso
-                                                const rendimento = periodoData.rendimentiArray.find(r => 
+                                                const rendimento = periodoData.rendimentiArray.find(r =>
                                                     r.data_ingresso.getTime() === date.getTime());
                                                 if (rendimento) {
                                                     dataUscita = rendimento.data_uscita;
@@ -1317,7 +1393,7 @@
                                             }
                                         }
                                     }
-                                    
+
                                     // Se abbiamo trovato la data di uscita, la mostriamo
                                     if (dataUscita) {
                                         const dataIngressoFormattata = date.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -1328,7 +1404,7 @@
                                         return `Data: ${date.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}, Rendimento: ${point.y.toFixed(2)}%`;
                                     }
                                 },
-                                title: function(tooltipItems) {
+                                title: function (tooltipItems) {
                                     const date = new Date(tooltipItems[0].raw.x);
                                     return date.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' });
                                 }
@@ -1371,7 +1447,7 @@
                     y: leveragedData[i]
                 });
             }
-            
+
             // Definiamo una palette di colori per i diversi periodi
             // Colori predefiniti per i diversi periodi - deve corrispondere ai colori usati nel grafico dei rendimenti
             const colors = [
@@ -1382,7 +1458,7 @@
                 { bg: 'rgba(111, 66, 193, 0.5)', border: 'rgba(111, 66, 193, 1)' },   // Viola
                 { bg: 'rgba(23, 162, 184, 0.5)', border: 'rgba(23, 162, 184, 1)' }     // Ciano
             ];
-            
+
             // Verifichiamo che ci siano dati validi per i migliori giorni
             const annotations = {};
 
@@ -1393,12 +1469,12 @@
 
             // Calcoliamo il numero totale di periodi (normali + annui) per distribuire le frecce
             const numeroPeriodi = tuttiMiglioriGiorni.length;
-            
+
             // Definiamo valori fissi per il posizionamento delle frecce
             // Questi valori saranno costanti indipendentemente dalla scala
             const valoreBase = 0;  // Valore di partenza sopra il 100%
             const spazioDisponibile = 400; // Range di valori per le frecce
-            
+
             // Creiamo le annotazioni per tutti i periodi
             // Iteriamo su tutti i periodi per i migliori rendimenti assoluti
             for (let i = 0; i < tuttiMiglioriGiorni.length; i++) {
@@ -1406,11 +1482,11 @@
                 const giorno = tuttiMiglioriGiorni[i].giorno;
                 const dataUscita = tuttiMiglioriGiorni[i].dataUscita;
                 const colorIndex = i % colors.length;
-                
+
                 // Calcoliamo la posizione verticale con valori fissi
                 // Distribuiamo equamente basandoci sul numero di periodi
                 const altezzaFreccia = valoreBase + (spazioDisponibile * (i + 1) / (numeroPeriodi + 1));
-                
+
                 // Aggiungiamo l'annotazione per il giorno di ingresso
                 annotations[`migliorGiorno_${i}`] = {
                     type: 'line',
@@ -1424,7 +1500,7 @@
                         position: 'start'
                     }
                 };
-                
+
                 // Aggiungiamo l'annotazione per il giorno di uscita
                 annotations[`migliorDataUscita_${i}`] = {
                     type: 'line',
@@ -1438,7 +1514,7 @@
                         position: 'start'
                     }
                 };
-                
+
                 // Aggiungiamo una freccia che collega l'inizio e la fine del periodo
                 // Utilizziamo valori numerici fissi per yMin e yMax così da creare una linea orizzontale
                 annotations[`frecciaPeriodo_${i}`] = {
@@ -1461,14 +1537,14 @@
                     }
                 };
             }
-            
+
             // Iteriamo su tutti i periodi per i migliori rendimenti annui
             for (let i = 0; i < tuttiMiglioriGiorniAnnui.length; i++) {
                 const periodo = tuttiMiglioriGiorniAnnui[i].periodo;
                 const giorno = tuttiMiglioriGiorniAnnui[i].giorno;
                 const dataUscita = tuttiMiglioriGiorniAnnui[i].dataUscita;
                 const colorIndex = i % colors.length;
-                
+
                 // Aggiungiamo l'annotazione per il giorno di ingresso annuo
                 annotations[`migliorGiornoAnnuo_${i}`] = {
                     type: 'line',
@@ -1482,7 +1558,7 @@
                         position: 'end'
                     }
                 };
-                
+
                 // Aggiungiamo l'annotazione per il giorno di uscita annuo
                 annotations[`migliorDataUscitaAnnuo_${i}`] = {
                     type: 'line',
@@ -1549,16 +1625,16 @@
                         },
                         tooltip: {
                             callbacks: {
-                                title: function(tooltipItems) {
+                                title: function (tooltipItems) {
                                     const date = new Date(tooltipItems[0].raw.x);
                                     return date.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
                                 },
-                                label: function(tooltipItem) {
+                                label: function (tooltipItem) {
                                     const leva = parseFloat(document.getElementById('leva').value);
                                     if (leva === 1) {
-                                        return `Rispetto all'inizio: ${(tooltipItem.raw.y-100).toFixed(2)} %`;
+                                        return `Rispetto all'inizio: ${(tooltipItem.raw.y - 100).toFixed(2)} %`;
                                     } else {
-                                        return `Rispetto all'inizio con leva ${leva.toFixed(1)}: ${(tooltipItem.raw.y-100).toFixed(2)} %`;
+                                        return `Rispetto all'inizio con leva ${leva.toFixed(1)}: ${(tooltipItem.raw.y - 100).toFixed(2)} %`;
                                     }
                                 }
                             }
@@ -1594,27 +1670,27 @@
         function updateStatsTable(stats) {
             const tbody = document.getElementById('stats-body');
             tbody.innerHTML = '';
-            
+
             // Aggiorniamo lo stile della tabella per gestire meglio le colonne
             const table = document.getElementById('stats-table');
             table.style.tableLayout = 'auto'; // Permette alle colonne di adattarsi al contenuto
             table.style.width = '100%';
             table.style.maxWidth = '100%';
             table.style.borderCollapse = 'collapse';
-            
+
             // Se stats è un array di oggetti, dobbiamo creare una tabella con periodi per righe
             if (Array.isArray(stats) && stats.length > 0) {
                 // Ordiniamo l'array di statistiche per durata del periodo (dal più breve al più lungo)
                 stats.sort((a, b) => a.periodoRaw - b.periodoRaw);
-                
+
                 // Otteniamo tutte le chiavi (metriche) dal primo oggetto, escludendo le proprietà tecniche
-                const metriche = Object.keys(stats[0]).filter(metrica => 
+                const metriche = Object.keys(stats[0]).filter(metrica =>
                     metrica !== 'Mesi' && metrica !== 'periodoRaw' && metrica !== 'isPeriodoGlobale');
-                
+
                 // Creiamo la riga di intestazione con tutte le colonne
                 const headerRow = document.createElement('tr');
                 headerRow.style.backgroundColor = '#e9ecef';
-                
+
                 // Aggiungiamo le celle di intestazione per ogni metrica
                 metriche.forEach(metrica => {
                     const metricaHeaderCell = document.createElement('th');
@@ -1627,29 +1703,29 @@
                     metricaHeaderCell.style.wordWrap = 'break-word'; // Specifica aggiuntiva
                     metricaHeaderCell.style.overflowWrap = 'anywhere'; // Controllo aggiuntivo per l'overflow
                     metricaHeaderCell.style.lineHeight = '1.2'; // Altezza riga più compatta per l'intestazione
-                    
+
                     // Imposta larghezza fissa per la colonna Periodo
                     if (metrica === 'Periodo') {
                         metricaHeaderCell.style.width = 'auto';
                         metricaHeaderCell.style.minWidth = '120px';
                         metricaHeaderCell.style.fontWeight = 'bold';
                     }
-                    
+
                     metricaHeaderCell.textContent = metrica;
                     headerRow.appendChild(metricaHeaderCell);
                 });
-                
+
                 tbody.appendChild(headerRow);
-                
+
                 // Creiamo una riga per ogni periodo
                 stats.forEach((statObj, index) => {
                     const row = document.createElement('tr');
-                    
+
                     // Se questo è il periodo massimo globale, applichiamo uno stile speciale
                     if (statObj.isPeriodoGlobale) {
                         row.style.backgroundColor = '#d4e6fe'; // Blu scuro
                     }
-                    
+
                     // Aggiungiamo una cella per ogni metrica di questo periodo
                     metriche.forEach(metrica => {
                         const valueCell = document.createElement('td');
@@ -1658,19 +1734,19 @@
                         valueCell.style.textAlign = 'left';
                         valueCell.style.verticalAlign = 'middle';
                         valueCell.style.whiteSpace = 'nowrap'; // Impedisce il wrapping del testo nei dati
-                        
+
                         // Mettiamo in grassetto la colonna "Periodo"
                         if (metrica === 'Periodo') {
                             valueCell.style.fontWeight = 'bold';
                             valueCell.style.width = 'auto'; // Larghezza automatica per adattarsi al contenuto
                             valueCell.style.minWidth = '120px'; // Larghezza minima per garantire leggibilità
                         }
-                        
+
                         // Usa direttamente il valore senza manipolazioni, dato che è già formattato in periodoObj
                         valueCell.textContent = statObj[metrica] || '-';
                         row.appendChild(valueCell);
                     });
-                    
+
                     tbody.appendChild(row);
                 });
             } else if (typeof stats === 'object' && stats !== null) {
@@ -1685,36 +1761,36 @@
             // Aggiungiamo alcuni valori predefiniti (es. 1 anno, 5 anni)
             aggiungiPeriodo(1, 0, 0); // 1 anno
             aggiungiPeriodo(5, 0, 0); // 5 anni
-            
+
             // Aggiungiamo evento al pulsante "+" della prima riga
-            document.querySelector('.add-periodo-btn').addEventListener('click', function() {
+            document.querySelector('.add-periodo-btn').addEventListener('click', function () {
                 const row = this.closest('.periodo-row');
                 const anni = row.querySelector('[data-unit="anni"]').value || 0;
                 const mesi = row.querySelector('[data-unit="mesi"]').value || 0;
                 const giorni = row.querySelector('[data-unit="giorni"]').value || 0;
-                
+
                 // Aggiungiamo un nuovo periodo solo se almeno uno dei campi è compilato
                 if (anni > 0 || mesi > 0 || giorni > 0) {
                     aggiungiPeriodo(anni, mesi, giorni);
-                    
+
                     // Resettiamo i campi di input
                     row.querySelector('[data-unit="anni"]').value = '';
                     row.querySelector('[data-unit="mesi"]').value = '';
                     row.querySelector('[data-unit="giorni"]').value = '';
                 }
             });
-            
+
             // Attiviamo l'aggiornamento del campo nascosto quando un periodo cambia
             document.querySelectorAll('.periodo-row').forEach(row => {
                 row.querySelectorAll('input').forEach(input => {
                     input.addEventListener('change', aggiornaCampoPeriodi);
                 });
             });
-            
+
             // Aggiorniamo il campo nascosto con i periodi iniziali
             aggiornaCampoPeriodi();
         }
-        
+
         // Funzione per aggiungere un nuovo periodo
         function aggiungiPeriodo(anni, mesi, giorni) {
             // Creiamo l'elemento del periodo
@@ -1727,45 +1803,45 @@
             periodoRow.style.backgroundColor = '#f0f9ff';
             periodoRow.style.borderRadius = '8px';
             periodoRow.style.border = '1px solid #d0e8ff';
-            
+
             // Calcoliamo la data di fine basata sul periodo
             const dataInizio = document.getElementById('data_inizio').value;
             let dataFine = calcolaDataFine(dataInizio, anni, mesi, giorni);
             const formatoData = dataFine.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            
+
             // Generiamo il testo del periodo
             let periodoTesto = '';
             if (anni > 0) periodoTesto += anni + (anni === 1 ? ' anno ' : ' anni ');
             if (mesi > 0) periodoTesto += mesi + (mesi === 1 ? ' mese ' : ' mesi ');
             if (giorni > 0) periodoTesto += giorni + (giorni === 1 ? ' giorno' : ' giorni');
-            
+
             // Sistemiamo il testo del periodo se è vuoto
             if (periodoTesto === '') periodoTesto = 'Periodo personalizzato';
-            
+
             // Aggiungiamo il testo al periodo
             periodoRow.innerHTML = `
                 <div style="flex: 1; font-weight: 500;">${periodoTesto}</div>
                 <input type="hidden" class="periodo-value" data-anni="${anni}" data-mesi="${mesi}" data-giorni="${giorni}">
                 <button class="remove-periodo-btn" style="background-color: #dc3545; color: white; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; margin-left: 10px;">×</button>
             `;
-            
+
             // Aggiungiamo il periodo al container
             const periodiContainer = document.getElementById('periodi_container');
             periodiContainer.appendChild(periodoRow);
-            
+
             // Aggiungiamo la classe 'aggiunto' per lo stile
             periodoRow.classList.add('aggiunto');
-            
+
             // Aggiungiamo l'event listener per il pulsante di rimozione
-            periodoRow.querySelector('.remove-periodo-btn').addEventListener('click', function() {
+            periodoRow.querySelector('.remove-periodo-btn').addEventListener('click', function () {
                 periodoRow.remove();
                 aggiornaCampoPeriodi();
             });
-            
+
             // Aggiorniamo il campo nascosto con i periodi
             aggiornaCampoPeriodi();
         }
-        
+
         // Funzione per calcolare la data di fine basata sul periodo
         function calcolaDataFine(dataInizio, anni, mesi, giorni) {
             const data = new Date(dataInizio);
@@ -1774,7 +1850,7 @@
             data.setDate(data.getDate() + parseInt(giorni));
             return data;
         }
-        
+
         // Funzione per aggiornare il campo nascosto con i periodi
         function aggiornaCampoPeriodi() {
             const periodi = [];
@@ -1782,14 +1858,14 @@
                 const anni = parseFloat(input.getAttribute('data-anni') || 0);
                 const mesi = parseFloat(input.getAttribute('data-mesi') || 0);
                 const giorni = parseFloat(input.getAttribute('data-giorni') || 0);
-                
+
                 // Convertiamo tutto in anni
                 const totaleAnni = anni + (mesi / 12) + (giorni / 365.25);
                 if (totaleAnni > 0) {
                     periodi.push(totaleAnni);
                 }
             });
-            
+
             // Aggiorniamo il campo nascosto
             document.getElementById('periodi_investimento').value = periodi.join(',');
         }
@@ -1801,16 +1877,16 @@
             const meseDecimale = (periodoAnni - anniInteri) * 12;
             const mesiInteri = Math.floor(meseDecimale);
             const giorni = Math.round((meseDecimale - mesiInteri) * 30.4375); // Media giorni per mese
-            
+
             // Formattiamo il testo
             let periodoTesto = '';
             if (anniInteri > 0) periodoTesto += anniInteri + (anniInteri === 1 ? ' anno ' : ' anni ');
             if (mesiInteri > 0) periodoTesto += mesiInteri + (mesiInteri === 1 ? ' mese ' : ' mesi ');
             if (giorni > 0) periodoTesto += giorni + (giorni === 1 ? ' giorno' : ' giorni');
-            
+
             // Se periodo è molto breve (meno di un giorno)
             if (periodoTesto === '') periodoTesto = 'meno di 1 giorno';
-            
+
             return periodoTesto.trim();
         }
     </script>

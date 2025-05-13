@@ -191,6 +191,28 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        .ticker-selection {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .ticker-selection select,
+        .ticker-selection input {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .ticker-selection select:focus,
+        .ticker-selection input:focus {
+            border-color: #0080ff;
+            box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.2);
+            outline: none;
+        }
     </style>
 </head>
 
@@ -228,21 +250,25 @@
                     </div>
                     <div class="input-group">
                         <label for="ticker">Ticker:</label>
-                        <select id="ticker">
-                            <option value="^GSPC">S&P 500</option>
-                            <option value="AAPL">Apple Inc.</option>
-                            <option value="MSFT">Microsoft Corporation</option>
-                            <option value="AMZN">Amazon.com, Inc.</option>
-                            <option value="GOOGL">Alphabet Inc. (Google)</option>
-                            <option value="TSLA">Tesla, Inc.</option>
-                            <option value="NVDA">Nvidia Corporation</option>
-                            <option value="V">Visa Inc.</option>
-                            <option value="JPM">JPMorgan Chase & Co.</option>
-                            <option value="JNJ">Johnson & Johnson</option>
-                            <option value="BRK-B">Berkshire Hathaway</option>
-                            <option value="BTC-USD">Bitcoin</option>
-                            <option value="GLD">Gold</option>
-                        </select>
+                        <div class="ticker-selection">
+                            <select id="ticker">
+                                <option value="^GSPC">S&P 500</option>
+                                <option value="AAPL">Apple Inc.</option>
+                                <option value="MSFT">Microsoft Corporation</option>
+                                <option value="AMZN">Amazon.com, Inc.</option>
+                                <option value="GOOGL">Alphabet Inc. (Google)</option>
+                                <option value="TSLA">Tesla, Inc.</option>
+                                <option value="NVDA">Nvidia Corporation</option>
+                                <option value="V">Visa Inc.</option>
+                                <option value="JPM">JPMorgan Chase & Co.</option>
+                                <option value="JNJ">Johnson & Johnson</option>
+                                <option value="BRK-B">Berkshire Hathaway</option>
+                                <option value="BTC-USD">Bitcoin</option>
+                                <option value="GLD">Gold</option>
+                                <option value="custom">Personalizzato</option>
+                            </select>
+                            <input type="text" id="ticker_custom" placeholder="Inserisci ticker" style="display: none;">
+                        </div>
                     </div>
                     
                     <div class="input-group">
@@ -404,6 +430,18 @@
             const levaDisabledIcon = document.getElementById('leva_disabled_icon');
             const knockoutDisabledIcon = document.getElementById('knockout_disabled_icon');
             
+            // Gestione ticker personalizzato
+            const tickerSelect = document.getElementById('ticker');
+            const tickerCustomInput = document.getElementById('ticker_custom');
+            
+            tickerSelect.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    tickerCustomInput.style.display = 'block';
+                } else {
+                    tickerCustomInput.style.display = 'none';
+                }
+            });
+            
             // Flag per tenere traccia dello stato attivo
             let campoAttivo = null; // 'leva', 'knockout' o null
             
@@ -544,7 +582,16 @@
                 const puntoPartenza = parseFloat(document.getElementById('punto_partenza').value);
                 const dataInizio = document.getElementById('data_inizio').value;
                 const dataFine = document.getElementById('data_fine').value;
-                const ticker = document.getElementById('ticker').value;
+                let ticker = document.getElementById('ticker').value;
+                // Se il ticker è personalizzato, usa il valore dell'input
+                if (ticker === 'custom') {
+                    ticker = document.getElementById('ticker_custom').value.trim();
+                    if (!ticker) {
+                        alert('Inserisci un ticker valido nel campo personalizzato');
+                        loadingIndicator.style.display = 'none';
+                        return;
+                    }
+                }
                 const levaIniziale = parseFloat(document.getElementById('leva').value);
                 const knockoutLevel = parseFloat(document.getElementById('knockout_manuale').value);
                 const scalaLogaritmica = document.getElementById('scala_logaritmica').checked;
@@ -619,7 +666,16 @@
                 const puntoPartenza = parseFloat(puntoPartenzaInput.value);
                 const dataInizio = document.getElementById('data_inizio').value;
                 const dataFine = document.getElementById('data_fine').value;
-                const ticker = document.getElementById('ticker').value;
+                let ticker = document.getElementById('ticker').value;
+                // Se il ticker è personalizzato, usa il valore dell'input
+                if (ticker === 'custom') {
+                    ticker = document.getElementById('ticker_custom').value.trim();
+                    if (!ticker) {
+                        alert('Inserisci un ticker valido nel campo personalizzato');
+                        loadingIndicator.style.display = 'none';
+                        return;
+                    }
+                }
                 const levaIniziale = parseFloat(levaInput.value);
                 const scalaLogaritmica = scalaLogaritmicaCheckbox.checked;
                 
@@ -672,7 +728,16 @@
                     loadingIndicator.style.display = 'block';
                     errorMessage.style.display = 'none';
                     
-                    const ticker = document.getElementById('ticker').value;
+                    let ticker = document.getElementById('ticker').value;
+                    // Se il ticker è personalizzato, usa il valore dell'input
+                    if (ticker === 'custom') {
+                        ticker = document.getElementById('ticker_custom').value.trim();
+                        if (!ticker) {
+                            alert('Inserisci un ticker valido nel campo personalizzato');
+                            loadingIndicator.style.display = 'none';
+                            return;
+                        }
+                    }
                     
                     // Data di partenza molto vecchia per assicurarci di ottenere tutti i dati
                     const dataVecchia = new Date('1950-01-01');

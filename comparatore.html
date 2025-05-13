@@ -101,7 +101,8 @@
             { value: "JNJ", label: "Johnson & Johnson" },
             { value: "BRK-B", label: "Berkshire Hathaway" },
             { value: "BTC-USD", label: "Bitcoin" },
-            { value: "GLD", label: "Gold" }
+            { value: "GLD", label: "Gold" },
+            { value: "custom", label: "Personalizzato" }
         ];
 
         // Inizializzazione al caricamento della pagina
@@ -119,8 +120,11 @@
             // Generiamo i campi iniziali
             aggiornaConfronti();
             
-            // Generiamo il grafico iniziale all'avvio della pagina
-            generaGrafico();
+            // Generiamo il grafico iniziale all'avvio della pagina dopo un piccolo ritardo
+            // per assicurarci che i campi di confronto siano stati creati
+            setTimeout(() => {
+                generaGrafico();
+            }, 0);
         });
 
         // Funzione per aggiornare i campi di confronto in base al numero selezionato
@@ -222,6 +226,33 @@
                 tickerDiv.appendChild(tickerLabel);
                 tickerDiv.appendChild(tickerSelect);
                 
+                // Aggiungiamo un input di testo per il ticker personalizzato
+                const tickerCustomInput = document.createElement('input');
+                tickerCustomInput.type = 'text';
+                tickerCustomInput.id = `ticker_custom_${i}`;
+                tickerCustomInput.name = `ticker_custom_${i}`;
+                tickerCustomInput.placeholder = 'Inserisci ticker personalizzato';
+                tickerCustomInput.style.padding = '10px';
+                tickerCustomInput.style.border = '1px solid #ddd';
+                tickerCustomInput.style.borderRadius = '6px';
+                tickerCustomInput.style.backgroundColor = '#f8f9fa';
+                tickerCustomInput.style.marginTop = '10px';
+                tickerCustomInput.style.display = 'none'; // Inizialmente nascosto
+                
+                // Aggiungiamo event listener per mostrare/nascondere l'input personalizzato
+                tickerSelect.addEventListener('change', function() {
+                    if (this.value === 'custom') {
+                        tickerCustomInput.style.display = 'block';
+                    // imposta la stessa larghezza del select
+                    tickerCustomInput.style.boxSizing = 'border-box';
+                    tickerCustomInput.style.width = `${this.clientWidth}px`;
+                    } else {
+                        tickerCustomInput.style.display = 'none';
+                    }
+                });
+                
+                tickerDiv.appendChild(tickerCustomInput);
+                
                 // Contenitore per le date
                 const dateContainer = document.createElement('div');
                 dateContainer.style.display = 'grid';
@@ -300,12 +331,33 @@
                 document.getElementById('loading').style.display = 'block';
                 document.getElementById('error').style.display = 'none';
                 
-                const numeroConfronti = parseInt(document.getElementById('numero_confronti').value);
+                const numeroConfrontiElement = document.getElementById('numero_confronti');
+                if (!numeroConfrontiElement) {
+                    throw new Error('I campi di input non sono ancora stati creati. Attendere il caricamento completo della pagina.');
+                }
+                
+                const numeroConfronti = parseInt(numeroConfrontiElement.value);
                 const datiConfronti = [];
                 
                 // Raccogliamo i dati per ogni confronto
                 for (let i = 0; i < numeroConfronti; i++) {
-                    const ticker = document.getElementById(`ticker_${i}`).value;
+                    const tickerElement = document.getElementById(`ticker_${i}`);
+                    if (!tickerElement) {
+                        throw new Error('I campi di confronto non sono ancora stati creati. Prova a cliccare su "Aggiorna Confronti" prima.');
+                    }
+                    
+                    let ticker = tickerElement.value;
+                    // Se il ticker è personalizzato, usa il valore dell'input personalizzato
+                    if (ticker === 'custom') {
+                        const tickerCustomElement = document.getElementById(`ticker_custom_${i}`);
+                        if (!tickerCustomElement) {
+                            throw new Error(`Campo ticker personalizzato per il confronto ${i + 1} non trovato`);
+                        }
+                        ticker = tickerCustomElement.value.trim();
+                        if (!ticker) {
+                            throw new Error(`Inserisci un ticker valido nel campo personalizzato per il confronto ${i + 1}`);
+                        }
+                    }
                     const dataInizio = document.getElementById(`data_inizio_${i}`).value;
                     const dataFine = document.getElementById(`data_fine_${i}`).value;
                     
@@ -324,7 +376,7 @@
                         ticker,
                         dataInizio,
                         dataFine,
-                        label: tickerOptions.find(option => option.value === ticker)?.label || ticker,
+                        label: ticker === 'custom' ? ticker : (tickerOptions.find(option => option.value === ticker)?.label || ticker),
                         colore: colori[i % colori.length]
                     });
                 }
